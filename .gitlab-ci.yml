@@ -48,7 +48,7 @@ unit-test-job:   # This job runs in the test stage.
   artifacts:
     when: always
     reports:
-      junit: test_detail.xml
+      junit: *.xml
   script:
     - make test
 
