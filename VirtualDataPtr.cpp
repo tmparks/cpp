@@ -3,11 +3,11 @@
 
 #include "StretchableArray.hpp"
 
-class Stack : private Verbose
+class StackPtr : private Verbose
 {
 public:
     // The base class has a normal constructor that provides its own object.
-    Stack(gsl::index size = 1);
+    StackPtr(gsl::index size = 1);
 
 public:
     void Push(double x);
@@ -15,7 +15,7 @@ public:
 
 protected:
     // The base class has a constructor that accepts an object from a derived class.
-    Stack(std::string&& name, std::unique_ptr<Array>&& data);
+    StackPtr(std::string&& name, std::unique_ptr<Array>&& data);
 
 private:
     // To simulate virtual data in C++, the base class has a pointer to the
@@ -29,40 +29,40 @@ private:
 
 // Virtual data makes the implementation of the derived class easier:
 // most of the implementation is inherited.
-class StretchableStack : public Stack
+class StretchableStackPtr : public StackPtr
 {
 public:
     // The derived class has a constructor that provides a new object to the base class.
-    StretchableStack(gsl::index size = 1);
+    StretchableStackPtr(gsl::index size = 1);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Stack::Stack(gsl::index size) :
-    Stack(gsl::czstring(__func__), std::make_unique<Array>(size))
+StackPtr::StackPtr(gsl::index size) :
+    StackPtr(gsl::czstring(__func__), std::make_unique<Array>(size))
 {
 }
 
-Stack::Stack(std::string&& name, std::unique_ptr<Array>&& data) :
+StackPtr::StackPtr(std::string&& name, std::unique_ptr<Array>&& data) :
     Verbose(std::move(name)),
     data_(std::move(data))
 {
 }
 
-void Stack::Push(double x)
+void StackPtr::Push(double x)
 {
     (*data_)[index_++] = x; // may throw
 }
 
-double Stack::Pop()
+double StackPtr::Pop()
 {
     return (*data_)[--index_]; // may throw
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-StretchableStack::StretchableStack(gsl::index size) :
-    Stack(gsl::czstring(__func__), std::make_unique<StretchableArray>(size))
+StretchableStackPtr::StretchableStackPtr(gsl::index size) :
+    StackPtr(gsl::czstring(__func__), std::make_unique<StretchableArray>(size))
 {
 }
 
@@ -73,7 +73,7 @@ StretchableStack::StretchableStack(gsl::index size) :
 TEST(VirtualDataPtr, Stack_Push_Pop)
 {
     const gsl::index size { 3 };
-    Stack stack(size);
+    StackPtr stack(size);
     for(gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));
@@ -87,7 +87,7 @@ TEST(VirtualDataPtr, Stack_Push_Pop)
 TEST(VirtualDataPtr, Stack_Push_Full)
 {
     gsl::index size { 3 };
-    Stack stack(size);
+    StackPtr stack(size);
     for(gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));
@@ -97,14 +97,14 @@ TEST(VirtualDataPtr, Stack_Push_Full)
 
 TEST(VirtualDataPtr, Stack_Pop_Empty)
 {
-    Stack stack(1);
+    StackPtr stack(1);
     EXPECT_THROW(stack.Pop(), std::out_of_range);
 }
 
 TEST(VirtualDataPtr, Stack_Stretch)
 {
     gsl::index size { 3 };
-    StretchableStack stack(size);
+    StretchableStackPtr stack(size);
     for(gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));

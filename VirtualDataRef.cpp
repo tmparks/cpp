@@ -4,7 +4,7 @@
 #include "StretchableArray.hpp"
 #include <iostream>
 
-class Stack : private Verbose
+class StackRef : private Verbose
 {
 public:
     void Push(double x);
@@ -13,7 +13,7 @@ public:
 protected:
     // The base class has no public constructor and does not provide its own
     // object. Instead it accepts an object from a derived class.
-    Stack(std::string&& name, Array& data);
+    StackRef(std::string&& name, Array& data);
 
 private:
     // To simulate virtual data in C++, the base class has a reference to the
@@ -27,11 +27,11 @@ private:
 
 // Virtual data makes the implementation of the derived class easier:
 // most of the implementation is inherited.
-class FixedStack : public Stack
+class FixedStackRef : public StackRef
 {
 public:
     // The derived class has a constructor that provides an object to the base class.
-    FixedStack(gsl::index size = 1);
+    FixedStackRef(gsl::index size = 1);
 
 private:
     // The derived class contains the member object.
@@ -42,11 +42,11 @@ private:
 
 // Virtual data makes the implementation of the derived class easier:
 // most of the implementation is inherited.
-class StretchableStack : public Stack
+class StretchableStackRef : public StackRef
 {
 public:
     // The derived class has a constructor that provides an object to the base class.
-    StretchableStack(gsl::index size = 1);
+    StretchableStackRef(gsl::index size = 1);
 
 private:
     // The derived class contains the member object.
@@ -55,27 +55,27 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Stack::Stack(std::string&& name, Array& data) :
+StackRef::StackRef(std::string&& name, Array& data) :
     Verbose(std::move(name)),
     data_(data)
 {
     std::cout << gsl::czstring(__func__) << ": &data_=" << &data_ << std::endl;
 }
 
-void Stack::Push(double x)
+void StackRef::Push(double x)
 {
     data_[index_++] = x; // may throw
 }
 
-double Stack::Pop()
+double StackRef::Pop()
 {
     return data_[--index_]; // may throw
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FixedStack::FixedStack(gsl::index size) :
-    Stack(gsl::czstring(__func__), value_),
+FixedStackRef::FixedStackRef(gsl::index size) :
+    StackRef(gsl::czstring(__func__), value_),
     value_(size)
 {
     std::cout << gsl::czstring(__func__) << ": &value_=" << &value_ << std::endl;
@@ -83,8 +83,8 @@ FixedStack::FixedStack(gsl::index size) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-StretchableStack::StretchableStack(gsl::index size) :
-    Stack(gsl::czstring(__func__), value_),
+StretchableStackRef::StretchableStackRef(gsl::index size) :
+    StackRef(gsl::czstring(__func__), value_),
     value_(size)
 {
     std::cout << gsl::czstring(__func__) << ": &value_=" << &value_ << std::endl;
@@ -97,7 +97,7 @@ StretchableStack::StretchableStack(gsl::index size) :
 TEST(VirtualDataRef, Stack_Push_Pop)
 {
     const gsl::index size { 3 };
-    FixedStack stack(size);
+    FixedStackRef stack(size);
     for (gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));
@@ -111,7 +111,7 @@ TEST(VirtualDataRef, Stack_Push_Pop)
 TEST(VirtualDataRef, Stack_Push_Full)
 {
     gsl::index size { 3 };
-    FixedStack stack(size);
+    FixedStackRef stack(size);
     for (gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));
@@ -121,14 +121,14 @@ TEST(VirtualDataRef, Stack_Push_Full)
 
 TEST(VirtualDataRef, Stack_Pop_Empty)
 {
-    FixedStack stack(1);
+    FixedStackRef stack(1);
     EXPECT_THROW(stack.Pop(), std::out_of_range);
 }
 
 TEST(VirtualDataRef, Stack_Stretch)
 {
     gsl::index size { 3 };
-    StretchableStack stack(size);
+    StretchableStackRef stack(size);
     for (gsl::index x = 0; x < size; x++)
     {
         stack.Push(double(x));

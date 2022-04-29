@@ -5,24 +5,20 @@ LDLIBS = -lgtest_main -lgtest
 
 SRC = $(wildcard *.cpp)
 OBJ = ${SRC:.cpp=.o}
-EXE = TestVirtualDataPtr TestVirtualDataRef
+EXE = TestVirtualData
 
 all: ${OBJ}
 
 test: ${EXE}
-	for test in $^; do ./$$test || exit; done
+	./$^ --gtest_output=xml
 
 check: ${SRC}
 	clang-tidy $^ -- ${CPPFLAGS} ${CXXFLAGS} 
 
 clean:
-	rm --force ${EXE} ${OBJ}
+	rm --force ${EXE} ${OBJ} *.xml
 
-TestVirtualDataPtr: Array.o StretchableArray.o Verbose.o
-
-TestVirtualDataRef: Array.o StretchableArray.o Verbose.o
-
-Test%: %.o
-	${CC} ${LDFLAGS} --output $@ $^ ${LOADLIBES} ${LDLIBS}
+${EXE}: ${OBJ}
+	${LINK.o} ${OUTPUT_OPTION} $^ ${LOADLIBES} ${LDLIBS}
 
 .PHONY: all test check clean

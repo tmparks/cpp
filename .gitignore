@@ -2,3 +2,5 @@
 .vscode/
 .editorconfig
 *.o
+*.xml
+Test*
