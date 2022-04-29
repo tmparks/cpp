@@ -60,4 +60,6 @@ deploy-job:      # This job runs in the deploy stage.
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
+    - docker pull $IMAGE
     - docker tag $IMAGE $LATEST
+    - docker push $LATEST
