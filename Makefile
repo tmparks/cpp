@@ -3,27 +3,20 @@ CC = ${CXX}
 CXXFLAGS = -std=c++20 -Werror -Wall -Wextra
 LDLIBS = -lgtest_main -lgtest
 
-SRC = \
-	Array.cpp \
-	StretchableArray.cpp \
-	Verbose.cpp \
-	VirtualDataPtr.cpp \
-	VirtualDataRef.cpp
-
+SRC = $(wildcard *.cpp)
 OBJ = ${SRC:.cpp=.o}
+EXE = TestVirtualDataPtr TestVirtualDataRef
 
-TEST = TestVirtualDataPtr TestVirtualDataRef
+all: ${OBJ}
 
-all: test
-
-test: ${TEST}
+test: ${EXE}
 	for test in $^; do ./$$test || exit; done
 
 check: ${SRC}
 	clang-tidy $^ -- ${CPPFLAGS} ${CXXFLAGS} 
 
 clean:
-	rm -f ${TEST} ${OBJ}
+	rm --force ${EXE} ${OBJ}
 
 TestVirtualDataPtr: Array.o StretchableArray.o Verbose.o
 
