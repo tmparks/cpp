@@ -43,6 +43,7 @@ build-job:       # This job runs in the build stage.
   script:
     - make all
 
+# See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   artifacts:
@@ -52,6 +53,7 @@ unit-test-job:   # This job runs in the test stage.
         coverage_format: cobertura
         path: results/coverage.xml
       junit: results/TestRunner.xml
+  coverage: ^TOTAL.*\s+(\d+\%)$
   script:
     - make coverage
 
