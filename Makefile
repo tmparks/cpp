@@ -1,24 +1,25 @@
-CXX = clang++
-CC = ${CXX}
-CXXFLAGS = -std=c++20 -Werror -Wall -Wextra
-LDLIBS = -lgtest_main -lgtest
-
 SRC = $(wildcard *.cpp)
 OBJ = ${SRC:.cpp=.o}
-EXE = TestVirtualData
+EXE = TestRunner
+
+CXXFLAGS += -std=c++20 -Werror -Wall -Wextra
+LDLIBS += -lgtest_main -lgtest
 
 all: ${OBJ}
 
 test: ${EXE}
-	./$^ --gtest_output=xml
+	./$^ --gtest_output=xml:results/
 
-check: ${SRC}
-	clang-tidy $^ -- ${CPPFLAGS} ${CXXFLAGS} 
+clean-test:
+	${RM} --recursive results
 
-clean:
-	rm --force ${EXE} ${OBJ} *.xml
+clean: clean-test
+	${RM} ${EXE} ${OBJ}
 
 ${EXE}: ${OBJ}
 	${LINK.o} ${OUTPUT_OPTION} $^ ${LOADLIBES} ${LDLIBS}
 
-.PHONY: all test check clean
+.PHONY: all test clean-test clean
+
+# include llvm.mk
+include gcc.mk

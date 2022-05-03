@@ -1,6 +1,10 @@
 .devcontainer/
 .vscode/
 .editorconfig
+results/
+*.gcda
+*.gcno
 *.o
-*.xml
+*.profdata
+*.profraw
 Test*

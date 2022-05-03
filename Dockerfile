@@ -1,13 +1,15 @@
 FROM ubuntu
 
 # Install development tools
-RUN apt-get update && apt-get install --yes \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     build-essential \
     clang  \
     clang-tidy \
     cmake \
+    gcovr \
     git  \
     googletest \
+    llvm \
     && rm --recursive --force /var/lib/apt/lists/*
 
 # Install gmock and gtest

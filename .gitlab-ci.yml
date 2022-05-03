@@ -48,7 +48,10 @@ unit-test-job:   # This job runs in the test stage.
   artifacts:
     when: always
     reports:
-      junit: "*.xml"
+      coverage_report:
+        coverage_format: cobertura
+        path: results/coverage.xml
+      junit: results/TestRunner.xml
   script:
     - make test
 
