@@ -53,7 +53,7 @@ unit-test-job:   # This job runs in the test stage.
         path: results/coverage.xml
       junit: results/TestRunner.xml
   script:
-    - make test
+    - make coverage
 
 lint-test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
