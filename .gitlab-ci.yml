@@ -14,32 +14,62 @@
 # For more information, see: https://docs.gitlab.com/ee/ci/yaml/index.html#stages
 
 stages:          # List of stages for jobs, and their order of execution
+  - .pre
   - build
   - test
   - deploy
 
-build-job:       # This job runs in the build stage, which runs first.
+variables:
+  IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+  LATEST: ${CI_REGISTRY_IMAGE}:latest
+
+default:
+  image: $IMAGE
+
+pre-job:         # This job runs in the .pre stage, wich runs first.
+  stage: .pre
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - docker pull $LATEST || true
+    - docker build --tag $IMAGE --cache-from $LATEST .
+    - docker push $IMAGE
+
+build-job:       # This job runs in the build stage.
   stage: build
   script:
-    - echo "Compiling the code..."
-    - echo "Compile complete."
+    - make all
 
+# See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
 unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: results/coverage.xml
+      junit: results/TestRunner.xml
+  coverage: /TOTAL.*\s+(\d+\%)/
   script:
-    - echo "Running unit tests... This will take about 60 seconds."
-    - sleep 60
-    - echo "Code coverage is 90%"
+    - make coverage
 
 lint-test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
   script:
-    - echo "Linting code... This will take about 10 seconds."
-    - sleep 10
-    - echo "No lint issues found."
+    - make check
 
 deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
-    - echo "Deploying application..."
-    - echo "Application successfully deployed."
+    - docker pull $IMAGE
+    - docker tag $IMAGE $LATEST
+    - docker push $LATEST
