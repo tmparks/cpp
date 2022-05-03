@@ -53,7 +53,7 @@ unit-test-job:   # This job runs in the test stage.
         coverage_format: cobertura
         path: results/coverage.xml
       junit: results/TestRunner.xml
-  coverage: ^TOTAL.*\s+(\d+\%)$
+  coverage: /TOTAL.*\s+(\d+\%)/
   script:
     - make coverage
 
