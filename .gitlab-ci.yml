@@ -48,12 +48,14 @@ unit-test-job:   # This job runs in the test stage.
   stage: test    # It only starts when the job in the build stage completes successfully.
   artifacts:
     when: always
+    paths:
+      - results/
     reports:
       coverage_report:
         coverage_format: cobertura
         path: results/coverage.xml
       junit: results/TestRunner.xml
-  coverage: /TOTAL.*\s+(\d+\%)/
+  coverage: /TOTAL.*\s+(\d+)%/
   script:
     - make coverage
 
