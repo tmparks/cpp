@@ -2,9 +2,9 @@
 #include <iostream>
 #include <utility>
 
-Verbose::Verbose()
+Verbose::Verbose(std::string&& name) : name_(name)
 {
-    std::cout << name_ << ": default constructor" << std::endl;
+    std::cout << name_ << ": constructor" << std::endl;
 }
 
 Verbose::Verbose(const Verbose& other) : name_(other.name_)
@@ -36,7 +36,28 @@ Verbose::~Verbose()
     std::cout << name_ << ": destructor" << std::endl;
 }
 
-Verbose::Verbose(std::string&& name) : name_(name)
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include <gmock/gmock.h>
+#include <gsl/gsl>
+
+using namespace testing;
+using namespace testing::internal;
+
+class TestableVerbose : private Verbose
 {
-    std::cout << name_ << ": constructor" << std::endl;
+public:
+    TestableVerbose() : Verbose(gsl::czstring(__func__)) {}
+    ~TestableVerbose() override = default;
+};
+
+TEST(Verbose, Constructor)
+{
+    CaptureStdout();
+    auto v1 = TestableVerbose();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
 }
