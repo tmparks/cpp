@@ -19,15 +19,15 @@ Verbose::Verbose(Verbose&& other) : name_(other.name_)
 
 Verbose& Verbose::operator=(const Verbose& other)
 {
-    name_ = other.name_;
     std::cout << name_ << ": copy assignment" << std::endl;
+    name_ = other.name_;
     return *this;
 }
 
 Verbose& Verbose::operator=(Verbose&& other)
 {
-    name_ = other.name_;
     std::cout << name_ << ": move assignment" << std::endl;
+    name_ = other.name_;
     return *this;
 }
 
@@ -35,7 +35,6 @@ Verbose::~Verbose()
 {
     std::cout << name_ << ": destructor" << std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,12 +44,16 @@ Verbose::~Verbose()
 using namespace testing;
 using namespace testing::internal;
 
-class TestableVerbose : private Verbose
+namespace // Anonymous namespace for definitions that are local to this file.
 {
-public:
-    TestableVerbose() : Verbose(gsl::czstring(__func__)) {}
-    ~TestableVerbose() override = default;
-};
+    class TestableVerbose : private Verbose
+    {
+    public:
+        TestableVerbose() : TestableVerbose(gsl::czstring(__func__)) {}
+        TestableVerbose(std::string&& name) : Verbose(std::move(name)) {}
+        ~TestableVerbose() override = default;
+    };
+} // anonymous namespace
 
 TEST(Verbose, Constructor)
 {
@@ -60,4 +63,38 @@ TEST(Verbose, Constructor)
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
+}
+
+TEST(Verbose, CopyConstructor)
+{
+    auto v1 = TestableVerbose();
+    CaptureStdout();
+    auto v2 = TestableVerbose(v1);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("copy"));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
+}
+
+TEST(Verbose, CopyAssignment)
+{
+    auto v1 = TestableVerbose("one");
+    auto v2 = TestableVerbose("two");
+    CaptureStdout();
+    v1 = v2;
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("one"));
+    EXPECT_THAT(actual, HasSubstr("assignment"));
+    EXPECT_THAT(actual, HasSubstr("copy"));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
+}
+
+TEST(Verbose, Destructor)
+{
+    {
+        auto v1 = TestableVerbose();
+        CaptureStdout();
+    }
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("destructor"));
 }
