@@ -10,7 +10,7 @@ coverage: test
 	llvm-cov show -format=html -output-dir=results ./${EXE} -instr-profile=default.profdata
 
 check: ${SRC}
-	clang-tidy $^ -- ${CPPFLAGS} ${CXXFLAGS} 
+	clang-tidy --quiet $^ -- ${CPPFLAGS} ${CXXFLAGS} 
 
 clean-coverage:
 	${RM} --recursive results

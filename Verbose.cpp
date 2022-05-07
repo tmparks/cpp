@@ -50,7 +50,11 @@ namespace // Anonymous namespace for definitions that are local to this file.
     {
     public:
         TestableVerbose() : TestableVerbose(gsl::czstring(__func__)) {}
-        TestableVerbose(std::string&& name) : Verbose(std::move(name)) {}
+        explicit TestableVerbose(std::string&& name) : Verbose(std::move(name)) {}
+        TestableVerbose(const TestableVerbose&) = default;
+        TestableVerbose(TestableVerbose&&) = default;
+        TestableVerbose& operator=(const TestableVerbose&) = default;
+        TestableVerbose& operator=(TestableVerbose&&) = default;
         ~TestableVerbose() override = default;
     };
 } // anonymous namespace
@@ -58,7 +62,7 @@ namespace // Anonymous namespace for definitions that are local to this file.
 TEST(Verbose, Constructor)
 {
     CaptureStdout();
-    auto v1 = TestableVerbose();
+    auto v1 = TestableVerbose { };
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
@@ -67,19 +71,30 @@ TEST(Verbose, Constructor)
 
 TEST(Verbose, CopyConstructor)
 {
-    auto v1 = TestableVerbose();
+    auto v1 = TestableVerbose { };
     CaptureStdout();
-    auto v2 = TestableVerbose(v1);
+    auto v2 { v1 };
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, HasSubstr("copy"));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
 }
 
+TEST(Verbose, MoveConstructor)
+{
+    TestableVerbose v1 = TestableVerbose { };
+    CaptureStdout();
+    auto v2 { std::move(v1) };
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, HasSubstr("move"));
+}
+
 TEST(Verbose, CopyAssignment)
 {
-    auto v1 = TestableVerbose("one");
-    auto v2 = TestableVerbose("two");
+    auto v1 = TestableVerbose { "one" };
+    auto v2 = TestableVerbose { "two" };
     CaptureStdout();
     v1 = v2;
     auto actual = GetCapturedStdout();
@@ -89,10 +104,23 @@ TEST(Verbose, CopyAssignment)
     EXPECT_THAT(actual, Not(HasSubstr("move")));
 }
 
+TEST(Verbose, MoveAssignment)
+{
+    auto v1 = TestableVerbose { "one" };
+    auto v2 = TestableVerbose { "two" };
+    CaptureStdout();
+    v1 = std::move(v2);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, HasSubstr("one"));
+    EXPECT_THAT(actual, HasSubstr("assignment"));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, HasSubstr("move"));
+}
+
 TEST(Verbose, Destructor)
 {
     {
-        auto v1 = TestableVerbose();
+        auto v1 = TestableVerbose { };
         CaptureStdout();
     }
     auto actual = GetCapturedStdout();

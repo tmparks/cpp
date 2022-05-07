@@ -8,7 +8,7 @@ coverage: test
 	gcovr --xml=results/ --html-details=results/ --txt
 
 check: ${SRC}
-	clang-tidy $^ -- ${CPPFLAGS} ${CXXFLAGS} 
+	clang-tidy --quiet $^ -- ${CPPFLAGS} ${CXXFLAGS} 
 
 clean-coverage:
 	${RM} --recursive results

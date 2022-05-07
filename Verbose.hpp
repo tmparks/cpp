@@ -6,7 +6,7 @@ public:
     virtual ~Verbose();                       // destructor
 
 protected:
-    Verbose(std::string&& name);              // constructor
+    explicit Verbose(std::string&& name);     // constructor
     Verbose(const Verbose& other);            // copy constructor
     Verbose(Verbose&& other);                 // move constructor
     Verbose& operator=(const Verbose& other); // copy assignment
