@@ -7,7 +7,7 @@ class StackPtr : private Verbose
 {
 public:
     // The base class has a normal constructor that provides its own object.
-    StackPtr(gsl::index size = 1);
+    explicit StackPtr(gsl::index size = 1);
 
 public:
     void Push(double x);
@@ -15,14 +15,14 @@ public:
 
 protected:
     // The base class has a constructor that accepts an object from a derived class.
-    StackPtr(std::string&& name, std::unique_ptr<Array>&& data);
+    StackPtr(const std::string& name, std::unique_ptr<Array> data);
 
 private:
     // To simulate virtual data in C++, the base class has a pointer to the
     // member object and the base class’s destructor deletes the object.
     // Some additional memory allocation overhead is imposed.
     std::unique_ptr<Array> data_;
-    int index_ { 0 };
+    gsl::index index_ { 0 };
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ class StretchableStackPtr : public StackPtr
 {
 public:
     // The derived class has a constructor that provides a new object to the base class.
-    StretchableStackPtr(gsl::index size = 1);
+    explicit StretchableStackPtr(gsl::index size = 1);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,9 +43,9 @@ StackPtr::StackPtr(gsl::index size) :
 {
 }
 
-StackPtr::StackPtr(std::string&& name, std::unique_ptr<Array>&& data) :
-    Verbose(std::move(name)),
-    data_(std::move(data))
+StackPtr::StackPtr(const std::string& name, std::unique_ptr<Array> data) :
+    Verbose { name },
+    data_ { std::move(data) }
 {
 }
 
@@ -62,7 +62,8 @@ double StackPtr::Pop()
 ////////////////////////////////////////////////////////////////////////////////
 
 StretchableStackPtr::StretchableStackPtr(gsl::index size) :
-    StackPtr(gsl::czstring(__func__), std::make_unique<StretchableArray>(size))
+    StackPtr {
+        gsl::czstring(__func__), std::make_unique<StretchableArray>(size) }
 {
 }
 
@@ -72,47 +73,47 @@ StretchableStackPtr::StretchableStackPtr(gsl::index size) :
 
 TEST(VirtualDataPtr, Stack_Push_Pop)
 {
-    const gsl::index size { 3 };
-    StackPtr stack(size);
-    for(gsl::index x = 0; x < size; x++)
+    const auto size = gsl::index { 3 };
+    auto stack = StackPtr { size };
+    for (auto x = gsl::index { 0 }; x < size; x++)
     {
-        stack.Push(double(x));
+        stack.Push(gsl::narrow_cast<double>(x));
     }
-    for(gsl::index x = size - 1; x >= 0; x--)
+    for (auto x = size - 1; x >= 0; x--)
     {
-        EXPECT_EQ(double(x), stack.Pop());
+        EXPECT_EQ(gsl::narrow_cast<double>(x), stack.Pop());
     }
 }
 
 TEST(VirtualDataPtr, Stack_Push_Full)
 {
-    gsl::index size { 3 };
-    StackPtr stack(size);
-    for(gsl::index x = 0; x < size; x++)
+    const auto size = gsl::index { 3 };
+    auto stack = StackPtr { size };
+    for (auto x = gsl::index { 0 }; x < size; x++)
     {
-        stack.Push(double(x));
+        stack.Push(gsl::narrow_cast<double>(x));
     }
-    EXPECT_THROW(stack.Push(double(size)), std::out_of_range);
+    EXPECT_THROW(stack.Push(gsl::narrow_cast<double>(size)), std::out_of_range);
 }
 
 TEST(VirtualDataPtr, Stack_Pop_Empty)
 {
-    StackPtr stack(1);
+    auto stack = StackPtr { 1 };
     EXPECT_THROW(stack.Pop(), std::out_of_range);
 }
 
 TEST(VirtualDataPtr, Stack_Stretch)
 {
-    gsl::index size { 3 };
-    StretchableStackPtr stack(size);
-    for(gsl::index x = 0; x < size; x++)
+    auto size = gsl::index(3);
+    auto stack = StretchableStackPtr { size };
+    for (auto x = gsl::index { 0 }; x < size; x++)
     {
-        stack.Push(double(x));
+        stack.Push(gsl::narrow_cast<double>(x));
     }
-    EXPECT_NO_THROW(stack.Push(double(size)));
-    EXPECT_EQ(double(size), stack.Pop());
-    for(gsl::index x = size - 1; x >= 0; x--)
+    EXPECT_NO_THROW(stack.Push(gsl::narrow_cast<double>(size)));
+    EXPECT_EQ(gsl::narrow_cast<double>(size), stack.Pop());
+    for (auto x = size - 1; x >= 0; x--)
     {
-        EXPECT_EQ(double(x), stack.Pop());
+        EXPECT_EQ(gsl::narrow_cast<double>(x), stack.Pop());
     }
 }

@@ -8,12 +8,12 @@
 class Array : protected Verbose
 {
 public:
-    Array(gsl::index size);
+    explicit Array(gsl::index size);
     gsl::index Size() const;
     double& operator[](gsl::index i);
 
 protected:
-    Array(std::string&& name, gsl::index size);
+    Array(const std::string& name, gsl::index size);
     virtual void CheckBounds(gsl::index i);
     gsl::index size_ { 0 }; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
     std::unique_ptr<double[]> data_; // NOLINT(cppcoreguidelines-avoid-c-arrays,cppcoreguidelines-non-private-member-variables-in-classes)

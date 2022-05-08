@@ -1,18 +1,17 @@
 #include "Verbose.hpp"
 #include <iostream>
-#include <utility>
 
-Verbose::Verbose(std::string&& name) : name_(name)
+Verbose::Verbose(const std::string& name) : name_ { name }
 {
     std::cout << name_ << ": constructor" << std::endl;
 }
 
-Verbose::Verbose(const Verbose& other) : name_(other.name_)
+Verbose::Verbose(const Verbose& other) : name_ { other.name_ }
 {
     std::cout << name_ << ": copy constructor" << std::endl;
 }
 
-Verbose::Verbose(Verbose&& other) : name_(other.name_)
+Verbose::Verbose(Verbose&& other) : name_ { other.name_ }
 {
     std::cout << name_ << ": move constructor" << std::endl;
 }
@@ -49,8 +48,8 @@ namespace // Anonymous namespace for definitions that are local to this file.
     class TestableVerbose : private Verbose
     {
     public:
-        TestableVerbose() : TestableVerbose(gsl::czstring(__func__)) {}
-        explicit TestableVerbose(std::string&& name) : Verbose(std::move(name)) {}
+        TestableVerbose() : TestableVerbose { gsl::czstring(__func__) } {}
+        explicit TestableVerbose(const std::string& name) : Verbose { name } {}
         TestableVerbose(const TestableVerbose&) = default;
         TestableVerbose(TestableVerbose&&) = default;
         TestableVerbose& operator=(const TestableVerbose&) = default;
@@ -73,7 +72,7 @@ TEST(Verbose, CopyConstructor)
 {
     auto v1 = TestableVerbose { };
     CaptureStdout();
-    auto v2 { v1 };
+    auto v2 = v1;
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, HasSubstr("copy"));
@@ -82,9 +81,9 @@ TEST(Verbose, CopyConstructor)
 
 TEST(Verbose, MoveConstructor)
 {
-    TestableVerbose v1 = TestableVerbose { };
+    auto v1 = TestableVerbose { };
     CaptureStdout();
-    auto v2 { std::move(v1) };
+    auto v2 = std::move(v1);
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));

@@ -4,7 +4,7 @@
 class StretchableArray : public Array
 {
 public:
-    StretchableArray(gsl::index size);
+    explicit StretchableArray(gsl::index size);
 
 protected:
     void CheckBounds(gsl::index i) override;

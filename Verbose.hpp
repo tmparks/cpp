@@ -3,14 +3,14 @@
 class Verbose
 {
 public:
-    virtual ~Verbose();                       // destructor
+    virtual ~Verbose();                        // destructor
 
 protected:
-    explicit Verbose(std::string&& name);     // constructor
-    Verbose(const Verbose& other);            // copy constructor
-    Verbose(Verbose&& other);                 // move constructor
-    Verbose& operator=(const Verbose& other); // copy assignment
-    Verbose& operator=(Verbose&& other);      // move assignment
+    explicit Verbose(const std::string& name); // constructor
+    Verbose(const Verbose& other);             // copy constructor
+    Verbose(Verbose&& other);                  // move constructor
+    Verbose& operator=(const Verbose& other);  // copy assignment
+    Verbose& operator=(Verbose&& other);       // move assignment
 
     std::string name_ { "anonymous" }; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
 };
