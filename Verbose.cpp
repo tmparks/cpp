@@ -70,7 +70,7 @@ TEST(Verbose, Constructor)
 
 TEST(Verbose, CopyConstructor)
 {
-    auto v1 = TestableVerbose { };
+    auto v1 = TestableVerbose { "one" };
     CaptureStdout();
     auto v2 = v1;
     auto actual = GetCapturedStdout();
@@ -81,7 +81,7 @@ TEST(Verbose, CopyConstructor)
 
 TEST(Verbose, MoveConstructor)
 {
-    auto v1 = TestableVerbose { };
+    auto v1 = TestableVerbose { "one" };
     CaptureStdout();
     auto v2 = std::move(v1);
     auto actual = GetCapturedStdout();

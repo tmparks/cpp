@@ -1,31 +1,18 @@
 #include "StretchableArray.hpp"
 #include <iostream>
 
-StretchableArray::StretchableArray(gsl::index size) :
-    Array { gsl::czstring(__func__), size }
-{
-}
-
-void StretchableArray::CheckBounds(gsl::index i)
+double& StretchableArray::operator[](gsl::index i)
 {
     if (i >= size_)
     {
-        Resize(std::max(i, 2 * size_));
+        auto larger_size = std::max(i, 2 * size_);
+        std::cout << name_ << ": resize from " << size_ << " to " << larger_size << std::endl;
+        auto larger_data = std::make_unique<double[]>(larger_size); // NOLINT(cppcoreguidelines-avoid-c-arrays) 
+        std::copy(data_.get(), data_.get() + size_, larger_data.get());
+        data_ = std::move(larger_data);
+        size_ = larger_size;
     }
-    Array::CheckBounds(i);
-}
-
-void StretchableArray::Resize(gsl::index size)
-{
-    using namespace std;
-    std::cout << name_ << ":" << gsl::czstring(__func__) << ": " << size_ << " to " << size << std::endl;
-    auto temp = std::make_unique<double[]>(size); // NOLINT(cppcoreguidelines-avoid-c-arrays) 
-    std::copy(
-        data_.get(),
-        data_.get() + std::min(size, size_),
-        temp.get());
-    data_ = std::move(temp);
-    size_ = size;
+    return Array::operator[](i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +27,9 @@ TEST(StretchableArray, Stretch)
     {
         array[x] = gsl::narrow_cast<double>(x);
     }
-    EXPECT_EQ(array.Size(), size);
+    EXPECT_EQ(array.size(), size);
     EXPECT_NO_THROW(array[size] = size);
-    EXPECT_GT(array.Size(), size);
+    EXPECT_GT(array.size(), size);
     for (auto x = gsl::index { 0 }; x < size; x++)
     {
         EXPECT_EQ(array[x], x);
