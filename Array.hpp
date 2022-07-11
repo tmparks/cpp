@@ -23,7 +23,7 @@ public:
     virtual double& operator[](gsl::index);
 
 protected:
-    void assign(Array other) noexcept;
+    void assign(Array other);
     void check_bounds(gsl::index size) const;
     gsl::index size_ { 0 }; // NOLINT(*-non-private-member-variables-in-classes)
     std::unique_ptr<double[]> data_ { }; // NOLINT(*-avoid-c-arrays,*-non-private-member-variables-in-classes)

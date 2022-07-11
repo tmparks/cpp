@@ -59,7 +59,7 @@ Array& Array::operator=(Array&& other)
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 // see Item 11: [Handle assignment to self in operator=]
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
-void Array::assign(Array other) noexcept // pass by value
+void Array::assign(Array other) // pass by value
 {
     std::cout << name_ << ": unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
