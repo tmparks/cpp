@@ -13,14 +13,17 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     && rm --recursive --force /var/lib/apt/lists/*
 
 # Install gmock and gtest
-RUN BUILD=$(mktemp --directory) \
+RUN CMAKE_BUILD_TYPE=Release \
+    BUILD=$(mktemp --directory) \
     && cmake -S /usr/src/googletest -B $BUILD \
     && make --directory=$BUILD install \
     && rm --recursive --force $BUILD
 
 # Install Guidelines Support Library
-RUN BUILD=$(mktemp --directory) \
-    && git clone https://github.com/microsoft/GSL.git --depth 1 --single-branch $BUILD \
-    && cmake -S $BUILD -B $BUILD/build \
-    && make --directory=$BUILD/build install \
-    && rm --recursive --force $BUILD
+RUN CMAKE_BUILD_TYPE=Release \
+    SOURCE=$(mktemp --directory) \
+    BUILD=$(mktemp --directory) \
+    && git clone https://github.com/microsoft/GSL.git --depth 1 --single-branch $SOURCE \
+    && cmake -S $SOURCE -B $BUILD \
+    && make --directory=$BUILD install \
+    && rm --recursive --force $SOURCE $BUILD
