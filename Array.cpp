@@ -3,7 +3,7 @@
 
 // default constructor
 Array::Array() :
-    Array { 0 }
+    Verbose { gsl::czstring(__func__) }
 {
 }
 
@@ -11,7 +11,7 @@ Array::Array() :
 Array::Array(gsl::index size) :
     Verbose { gsl::czstring(__func__) },
     size_ { size },
-    data_ { std::make_unique<double[]>(size_) } // // NOLINT(*-avoid-c-arrays)
+    data_ { std::make_unique<double[]>(size_) } // NOLINT(*-avoid-c-arrays)
 {
 }
 
@@ -21,7 +21,7 @@ Array::Array(gsl::index size) :
 Array::Array(const Array& other) :
     Verbose { other },
     size_ { other.size_ },
-    data_ { std::make_unique<double[]>(size_) } // // NOLINT(*-avoid-c-arrays)}
+    data_ { std::make_unique<double[]>(size_) } // NOLINT(*-avoid-c-arrays)}
 {
     const auto* begin = other.data_.get();
     const auto* end = begin + other.size_; // NOLINT *-pro-bounds-pointer-arithmetic
@@ -35,9 +35,7 @@ Array::Array(const Array& other) :
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 Array::Array(Array&& other) :
-    Verbose { std::move(other) },
-    size_ { 0 },
-    data_ { }
+    Verbose { std::move(other) }
 {
     swap(*this, other); // other becomes empty
 }
@@ -56,7 +54,7 @@ Array& Array::operator=(Array&& other)
     return *this;
 }
 
-// unified assignment operator
+// unified assignment
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 // see Item 11: [Handle assignment to self in operator=]
@@ -161,8 +159,8 @@ TEST(Array, MoveConstructor)
     EXPECT_THAT(actual, HasSubstr("swap"));
     std::cout << std::endl << actual << std::endl;
 
-    const auto & const0 = a0;
-    const auto & const1 = a1;
+    const auto& const0 = a0;
+    const auto& const1 = a1;
     EXPECT_EQ(0, const0.size_);
     EXPECT_EQ(nullptr, const0.data_);
     EXPECT_EQ(size, const1.size());
@@ -194,8 +192,8 @@ TEST(Array, CopyAssignment)
     EXPECT_THAT(actual, HasSubstr("destructor"));
     std::cout << std::endl << actual << std::endl;
 
-    const auto & const0 = a0;
-    const auto & const1 = a1;
+    const auto& const0 = a0;
+    const auto& const1 = a1;
     EXPECT_NE(const0.data_, const1.data_); // pointers should differ
     EXPECT_EQ(const0.size(), const1.size());
     for (auto i = gsl::index { 0 }; i < size; i++)
@@ -226,8 +224,8 @@ TEST(Array, MoveAssignment)
     EXPECT_THAT(actual, HasSubstr("destructor"));
     std::cout << std::endl << actual << std::endl;
 
-    const auto & const0 = a0;
-    const auto & const1 = a1;
+    const auto& const0 = a0;
+    const auto& const1 = a1;
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
         EXPECT_EQ(const0[i], 2 * i + 1); // odd
