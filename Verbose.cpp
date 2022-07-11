@@ -66,6 +66,7 @@ TEST(Verbose, Constructor)
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(Verbose, CopyConstructor)
@@ -77,6 +78,7 @@ TEST(Verbose, CopyConstructor)
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, HasSubstr("copy"));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(Verbose, MoveConstructor)
@@ -88,6 +90,7 @@ TEST(Verbose, MoveConstructor)
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
     EXPECT_THAT(actual, HasSubstr("move"));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(Verbose, CopyAssignment)
@@ -101,6 +104,7 @@ TEST(Verbose, CopyAssignment)
     EXPECT_THAT(actual, HasSubstr("assignment"));
     EXPECT_THAT(actual, HasSubstr("copy"));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(Verbose, MoveAssignment)
@@ -114,6 +118,7 @@ TEST(Verbose, MoveAssignment)
     EXPECT_THAT(actual, HasSubstr("assignment"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
     EXPECT_THAT(actual, HasSubstr("move"));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(Verbose, Destructor)
@@ -124,4 +129,5 @@ TEST(Verbose, Destructor)
     }
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("destructor"));
+    std::cout << std::endl << actual << std::endl;
 }

@@ -17,6 +17,7 @@ Array::Array(gsl::index size) :
 
 // copy constructor (deep copy)
 // explicitly invoke Verbose copy constructor
+// instead of delegating to another constructor
 Array::Array(const Array& other) :
     Verbose { other },
     size_ { other.size_ },
@@ -30,6 +31,7 @@ Array::Array(const Array& other) :
 
 // move constructor
 // explicitlly invoke Verbose move constructor
+// instead of delgating to default constructor
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 Array::Array(Array&& other) :
@@ -59,7 +61,7 @@ Array& Array::operator=(Array&& other)
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 // see Item 11: [Handle assignment to self in operator=]
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
-void Array::assign(Array other)
+void Array::assign(Array other) noexcept // pass by value
 {
     std::cout << name_ << ": unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
@@ -118,7 +120,10 @@ void Array::check_bounds(gsl::index i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+using namespace testing;
+using namespace testing::internal;
 
 namespace // anonymous namespace for definitions that are local to this file
 {
@@ -146,7 +151,15 @@ TEST(Array, MoveConstructor)
         a0[i] = gsl::narrow_cast<double>(2 * i); // even
     }
 
+    CaptureStdout();
     auto a1 = std::move(a0); // move constructor
+    auto actual = GetCapturedStdout();
+
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, HasSubstr("move"));
+    EXPECT_THAT(actual, HasSubstr("swap"));
+    std::cout << std::endl << actual << std::endl;
 
     const auto & const0 = a0;
     const auto & const1 = a1;
@@ -170,7 +183,16 @@ TEST(Array, CopyAssignment)
         a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
 
+    CaptureStdout();
     a0 = a1; // copy assignment
+    auto actual = GetCapturedStdout();
+
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("copy"));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
+    EXPECT_THAT(actual, HasSubstr("swap"));
+    EXPECT_THAT(actual, HasSubstr("destructor"));
+    std::cout << std::endl << actual << std::endl;
 
     const auto & const0 = a0;
     const auto & const1 = a1;
@@ -193,7 +215,16 @@ TEST(Array, MoveAssignment)
         a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
 
+    CaptureStdout();
     a0 = std::move(a1); // move assignment
+    auto actual = GetCapturedStdout();
+
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, HasSubstr("move"));
+    EXPECT_THAT(actual, HasSubstr("swap"));
+    EXPECT_THAT(actual, HasSubstr("destructor"));
+    std::cout << std::endl << actual << std::endl;
 
     const auto & const0 = a0;
     const auto & const1 = a1;
