@@ -61,7 +61,8 @@ namespace // Anonymous namespace for definitions that are local to this file.
 TEST(Verbose, Constructor)
 {
     CaptureStdout();
-    auto v1 = TestableVerbose { };
+    auto v1 = TestableVerbose { "one" };
+    auto v2 = TestableVerbose { "two" };
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
@@ -124,10 +125,22 @@ TEST(Verbose, MoveAssignment)
 TEST(Verbose, Destructor)
 {
     {
-        auto v1 = TestableVerbose { };
+        auto v1 = TestableVerbose { "one" };
+        auto v2 = TestableVerbose { "two" };
         CaptureStdout();
     }
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("destructor"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(Verbose, Swap)
+{
+    auto v1 = TestableVerbose { "one" };
+    auto v2 = TestableVerbose { "two" };
+
+    CaptureStdout();
+    std::swap(v1, v2); 
+    auto actual = GetCapturedStdout();
     std::cout << std::endl << actual << std::endl;
 }
