@@ -1,5 +1,4 @@
 #include "Array.hpp"
-#include "utility.hpp"
 #include <iostream>
 
 // default constructor
@@ -12,16 +11,19 @@ Array::Array() :
 Array::Array(gsl::index size) :
     Verbose { gsl::czstring(__func__) },
     size_ { size },
-    data_ { std::make_unique<double[]>(size_) }
+    data_ { std::make_unique<double[]>(size_) } // // NOLINT(*-avoid-c-arrays)
 {
 }
 
 // copy constructor (deep copy)
+// explicitly invoke Verbose copy constructor
 Array::Array(const Array& other) :
-    Array { other.size_ }
+    Verbose { other },
+    size_ { other.size_ },
+    data_ { std::make_unique<double[]>(size_) } // // NOLINT(*-avoid-c-arrays)}
 {
     const auto* begin = other.data_.get();
-    const auto* end = begin + other.size_;
+    const auto* end = begin + other.size_; // NOLINT *-pro-bounds-pointer-arithmetic
     auto* out = data_.get();
     std::copy(begin, end, out);
 }
@@ -38,17 +40,30 @@ Array::Array(Array&& other) :
     swap(*this, other); // other becomes empty
 }
 
+// copy assignment operator
+Array& Array::operator=(const Array& other)
+{
+    assign(other);
+    return *this;
+}
+
+// move assignment operator
+Array& Array::operator=(Array&& other)
+{
+    assign(std::move(other));
+    return *this;
+}
+
 // unified assignment operator
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 // see Item 11: [Handle assignment to self in operator=]
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
-Array& Array::operator=(Array other)
+void Array::assign(Array other)
 {
     std::cout << name_ << ": unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
     swap(*this, other);
-    return *this;
 }
 
 // non-member swap
@@ -67,6 +82,23 @@ gsl::index Array::size() const
 
 const double& Array::operator[](gsl::index i) const
 {
+    check_bounds(i);
+    return data_[i];
+}
+
+double& Array::operator[](gsl::index i)
+{
+    check_bounds(i);
+    return data_[i];
+}
+
+// see ES.50: [Don't cast away const]
+//     (https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#Res-casts-const)
+// see Item 3: Use const whenever possible:
+//     [Avoiding duplication in const and non-const member functions]
+//     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch01.html#ch01lev2sec2)
+void Array::check_bounds(gsl::index i) const
+{
     if (i >= size_)
     {
         throw std::out_of_range(
@@ -82,15 +114,6 @@ const double& Array::operator[](gsl::index i) const
             + std::to_string(i)
             + "< 0");
     }
-    return data_[i];
-}
-
-// see Item 3: Use const whenever possible:
-//     [Avoiding duplication in const and non-const member functions]
-//     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch01.html#ch01lev2sec2)
-double& Array::operator[](gsl::index i)
-{
-    return as_mutable(std::as_const(*this)[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +126,7 @@ namespace // anonymous namespace for definitions that are local to this file
     {
     public:
         using Array::Array;
+        using Array::size_;
         using Array::data_;
     };
 } // anonymous namespace
@@ -119,15 +143,19 @@ TEST(Array, MoveConstructor)
     auto a0 = TestableArray { size }; // constructor
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        a0[i] = 2 * i;     // even
+        a0[i] = gsl::narrow_cast<double>(2 * i); // even
     }
+
     auto a1 = std::move(a0); // move constructor
-    EXPECT_EQ(0, a0.size());
-    EXPECT_EQ(nullptr, a0.data_);
-    EXPECT_EQ(size, a1.size());
+
+    const auto & const0 = a0;
+    const auto & const1 = a1;
+    EXPECT_EQ(0, const0.size_);
+    EXPECT_EQ(nullptr, const0.data_);
+    EXPECT_EQ(size, const1.size());
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        EXPECT_EQ(a1[i], 2 * i);     // even
+        EXPECT_EQ(const1[i], 2 * i); // even
     }
 }
 
@@ -138,14 +166,19 @@ TEST(Array, CopyAssignment)
     auto a1 = TestableArray { size }; // constructor
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        a0[i] = 2 * i;     // even
-        a1[i] = 2 * i + 1; // odd
+        a0[i] = gsl::narrow_cast<double>(2 * i);     // even
+        a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
+
     a0 = a1; // copy assignment
-    EXPECT_NE(a0.data_, a1.data_); // pointers should differ
+
+    const auto & const0 = a0;
+    const auto & const1 = a1;
+    EXPECT_NE(const0.data_, const1.data_); // pointers should differ
+    EXPECT_EQ(const0.size(), const1.size());
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        EXPECT_EQ(a0[i], a1[i]);
+        EXPECT_EQ(const0[i], const1[i]);
     }
 }
 
@@ -156,14 +189,18 @@ TEST(Array, MoveAssignment)
     auto a1 = TestableArray { size }; // constructor
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        a0[i] = 2 * i;     // even
-        a1[i] = 2 * i + 1; // odd
+        a0[i] = gsl::narrow_cast<double>(2 * i);     // even
+        a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
+
     a0 = std::move(a1); // move assignment
+
+    const auto & const0 = a0;
+    const auto & const1 = a1;
     for (auto i = gsl::index { 0 }; i < size; i++)
     {
-        EXPECT_EQ(a0[i], 2 * i + 1); // odd
+        EXPECT_EQ(const0[i], 2 * i + 1); // odd
     }
-    EXPECT_EQ(0, a1.size());
-    EXPECT_EQ(nullptr, a1.data_);
+    EXPECT_EQ(0, const1.size_);
+    EXPECT_EQ(nullptr, const1.data_);
 }

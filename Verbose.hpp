@@ -3,6 +3,9 @@
 
 class Verbose
 {
+public:
+    virtual ~Verbose();                        // destructor
+
 protected:
     Verbose() = delete;                        // no default constructor
     explicit Verbose(const std::string& name); // constructor
@@ -10,7 +13,6 @@ protected:
     Verbose(Verbose&& other);                  // move constructor
     Verbose& operator=(const Verbose& other);  // copy assignment
     Verbose& operator=(Verbose&& other);       // move assignment
-    virtual ~Verbose();                        // destructor
 
-    std::string name_ { }; // NOLINT(cppcoreguidelines-non-private-member-variables-in-classes)
+    std::string name_ { }; // NOLINT(*-non-private-member-variables-in-classes)
 };
