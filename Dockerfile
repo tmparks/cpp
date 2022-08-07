@@ -10,6 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     git  \
     googletest \
     llvm \
+    nano \
     && rm --recursive --force /var/lib/apt/lists/*
 
 # Install gmock and gtest
