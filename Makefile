@@ -2,7 +2,7 @@ SRC = $(wildcard *.cpp)
 OBJ = ${SRC:.cpp=.o}
 EXE = TestRunner
 
-CXXFLAGS += -std=c++20 -Werror -Wall -Wextra
+CXXFLAGS += -std=c++20 -Werror -Wall -Wextra -Wpedantic
 LDLIBS += -lgtest_main -lgtest
 
 all: ${OBJ}

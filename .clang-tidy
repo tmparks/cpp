@@ -1,3 +1,4 @@
+WarningsAsErrors: '*'
 HeaderFilterRegex: .*
 Checks: cppcoreguidelines-*,modernize-use-auto
 CheckOptions:
