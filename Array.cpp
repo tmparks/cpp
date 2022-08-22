@@ -34,7 +34,7 @@ Array::Array(const Array& other) :
 // instead of delgating to default constructor
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
-Array::Array(Array&& other) :
+Array::Array(Array&& other) noexcept :
     Verbose { std::move(other) }
 {
     swap(*this, other); // other becomes empty
@@ -43,14 +43,14 @@ Array::Array(Array&& other) :
 // copy assignment operator
 Array& Array::operator=(const Array& other)
 {
-    assign(other);
+    assign(other); // copy constructor may throw
     return *this;
 }
 
 // move assignment operator
-Array& Array::operator=(Array&& other)
+Array& Array::operator=(Array&& other) noexcept
 {
-    assign(std::move(other));
+    assign(std::move(other)); // move constructor is noexcept
     return *this;
 }
 
@@ -59,7 +59,7 @@ Array& Array::operator=(Array&& other)
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 // see Item 11: [Handle assignment to self in operator=]
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
-void Array::assign(Array other) // pass by value
+void Array::assign(Array other) noexcept // pass by value
 {
     std::cout << name_ << ": unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
@@ -69,13 +69,13 @@ void Array::assign(Array other) // pass by value
 // non-member swap
 void swap(Array& left, Array& right) noexcept
 {
-    std::cout << left.name_ << ": swap" << std::endl;
     using std::swap; // enable Argument Dependent Lookup
+    swap(static_cast<Verbose&>(left), static_cast<Verbose&>(right));
     swap(left.size_, right.size_);
     swap(left.data_, right.data_);
 }
 
-gsl::index Array::size() const
+gsl::index Array::size() const noexcept
 {
     return size_;
 }
