@@ -42,6 +42,16 @@ void swap(Verbose& left, Verbose& right) noexcept
     swap(left.name_, right.name_);
 }
 
+std::string& Verbose::name() noexcept
+{
+    return name_;
+}
+
+const std::string& Verbose::name() const noexcept
+{
+    return name_;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <gmock/gmock.h>
