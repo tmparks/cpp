@@ -8,24 +8,26 @@ class Uncopyable : public Verbose
 {
 public:
     using Verbose::Verbose;                                 // inherit constructors
-    Uncopyable() = delete;                                  // no default constructor
-    Uncopyable(const Uncopyable&) = delete;                 // no copy constructor
     Uncopyable(Uncopyable&&) noexcept = default;            // move constructor
-    Uncopyable& operator=(const Uncopyable&) = delete;      // no copy assignment
     Uncopyable& operator=(Uncopyable&&) noexcept = default; // move assignment
     ~Uncopyable() override = default;                       // destructor
+
+    Uncopyable() = delete;                                  // no default constructor
+    Uncopyable(const Uncopyable&) = delete;                 // no copy constructor
+    Uncopyable& operator=(const Uncopyable&) = delete;      // no copy assignment
 };
 
 class Unmovable : public Verbose
 {
 public:
     using Verbose::Verbose;                              // inherit constructors
-    Unmovable() = delete;                                // no default constructor
     Unmovable(const Unmovable&) = default;               // copy constructor
-    Unmovable(Unmovable&&) noexcept = delete;            // no move constructor
     Unmovable& operator=(const Unmovable&) = default;    // copy assignment
-    Unmovable& operator=(Unmovable&&) noexcept = delete; // no move assignment
     ~Unmovable() override = default;                     // destructor
+
+    Unmovable() = delete;                                // no default constructor
+    Unmovable(Unmovable&&) noexcept = delete;            // no move constructor
+    Unmovable& operator=(Unmovable&&) noexcept = delete; // no move assignment
 };
 
 // Unnamed value constructed in return statement.
@@ -59,6 +61,11 @@ Verbose rvo_conditional(int x)
     {
         return Verbose { "odd" };
     }
+}
+
+Verbose rvo_chained()
+{
+    return Verbose { rvo() };
 }
 
 // Unique named return value.
@@ -102,8 +109,14 @@ Verbose nrvo_conditional(int x)
     }
 }
 
+Verbose nrvo_chained()
+{
+    Verbose result { nrvo() };
+    return result;
+}
+
 // Oops! Non-unique return values.
-Verbose nrvo_failure(int x)
+Verbose nrvo_not_unique(int x)
 {
     if (x % 2 == 0)
     {
@@ -115,6 +128,24 @@ Verbose nrvo_failure(int x)
         Verbose odd { "odd" };
         return odd;
     }
+}
+
+// Oops! Return value is function parameter.
+Verbose nrvo_value_parameter(Verbose v)
+{
+    return v;
+}
+
+// Oops! Return value is function parameter.
+Verbose nrvo_const_ref_parameter(const Verbose& v)
+{
+    return v;
+}
+
+// Oops! Return value is function parameter.
+Verbose nrvo_move_parameter(Verbose&& v)
+{
+    return v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +195,15 @@ TEST(CopyElision, rvo_conditional)
     std::cout << std::endl << actual << std::endl;
 }
 
+TEST(CopyElision, rvo_chained)
+{
+    CaptureStdout();
+    auto v = rvo_chained();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
 TEST(CopyElision, nrvo)
 {
     CaptureStdout();
@@ -192,12 +232,53 @@ TEST(CopyElision, nrvo_conditional)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_failure)
+TEST(CopyElision, nrvo_chained)
 {
     CaptureStdout();
-    auto v = nrvo_failure(odd_number);
+    auto v = nrvo_chained();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, nrvo_not_unique)
+{
+    CaptureStdout();
+    auto v = nrvo_not_unique(odd_number);
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
     EXPECT_THAT(v.name(), StrEq("odd"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, nrvo_parameter)
+{
+    auto p = Verbose { "parameter" };
+    CaptureStdout();
+    auto v1 = nrvo_value_parameter(p);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
+
+    CaptureStdout();
+    auto v2 = nrvo_const_ref_parameter(p);
+    actual = GetCapturedStdout();
+    EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
+
+    CaptureStdout();
+    auto v3 = nrvo_move_parameter(std::move(p));
+    actual = GetCapturedStdout();
+    EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, initialization)
+{
+    CaptureStdout();
+    Verbose v1 = Verbose { "one" };
+    auto v2 = Verbose { "two" };
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }

@@ -3,41 +3,41 @@
 
 Verbose::Verbose(const std::string& name) : name_ { name }
 {
-    std::cout << name_ << ": constructor" << std::endl;
+    std::cout << name_ << ": constructor this=" << this << std::endl;
 }
 
 Verbose::Verbose(const Verbose& other) : name_ { other.name_ }
 {
-    std::cout << name_ << ": copy constructor" << std::endl;
+    std::cout << name_ << ": copy constructor this=" << this << " other=" << &other << std::endl;
 }
 
 Verbose::Verbose(Verbose&& other) noexcept : name_ { std::move(other.name_) }
 {
-    std::cout << name_ << ": move constructor" << std::endl;
+    std::cout << name_ << ": move constructor this=" << this << " other=" << &other << std::endl;
 }
 
 Verbose& Verbose::operator=(const Verbose& other)
 {
-    std::cout << name_ << ": copy assignment" << std::endl;
+    std::cout << name_ << ": copy assignment this=" << this << " other=" << &other << std::endl;
     name_ = other.name_;
     return *this;
 }
 
 Verbose& Verbose::operator=(Verbose&& other) noexcept
 {
-    std::cout << name_ << ": move assignment" << std::endl;
+    std::cout << name_ << ": move assignment this=" << this << " other=" << &other << std::endl;
     name_ = std::move(other.name_);
     return *this;
 }
 
 Verbose::~Verbose()
 {
-    std::cout << name_ << ": destructor" << std::endl;
+    std::cout << name_ << ": destructor this=" << this << std::endl;
 }
 
 void swap(Verbose& left, Verbose& right) noexcept
 {
-    std::cout << left.name_ << ": swap" << std::endl;
+    std::cout << left.name() << ": swap left=" << &left << " right=" << &right << std::endl;
     using std::swap; // enable Argument Dependent Lookup
     swap(left.name_, right.name_);
 }
