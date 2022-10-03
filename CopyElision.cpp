@@ -3,7 +3,9 @@
 // See [Understanding when not to std::move in C++](https://developers.redhat.com/blog/2019/04/12/understanding-when-not-to-stdmove-in-c)
 
 #include "Verbose.hpp"
+#include <tuple>
 
+// A class that can be moved but not copied.
 class Uncopyable : public Verbose
 {
 public:
@@ -17,6 +19,7 @@ public:
     Uncopyable& operator=(const Uncopyable&) = delete;      // no copy assignment
 };
 
+// A class that can be copied but not moved.
 class Unmovable : public Verbose
 {
 public:
@@ -63,9 +66,16 @@ Verbose rvo_conditional(int x)
     }
 }
 
+// Unnamed value constructed from return value in return statement.
 Verbose rvo_chained()
 {
     return Verbose { rvo() };
+}
+
+// Unnamed tuple of unnamed values constructed in return statement.
+auto rvo_tuple()
+{
+    return std::tuple<Verbose, Verbose>("first", "second");
 }
 
 // Unique named return value.
@@ -109,13 +119,44 @@ Verbose nrvo_conditional(int x)
     }
 }
 
+// Unique named return value constructed from return value.
 Verbose nrvo_chained()
 {
     Verbose result { nrvo() };
     return result;
 }
 
-// Oops! Non-unique return values.
+// Unique named tuple return value.
+auto nrvo_tuple_good()
+{
+    auto result = std::tuple<Verbose, Verbose>("one", "two");
+    auto &v1 = get<0>(result);
+    auto &v2 = get<1>(result);
+    v1.name() = "first";
+    v2.name() = "second";
+    return result;
+}
+
+// Unique named tuple return value.
+auto nrvo_tuple_better()
+{
+    auto result = std::tuple<Verbose, Verbose>("one", "two");
+    auto &[v1, v2] = result;
+    v1.name() = "first";
+    v2.name() = "second";
+    return result;
+}
+
+// Fail! Named tuple of named values.
+auto nrvo_tuple_bad()
+{
+    auto v1 = Verbose { "first" };
+    auto v2 = Verbose { "second" };
+    auto result = std::make_tuple(v1, v2);
+    return result;
+}
+
+// Fail! Non-unique return values.
 Verbose nrvo_not_unique(int x)
 {
     if (x % 2 == 0)
@@ -130,22 +171,35 @@ Verbose nrvo_not_unique(int x)
     }
 }
 
-// Oops! Return value is function parameter.
+// Fail! Return value is function parameter.
 Verbose nrvo_value_parameter(Verbose v)
 {
     return v;
 }
 
-// Oops! Return value is function parameter.
+// Fail! Return value is function parameter.
 Verbose nrvo_const_ref_parameter(const Verbose& v)
 {
     return v;
 }
 
-// Oops! Return value is function parameter.
+// Fail! Return value is function parameter.
 Verbose nrvo_move_parameter(Verbose&& v)
 {
     return v;
+}
+
+// Fail! Unnamed value assigned to output parameter.
+void rvo_output_parameter(Uncopyable& result)
+{
+    result = Uncopyable { "parameter" };
+}
+
+// Fail! Unique named value assigned to output parameter.
+void nrvo_output_parameter(Unmovable& result)
+{
+    auto v = Unmovable{ "parameter" };
+    result = v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +307,7 @@ TEST(CopyElision, nrvo_not_unique)
 
 TEST(CopyElision, nrvo_parameter)
 {
-    auto p = Verbose { "parameter" };
+    auto p = Verbose { "local" };
     CaptureStdout();
     auto v1 = nrvo_value_parameter(p);
     auto actual = GetCapturedStdout();
@@ -270,6 +324,121 @@ TEST(CopyElision, nrvo_parameter)
     auto v3 = nrvo_move_parameter(std::move(p));
     actual = GetCapturedStdout();
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, output_parameter)
+{
+    auto name = std::string { "local" };
+    auto p1 = Uncopyable { name };
+    CaptureStdout();
+    rvo_output_parameter(p1);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(p1.name(), Not(StrEq(name)));
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("move assignment"));
+    std::cout << std::endl << actual << std::endl;
+
+    auto p2 = Unmovable { name };
+    CaptureStdout();
+    nrvo_output_parameter(p2);
+    actual = GetCapturedStdout();
+    EXPECT_THAT(p2.name(), Not(StrEq(name)));
+    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("copy assignment"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, rvo_tuple_get)
+{
+    // Good: use get to access tuple elements by reference
+    // without copying or moving.
+    CaptureStdout();
+    auto result = rvo_tuple();
+    auto& v1 = std::get<0>(result);
+    auto& v2 = std::get<1>(result);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, rvo_tuple_structured_binding)
+{
+    // Better: use structured binding to access tuple elements.
+    // Same efficiency, less verbose.
+    CaptureStdout();
+    auto [v1, v2] = rvo_tuple();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, rvo_tuple_tie)
+{
+    // Bad: use tie to access tuple elements.
+    // Constructor invoked for each local variable.
+    // Assignment operator invoked for each local variable.
+    auto v1 = Verbose { "one" };
+    auto v2 = Verbose { "two" };
+    CaptureStdout();
+    std::tie(v1, v2) = rvo_tuple();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(
+        HasSubstr("copy constructor"),
+        HasSubstr("move constructor"))));
+    EXPECT_THAT(actual, HasSubstr("move assignment"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, nrvo_tuple_get)
+{
+    // Good: use get to access tuple elements by reference
+    // without copying or moving.
+    CaptureStdout();
+    auto result = nrvo_tuple_good();
+    auto &v1 = std::get<0>(result);
+    auto &v2 = std::get<1>(result);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, nrvo_tuple_structured_binding)
+{
+    // Better: use structured binding to access tuple elements.
+    // Same efficiency, less verbose.
+    CaptureStdout();
+    auto [v1, v2] = nrvo_tuple_better();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, nrvo_tuple_tie)
+{
+    // Bad: use tie to access tuple elements.
+    // Local variables must be constructed before call.
+    // Results are assigned to local variables.
+    auto v1 = Verbose { "one" };
+    auto v2 = Verbose { "two" };
+    CaptureStdout();
+    std::tie(v1, v2) = nrvo_tuple_better();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(
+        HasSubstr("copy constructor"), HasSubstr("move constructor"))));
+    EXPECT_THAT(actual, HasSubstr("assignment"));
     std::cout << std::endl << actual << std::endl;
 }
 
