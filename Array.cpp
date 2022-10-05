@@ -61,7 +61,7 @@ Array& Array::operator=(Array&& other) noexcept
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
 void Array::assign(Array other) noexcept // pass by value
 {
-    std::cout << name_ << ": unified assignment" << std::endl;
+    std::cout << name() << ": unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
     swap(*this, other);
 }

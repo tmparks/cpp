@@ -13,6 +13,9 @@ public:
     virtual ~Verbose();                            // destructor
     friend void swap(Verbose&, Verbose&) noexcept; // non-member swap
 
-protected:
-    std::string name_ { }; // NOLINT(*-non-private-member-variables-in-classes)
+    std::string& name() noexcept;
+    const std::string& name() const noexcept;
+
+private:
+    std::string name_ { };
 };

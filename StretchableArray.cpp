@@ -6,7 +6,7 @@ double& StretchableArray::operator[](gsl::index i)
     if (i >= size_)
     {
         auto larger_size = std::max(i, 2 * size_);
-        std::cout << name_ << ": resize from " << size_ << " to " << larger_size << std::endl;
+        std::cout << name() << ": resize from " << size_ << " to " << larger_size << std::endl;
         auto larger_data = std::make_unique<double[]>(larger_size); // NOLINT(*-avoid-c-arrays) 
         std::copy(data_.get(), data_.get() + size_, larger_data.get());
         data_ = std::move(larger_data);
