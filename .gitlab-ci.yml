@@ -60,7 +60,7 @@ unit-test-job:   # This job runs in the test stage.
       coverage_report:
         coverage_format: cobertura
         path: build/results/coverage.xml
-      junit: build/results/test_details.xml
+      junit: build/results/test_detail.xml
   coverage: /TOTAL.*\s+(\d+)%/
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
