@@ -70,7 +70,7 @@ lint-test-job:   # This job also runs in the test stage.
   stage: test    # It can run at the same time as unit-test-job (in parallel).
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
-    - make --directory=build all
+    - make --directory=build check
 
 deploy-job:      # This job runs in the deploy stage.
   stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.

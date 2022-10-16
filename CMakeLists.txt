@@ -9,10 +9,18 @@ list(APPEND CMAKE_CTEST_ARGUMENTS
 include(CTest)
 find_package(GTest REQUIRED)
 
-# Debug options
-set(CMAKE_CXX_FLAGS_DEBUG --coverage)
+# Add run-time instrumentation for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    # https://gcovr.com/en/stable/cookbook.html#out-of-source-builds-with-cmake
+    set(INSTRUMENTATION_OPTIONS
+        --coverage
+        -fsanitize=address
+        -fsanitize=leak
+        -fsanitize=undefined
+    )
+    add_compile_options(${INSTRUMENTATION_OPTIONS})
+    add_link_options(${INSTRUMENTATION_OPTIONS})
+
+    # See [Out-of-Source Builds with CMake](https://gcovr.com/en/stable/cookbook.html#out-of-source-builds-with-cmake)
     add_custom_target(coverage
         COMMAND gcovr
             --txt
@@ -21,7 +29,6 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
             --root ${CMAKE_SOURCE_DIR}
             ${CMAKE_BINARY_DIR}
     )
-    set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 endif()
 
 # Default build options
@@ -43,3 +50,17 @@ add_executable(TestRunner
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)
 gtest_discover_tests(TestRunner)
+
+################################################################################
+
+# Perform static analysis on all source files.
+# Because setting CMAKE_CXX_CLANG_TIDY significantly slows compilation,
+# we define a custom target to run clang-tidy.
+# See [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/)
+# See [How to use clang-tidy in CMake](https://stackoverflow.com/questions/67999371/how-to-use-clang-tidy-in-cmake)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+get_target_property(CHECK_SOURCES TestRunner SOURCES)
+add_custom_target(check
+    COMMAND clang-tidy -p ${CMAKE_BINARY_DIR} ${CHECK_SOURCES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
