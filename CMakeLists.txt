@@ -32,6 +32,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 # Default build options
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Needed by clang-tidy (see below)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -58,7 +59,6 @@ gtest_discover_tests(TestRunner)
 # we define a custom target to run clang-tidy.
 # See [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/)
 # See [How to use clang-tidy in CMake](https://stackoverflow.com/questions/67999371/how-to-use-clang-tidy-in-cmake)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 get_target_property(CHECK_SOURCES TestRunner SOURCES)
 add_custom_target(check
     COMMAND clang-tidy -p ${CMAKE_BINARY_DIR} ${CHECK_SOURCES}
