@@ -35,13 +35,13 @@ public:
 };
 
 // An unrelated class that is convertible to Verbose.
-class Unrelated
+class Convertible
 {
 public:
     operator Verbose()
     {
-        std::cout << "Unrelated: implicit conversion this=" << this << std::endl;
-        return Verbose("Unrelated"); // rvo
+        std::cout << "Convertible: conversion to Verbose this=" << this << std::endl;
+        return Verbose("Converted to Verbose"); // rvo?
     }
 };
 
@@ -105,7 +105,8 @@ Verbose nrvo()
 }
 
 // Unique named movable return value.
-// Copy constructor not available?!
+// Copy constructor not available.
+// How does this work ?!
 Uncopyable nrvo_uncopyable()
 {
     Uncopyable result { "unique" };
@@ -113,7 +114,7 @@ Uncopyable nrvo_uncopyable()
 }
 
 // Unique named copyable return value.
-// Oops! Move constructor not available! Does not compile!
+// Fail! Move constructor not available! Does not compile!
 /*
 Unmovable nrvo_unmovable()
 {
@@ -175,7 +176,8 @@ auto nrvo_tuple_bad()
     return result;
 }
 
-// Fail! Non-unique return values.
+// Non-unique return values.
+// This actually works with LLVM ?!
 Verbose nrvo_not_unique(int x)
 {
     if (x % 2 == 0)
@@ -221,19 +223,31 @@ void nrvo_output_parameter(Unmovable& result)
     result = v;
 }
 
-// Copy elision is not possible because the types do not match.
-// The implicit conversion operator is invoked.
-Verbose redundant_move_unrelated()
+// Conversion operator is invoked implicitly.
+// No copy or move operation is invoked, with or wihtout std::move().
+// Using std::move() produces a GNU (but not LLVM) compiler warning.
+Verbose implicit_conversion()
 {
-    Unrelated u;
-    return u; // std::move() would be redundant
+    Convertible c;
+    return c; // std::move() has no effect
 }
 
-// Copy elision is not possible because the types do not match.
-Verbose redundant_move_derived()
+// Conversion operator is invoked explicitly.
+// No copy or move operation is invoked, with or without std::move().
+// Using std::move() does not produce a compiler warning.
+Verbose explicit_conversion()
+{
+    Convertible c;
+    return Verbose(c); // std::move() has no effect
+}
+
+// Convert to base type.
+// Copy or move constructor is invoked, with or without std::move().
+// Using std::move() produces a GNU (but not LLVM) compiler warning.
+Verbose class_conversion()
 {
     auto d = Derived { };
-    return d; // std::move() would be redundant
+    return d; // std::move() has no effect
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,9 +348,16 @@ TEST(CopyElision, nrvo_not_unique)
     CaptureStdout();
     auto v = nrvo_not_unique(odd_number);
     auto actual = GetCapturedStdout();
+#ifdef __clang__
+    // LLVM compiler performs NRVO
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+#else  // not __clang__
+    // Other compilers do not
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+#endif // __clang__
     EXPECT_THAT(v.name(), StrEq("odd"));
-    std::cout << std::endl << actual << std::endl;
+    std::cout << std::endl
+              << actual << std::endl;
 }
 
 TEST(CopyElision, nrvo_parameter)
@@ -485,20 +506,33 @@ TEST(CopyElision, initialization)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, redundant_move_unrelated)
+TEST(CopyElision, implicit_conversion)
 {
     CaptureStdout();
-    auto v = redundant_move_unrelated();
+    auto v = implicit_conversion();
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    EXPECT_THAT(v.name(), StrEq("Converted to Verbose"));
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, redundant_move_derived)
+TEST(CopyElision, explicit_conversion)
 {
     CaptureStdout();
-    auto v = redundant_move_derived();
+    auto v = explicit_conversion();
     auto actual = GetCapturedStdout();
-    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    EXPECT_THAT(v.name(), StrEq("Converted to Verbose"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, class_conversion)
+{
+    CaptureStdout();
+    auto v = class_conversion();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
+    EXPECT_THAT(actual, Not(HasSubstr("assignment")));
+    EXPECT_THAT(v.name(), StrEq("Derived"));
     std::cout << std::endl << actual << std::endl;
 }
