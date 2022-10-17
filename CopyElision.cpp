@@ -3,6 +3,7 @@
 // See [Understanding when not to std::move in C++](https://developers.redhat.com/blog/2019/04/12/understanding-when-not-to-stdmove-in-c)
 
 #include "Verbose.hpp"
+#include <iostream>
 #include <tuple>
 
 // A class that can be moved but not copied.
@@ -31,6 +32,24 @@ public:
     Unmovable() = delete;                                // no default constructor
     Unmovable(Unmovable&&) noexcept = delete;            // no move constructor
     Unmovable& operator=(Unmovable&&) noexcept = delete; // no move assignment
+};
+
+// An unrelated class that is convertible to Verbose.
+class Unrelated
+{
+public:
+    operator Verbose()
+    {
+        std::cout << "Unrelated: implicit conversion this=" << this << std::endl;
+        return Verbose("Unrelated"); // rvo
+    }
+};
+
+// A derived class.
+class Derived : public Verbose
+{
+public:
+    Derived() : Verbose{"Derived"} {}
 };
 
 // Unnamed value constructed in return statement.
@@ -200,6 +219,21 @@ void nrvo_output_parameter(Unmovable& result)
 {
     auto v = Unmovable{ "parameter" };
     result = v;
+}
+
+// Copy elision is not possible because the types do not match.
+// The implicit conversion operator is invoked.
+Verbose redundant_move_unrelated()
+{
+    Unrelated u;
+    return u; // std::move() would be redundant
+}
+
+// Copy elision is not possible because the types do not match.
+Verbose redundant_move_derived()
+{
+    auto d = Derived { };
+    return d; // std::move() would be redundant
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -448,5 +482,23 @@ TEST(CopyElision, initialization)
     auto v2 = Verbose { "two" };
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, redundant_move_unrelated)
+{
+    CaptureStdout();
+    auto v = redundant_move_unrelated();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+TEST(CopyElision, redundant_move_derived)
+{
+    CaptureStdout();
+    auto v = redundant_move_derived();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
     std::cout << std::endl << actual << std::endl;
 }
