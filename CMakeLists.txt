@@ -6,30 +6,58 @@ list(APPEND CMAKE_CTEST_ARGUMENTS
     --output-on-failure
     --output-junit ${CMAKE_BINARY_DIR}/results/test_detail.xml
 )
-include(CTest)
+enable_testing()
 find_package(GTest REQUIRED)
 
 # Add run-time instrumentation for Debug builds
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    set(INSTRUMENTATION_OPTIONS
-        --coverage
-        -fsanitize=address
-        -fsanitize=leak
-        -fsanitize=undefined
-    )
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # See [Source Based Code Coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html)
+        set(LLVM_COV_BINARIES TestRunner)
+        add_custom_target(coverage
+            COMMAND llvm-profdata merge
+                --sparse=true
+                --output=merged.profdata
+                *.profraw
+            COMMAND llvm-cov show
+                -format=html
+                -output-dir=results
+                -instr-profile=merged.profdata
+                ${LLVM_COV_BINARIES}
+            COMMAND llvm-cov report
+                -show-branch-summary=false
+                -instr-profile=merged.profdata
+                ${LLVM_COV_BINARIES}
+            COMMAND mv results/index.html results/coverage_details.html
+            COMMAND rm *.profraw *.profdata
+        )
+        set(INSTRUMENTATION_OPTIONS
+            -fprofile-instr-generate
+            -fcoverage-mapping
+            -fsanitize=address
+            -fsanitize=leak
+            -fsanitize=undefined
+        )
+    else() # Assume GNU-compatible compiler
+        # See [Out-of-Source Builds with CMake](https://gcovr.com/en/stable/cookbook.html#out-of-source-builds-with-cmake)
+        add_custom_target(coverage
+            COMMAND gcovr
+                --txt
+                --xml results/
+                --html-details results/
+                --root ${CMAKE_SOURCE_DIR}
+                ${CMAKE_BINARY_DIR}
+        )
+        set(INSTRUMENTATION_OPTIONS
+            --coverage
+            -fsanitize=address
+            -fsanitize=leak
+            -fsanitize=undefined
+        )
+    endif() # CMAKE_CXX_COMPILER_ID
     add_compile_options(${INSTRUMENTATION_OPTIONS})
     add_link_options(${INSTRUMENTATION_OPTIONS})
-
-    # See [Out-of-Source Builds with CMake](https://gcovr.com/en/stable/cookbook.html#out-of-source-builds-with-cmake)
-    add_custom_target(coverage
-        COMMAND gcovr
-            --txt
-            --xml results/
-            --html-details results/
-            --root ${CMAKE_SOURCE_DIR}
-            ${CMAKE_BINARY_DIR}
-    )
-endif()
+endif() # CMAKE_BUILD_TYPE
 
 # Default build options
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Needed by clang-tidy (see below)
@@ -50,7 +78,9 @@ add_executable(TestRunner
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)
-gtest_discover_tests(TestRunner)
+gtest_discover_tests(TestRunner
+    PROPERTIES ENVIRONMENT LLVM_PROFILE_FILE=llvm-%p.profraw
+)
 
 ################################################################################
 
