@@ -91,6 +91,6 @@ gtest_discover_tests(TestRunner
 # See [How to use clang-tidy in CMake](https://stackoverflow.com/questions/67999371/how-to-use-clang-tidy-in-cmake)
 get_target_property(CHECK_SOURCES TestRunner SOURCES)
 add_custom_target(check
-    COMMAND clang-tidy -p ${CMAKE_BINARY_DIR} ${CHECK_SOURCES}
+    COMMAND clang-tidy --quiet -p ${CMAKE_BINARY_DIR} ${CHECK_SOURCES}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 )
