@@ -238,7 +238,7 @@ Verbose implicit_conversion()
 Verbose explicit_conversion()
 {
     Convertible c;
-    return Verbose(c); // std::move() has no effect
+    return static_cast<Verbose>(c); // std::move() has no effect
 }
 
 // Convert to base type.
