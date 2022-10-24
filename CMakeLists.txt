@@ -70,6 +70,7 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
 add_executable(TestRunner
     Array.cpp
+    Const.cpp
     CopyElision.cpp
     StretchableArray.cpp
     Verbose.cpp

@@ -1,0 +1,10 @@
+BasedOnStyle: LLVM
+
+Language: Cpp
+Standard: c++20
+
+AlignTrailingComments: true
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+ReflowComments: false
+SpaceBeforeCpp11BracedList: true
