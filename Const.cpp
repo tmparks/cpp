@@ -9,6 +9,9 @@ public:
   const int initialized_ = 2; // may be initialized in constructor
 };
 
+// Forward declaration.
+class StaticConst2;
+
 class StaticConst {
 public:
   static const int uninitialized_; // initialized later
@@ -41,6 +44,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <gtest/gtest.h>
+#include <vector>
 
 TEST(Const, const) {
   Const instance;
@@ -58,3 +62,10 @@ TEST(Const, static_dependent) {
 }
 
 TEST(Const, constexpr) { EXPECT_EQ(2, ConstExpr::initialized_); }
+
+TEST(Const, constexpr_odr_used) {
+  std::vector<int> v;
+  v.push_back(ConstExpr::initialized_);
+  const auto & ref = ConstExpr::initialized_;
+  EXPECT_EQ(2, ref);
+}
