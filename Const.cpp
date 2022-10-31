@@ -9,25 +9,23 @@ public:
   const int initialized_ = 2; // may be initialized in constructor
 };
 
-// Forward declaration.
-class StaticConst2;
-
 class StaticConst {
 public:
   static const int uninitialized_; // initialized later
-  static const int initialized_ = 2;
-  static const int unused_ = 3;
-  static const int dependent_ = StaticConst2::dependent_ + 1;
+  static const int initialized_ = 4;
+  static const int unused_ = 5;
 };
+
+static const int non_member = StaticConst::uninitialized_ + 100;
 
 class StaticConst2 {
 public:
-  static const int dependent_ = StaticConst::initialized_ + 1;
-  static const int dependent2_ = StaticConst::dependent_ + 1;
+  static const int dependent_ = StaticConst::initialized_ + 100;
+  static const int dependent2_ = non_member + 100;
 };
 
 // a definition outside the class is required if odr-used
-const int StaticConst::uninitialized_ = 1;
+const int StaticConst::uninitialized_ = 3;
 const int StaticConst::initialized_; // already initialized
 // const int StaticConst::unused_ ; // already initialized
 
@@ -58,7 +56,7 @@ TEST(Const, static_const) {
 }
 
 TEST(Const, static_dependent) {
-  EXPECT_EQ(5, StaticConst2::dependent2_);
+  EXPECT_EQ(203, StaticConst2::dependent2_);
 }
 
 TEST(Const, constexpr) { EXPECT_EQ(2, ConstExpr::initialized_); }
