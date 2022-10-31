@@ -14,6 +14,13 @@ public:
   static const int uninitialized_; // initialized later
   static const int initialized_ = 2;
   static const int unused_ = 3;
+  static const int dependent_ = StaticConst2::dependent_ + 1;
+};
+
+class StaticConst2 {
+public:
+  static const int dependent_ = StaticConst::initialized_ + 1;
+  static const int dependent2_ = StaticConst::dependent_ + 1;
 };
 
 // a definition outside the class is required if odr-used
@@ -44,6 +51,10 @@ TEST(Const, const) {
 TEST(Const, static_const) {
   EXPECT_EQ(1, StaticConst::uninitialized_);
   EXPECT_EQ(2, StaticConst::initialized_);
+}
+
+TEST(Const, static_dependent) {
+  EXPECT_EQ(5, StaticConst2::dependent2_);
 }
 
 TEST(Const, constexpr) { EXPECT_EQ(2, ConstExpr::initialized_); }
