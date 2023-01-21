@@ -16,18 +16,23 @@ public:
   static const int unused_ = 5;
 };
 
-static const int non_member = StaticConst::uninitialized_ + 100;
-
-class StaticConst2 {
-public:
-  static const int dependent_ = StaticConst::initialized_ + 100;
-  static const int dependent2_ = non_member + 100;
-};
-
 // a definition outside the class is required if odr-used
 const int StaticConst::uninitialized_ = 3;
 const int StaticConst::initialized_; // already initialized
 // const int StaticConst::unused_ ; // already initialized
+
+// must be initialized after the constant upon which it depends
+static const int dependent_non_member = StaticConst::uninitialized_ + 100;
+
+class StaticConst2 {
+public:
+  static const int dependent_ = StaticConst::initialized_ + 100;
+  static const int dependent2_ = dependent_non_member + 100;
+};
+
+// a definition outside the class is required if odr-used
+const int StaticConst2::dependent_;
+const int StaticConst2::dependent2_;
 
 class ConstExpr {
 public:
@@ -51,11 +56,12 @@ TEST(Const, const) {
 }
 
 TEST(Const, static_const) {
-  EXPECT_EQ(1, StaticConst::uninitialized_);
-  EXPECT_EQ(2, StaticConst::initialized_);
+  EXPECT_EQ(3, StaticConst::uninitialized_);
+  EXPECT_EQ(4, StaticConst::initialized_);
 }
 
 TEST(Const, static_dependent) {
+  EXPECT_EQ(104, StaticConst2::dependent_);
   EXPECT_EQ(203, StaticConst2::dependent2_);
 }
 
