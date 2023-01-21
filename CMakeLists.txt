@@ -70,12 +70,12 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 
 add_executable(TestRunner
     Array.cpp
-    Const.cpp
+    Constant.cpp
     CopyElision.cpp
     StretchableArray.cpp
     Verbose.cpp
     VirtualDataPtr.cpp
-    VirtualDataRef.cpp    
+    VirtualDataRef.cpp
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)
