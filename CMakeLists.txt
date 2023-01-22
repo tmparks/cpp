@@ -72,6 +72,7 @@ add_executable(TestRunner
     Array.cpp
     Constant.cpp
     CopyElision.cpp
+    Lockable.cpp
     StretchableArray.cpp
     Verbose.cpp
     VirtualDataPtr.cpp
