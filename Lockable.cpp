@@ -27,7 +27,7 @@ public:
            "Lock is owned by this thread");
   }
 
-  void this_thread_owns_lock() {
+  void this_thread_is_owner() {
 #ifndef NDEBUG
     if (owner_ != std::this_thread::get_id()) {
       throw std::runtime_error("Lock is not owned by this thread!");
@@ -66,15 +66,15 @@ TEST(BasicLockable, unique_lock) {
 TEST(BasicLockable, unowned_throw) {
   auto mutex = BasicLockable();
 #ifdef NDEBUG
-  EXPECT_NO_THROW(mutex.this_thread_owns_lock());
+  EXPECT_NO_THROW(mutex.this_thread_is_owner());
 #else
-  EXPECT_THROW(mutex.this_thread_owns_lock(), std::runtime_error);
+  EXPECT_THROW(mutex.this_thread_is_owner(), std::runtime_error);
 #endif // NDEBUG
 }
 
 TEST(BasicLockable, DISABLED_unowned_throw_unhandled) {
   auto mutex = BasicLockable();
-  mutex.this_thread_owns_lock();
+  mutex.this_thread_is_owner();
 }
 
 TEST(BasicLockable, DISABLED_unowned_assert) {
