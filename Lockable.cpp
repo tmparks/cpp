@@ -8,23 +8,29 @@
 #include <thread>
 
 // See https://en.cppreference.com/w/cpp/named_req/BasicLockable
-class BasicLockable : protected Verbose {
+template <typename T> class BasicLockable : protected Verbose {
 public:
   BasicLockable() : Verbose {gsl::czstring(__func__)} {}
 
   void lock() {
-    mutex_.lock();
+    lock_.lock();
+#ifndef NDEBUG
     owner_ = std::this_thread::get_id();
+#endif // NDEBUG
   }
 
   void unlock() {
+#ifndef NDEBUG
     owner_ = none_;
-    mutex_.unlock();
+#endif // NDEBUG
+    lock_.unlock();
   }
 
   void assert_ownership() {
+#ifndef NDEBUG
     assert((owner_ == std::this_thread::get_id()) &&
-           "Lock is owned by this thread");
+           "Lock should be owned by this thread");
+#endif // NDEBUG
   }
 
   void this_thread_is_owner() {
@@ -32,16 +38,20 @@ public:
     if (owner_ != std::this_thread::get_id()) {
       throw std::runtime_error("Lock is not owned by this thread!");
     }
-#endif
+#endif // NDEBUG
   }
 
 private:
-  static const std::thread::id none_; // id that is not associated with any thread
+#ifndef NDEBUG
+  static const std::thread::id none_;
   std::atomic<std::thread::id> owner_ {none_}; // initially unowned
-  std::mutex mutex_; // initially unlocked
+#endif // NDEBUG
+  T lock_;                                     // initially unlocked
 };
 
-const std::thread::id BasicLockable::none_ {};
+#ifndef NDEBUG
+template <typename T> const std::thread::id BasicLockable<T>::none_ {};
+#endif // NDEBUG
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,19 +62,20 @@ using namespace testing;
 using namespace testing::internal;
 
 TEST(BasicLockable, lock_guard) {
-  auto mutex = BasicLockable();
+  auto mutex = BasicLockable<std::mutex>();
   auto lock = std::lock_guard<decltype(mutex)>(mutex);
   mutex.assert_ownership();
 }
 
 TEST(BasicLockable, unique_lock) {
-  auto mutex = BasicLockable();
+  auto mutex = BasicLockable<std::mutex>();
   auto lock = std::unique_lock<decltype(mutex)>(mutex);
   mutex.assert_ownership();
 }
 
+// Does not throw for RELEASE build
 TEST(BasicLockable, unowned_throw) {
-  auto mutex = BasicLockable();
+  auto mutex = BasicLockable<std::mutex>();
 #ifdef NDEBUG
   EXPECT_NO_THROW(mutex.this_thread_is_owner());
 #else
@@ -72,12 +83,10 @@ TEST(BasicLockable, unowned_throw) {
 #endif // NDEBUG
 }
 
-TEST(BasicLockable, DISABLED_unowned_throw_unhandled) {
-  auto mutex = BasicLockable();
-  mutex.this_thread_is_owner();
-}
-
-TEST(BasicLockable, DISABLED_unowned_assert) {
-  auto mutex = BasicLockable();
+// Does not abort for RELEASE build
+TEST(BasicLockable, unowned_assert) {
+#ifdef NDEBUG
+  auto mutex = BasicLockable<std::mutex>();
   mutex.assert_ownership(); // Expected to fail!
+#endif // NDEBUG
 }
