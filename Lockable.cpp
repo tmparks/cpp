@@ -90,3 +90,20 @@ TEST(BasicLockable, unowned_assert) {
   mutex.assert_ownership(); // Expected to fail!
 #endif // NDEBUG
 }
+
+TEST(BasicLockable, timing_with) {
+  const auto limit = 10000000;
+  auto mutex = BasicLockable<std::mutex>();
+  for (auto i = 0; i < limit; i++) {
+    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+    mutex.assert_ownership();
+  }
+}
+
+TEST(BasicLockable, timing_without) {
+  const auto limit = 10000000;
+  auto mutex = std::mutex();
+  for (auto i = 0; i < limit; i++) {
+    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+  }
+}
