@@ -99,7 +99,9 @@ deploy-job:      # This job runs in the deploy stage.
 
 pages-job:      # This job also runs in the deploy stage.
   stage: deploy
-  dependencies: unit-test-debug-job
-  script: mv build/results/ public/
+  dependencies:
+    - unit-test-debug-job
+  script:
+    - mv build/results/ public/
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
