@@ -38,6 +38,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -fsanitize=leak
             -fsanitize=undefined
         )
+        add_compile_definitions(LIBCXX_ENABLE_DEBUG_MODE)
     else() # Assume GNU-compatible compiler
         # See [Out-of-Source Builds with CMake](https://gcovr.com/en/stable/cookbook.html#out-of-source-builds-with-cmake)
         add_custom_target(coverage
@@ -54,6 +55,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -fsanitize=leak
             -fsanitize=undefined
         )
+        add_compile_definitions(_GLIBCXX_DEBUG)
     endif() # CMAKE_CXX_COMPILER_ID
     add_compile_options(${INSTRUMENTATION_OPTIONS})
     add_link_options(${INSTRUMENTATION_OPTIONS})
