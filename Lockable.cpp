@@ -2,7 +2,6 @@
 
 #include <gsl/gsl>
 
-#include <atomic>
 #include <cassert>
 #include <mutex>
 #include <thread>
@@ -33,20 +32,22 @@ public:
 #endif // NDEBUG
   }
 
-  void this_thread_is_owner() {
-#ifndef NDEBUG
-    if (owner_ != std::this_thread::get_id()) {
-      throw std::runtime_error("Lock is not owned by this thread!");
-    }
-#endif // NDEBUG
+#ifdef NDEBUG
+  constexpr bool owner_is_this_thread() {
+    return true; // never fails for RELEASE build
   }
+#else
+  bool owner_is_this_thread() {
+    return owner_ == std::this_thread::get_id();
+  }
+#endif // NDEBUG
 
 private:
 #ifndef NDEBUG
   static const std::thread::id none_;
-  std::atomic<std::thread::id> owner_ {none_}; // initially unowned
+  std::thread::id owner_ {none_}; // initially unowned
 #endif // NDEBUG
-  T lock_;                                     // initially unlocked
+  T lock_;                        // initially unlocked
 };
 
 #ifndef NDEBUG
@@ -73,13 +74,11 @@ TEST(BasicLockable, unique_lock) {
   mutex.assert_ownership();
 }
 
-// Does not throw for RELEASE build
-TEST(BasicLockable, unowned_throw) {
-  auto mutex = BasicLockable<std::mutex>();
+// Does not fail for RELEASE build
+TEST(BasicLockable, unowned_expects) {
 #ifdef NDEBUG
-  EXPECT_NO_THROW(mutex.this_thread_is_owner());
-#else
-  EXPECT_THROW(mutex.this_thread_is_owner(), std::runtime_error);
+  auto mutex = BasicLockable<std::mutex>();
+  Expects(mutex.owner_is_this_thread());
 #endif // NDEBUG
 }
 
@@ -91,8 +90,8 @@ TEST(BasicLockable, unowned_assert) {
 #endif // NDEBUG
 }
 
-TEST(BasicLockable, timing_with) {
-  const auto limit = 10000000;
+TEST(BasicLockable, timing_assert) {
+  const auto limit = 10'000'000;
   auto mutex = BasicLockable<std::mutex>();
   for (auto i = 0; i < limit; i++) {
     auto lock = std::lock_guard<decltype(mutex)>(mutex);
@@ -100,8 +99,17 @@ TEST(BasicLockable, timing_with) {
   }
 }
 
+TEST(BasicLockable, timing_expects) {
+  const auto limit = 10'000'000;
+  auto mutex = BasicLockable<std::mutex>();
+  for (auto i = 0; i < limit; i++) {
+    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+    Expects(mutex.owner_is_this_thread());
+  }
+}
+
 TEST(BasicLockable, timing_without) {
-  const auto limit = 10000000;
+  const auto limit = 10'000'000;
   auto mutex = std::mutex();
   for (auto i = 0; i < limit; i++) {
     auto lock = std::lock_guard<decltype(mutex)>(mutex);
