@@ -7,7 +7,8 @@
 #include <thread>
 
 // See https://en.cppreference.com/w/cpp/named_req/BasicLockable
-template <typename T> class BasicLockable : protected Verbose {
+template <typename T>
+class BasicLockable : protected Verbose {
 public:
   BasicLockable() : Verbose {gsl::czstring(__func__)} {}
 
@@ -51,7 +52,8 @@ private:
 };
 
 #ifndef NDEBUG
-template <typename T> const std::thread::id BasicLockable<T>::none_ {};
+template <typename T>
+const std::thread::id BasicLockable<T>::none_ {};
 #endif // NDEBUG
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,13 +66,13 @@ using namespace testing::internal;
 
 TEST(BasicLockable, lock_guard) {
   auto mutex = BasicLockable<std::mutex>();
-  auto lock = std::lock_guard<decltype(mutex)>(mutex);
+  auto lock = std::lock_guard(mutex);
   mutex.assert_ownership();
 }
 
 TEST(BasicLockable, unique_lock) {
   auto mutex = BasicLockable<std::mutex>();
-  auto lock = std::unique_lock<decltype(mutex)>(mutex);
+  auto lock = std::unique_lock(mutex);
   mutex.assert_ownership();
 }
 
@@ -94,7 +96,7 @@ TEST(BasicLockable, timing_assert) {
   const auto limit = 10'000'000;
   auto mutex = BasicLockable<std::mutex>();
   for (auto i = 0; i < limit; i++) {
-    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+    auto lock = std::lock_guard(mutex);
     mutex.assert_ownership();
   }
 }
@@ -103,7 +105,7 @@ TEST(BasicLockable, timing_expects) {
   const auto limit = 10'000'000;
   auto mutex = BasicLockable<std::mutex>();
   for (auto i = 0; i < limit; i++) {
-    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+    auto lock = std::lock_guard(mutex);
     Expects(mutex.owner_is_this_thread());
   }
 }
@@ -112,6 +114,6 @@ TEST(BasicLockable, timing_without) {
   const auto limit = 10'000'000;
   auto mutex = std::mutex();
   for (auto i = 0; i < limit; i++) {
-    auto lock = std::lock_guard<decltype(mutex)>(mutex);
+    auto lock = std::lock_guard(mutex);
   }
 }
