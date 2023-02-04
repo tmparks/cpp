@@ -86,7 +86,7 @@ latest:          # This job runs in the deploy stage.
 pages:           # This job must be named "pages"
   stage: deploy
   dependencies:
-    - unit-test-debug-job
+    - unit-test-debug
   artifacts:
     paths:
       - public/
