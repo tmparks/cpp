@@ -7,6 +7,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     clang-tidy \
     cmake \
     gcovr \
+    gdb \
     git  \
     googletest \
     llvm \

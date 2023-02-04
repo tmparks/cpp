@@ -50,8 +50,8 @@ build-job:       # This job runs in the build stage.
     - make --directory=build all
 
 # See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
-unit-test-job:   # This job runs in the test stage.
-  stage: test    # It only starts when the job in the build stage completes successfully.
+unit-test-debug-job:   # This job runs in the test stage.
+  stage: test          # It only starts when the jobs in the build stage complete successfully.
   artifacts:
     when: always
     paths:
@@ -66,14 +66,27 @@ unit-test-job:   # This job runs in the test stage.
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build all test coverage
 
+unit-test-release-job: # This job also runs in the test stage.
+  stage: test
+  artifacts:
+    when: always
+    paths:
+      - build/results/
+    reports:
+      junit: build/results/test_detail.xml
+  coverage: /TOTAL.*\s+(\d+)%/
+  script:
+    - cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+    - make --directory=build all test
+
 lint-test-job:   # This job also runs in the test stage.
-  stage: test    # It can run at the same time as unit-test-job (in parallel).
+  stage: test    # It can run at the same time as other jobs in the test stage (in parallel).
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build check
 
 deploy-job:      # This job runs in the deploy stage.
-  stage: deploy  # It only runs when *both* jobs in the test stage complete successfully.
+  stage: deploy  # It only runs when the jobs in the test stage complete successfully.
   image: docker:latest
   services:
     - docker:dind
@@ -83,3 +96,12 @@ deploy-job:      # This job runs in the deploy stage.
     - docker pull $IMAGE
     - docker tag $IMAGE $LATEST
     - docker push $LATEST
+
+pages-job:      # This job also runs in the deploy stage.
+  stage: deploy
+  dependencies:
+    - unit-test-debug-job
+  script:
+    - mv build/results/ public/
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
