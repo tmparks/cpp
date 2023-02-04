@@ -31,7 +31,7 @@ variables:
 default:
   image: $IMAGE
 
-pre-job:         # This job runs in the .pre stage, wich runs first.
+image:           # This job runs in the .pre stage, wich runs first.
   stage: .pre
   image: docker:latest
   services:
@@ -43,15 +43,15 @@ pre-job:         # This job runs in the .pre stage, wich runs first.
     - docker build --tag $IMAGE --cache-from $LATEST .
     - docker push $IMAGE
 
-build-job:       # This job runs in the build stage.
+build:           # This job runs in the build stage.
   stage: build
   script:
     - cmake -S . -B build
     - make --directory=build all
 
 # See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
-unit-test-debug-job:   # This job runs in the test stage.
-  stage: test          # It only starts when the jobs in the build stage complete successfully.
+unit-test-debug: # This job runs in the test stage.
+  stage: test    # It only starts when the jobs in the build stage complete successfully.
   artifacts:
     when: always
     paths:
@@ -66,7 +66,7 @@ unit-test-debug-job:   # This job runs in the test stage.
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build all test coverage
 
-unit-test-release-job: # This job also runs in the test stage.
+unit-test-release: # This job also runs in the test stage.
   stage: test
   artifacts:
     when: always
@@ -79,13 +79,13 @@ unit-test-release-job: # This job also runs in the test stage.
     - cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
     - make --directory=build all test
 
-lint-test-job:   # This job also runs in the test stage.
+lint-test:       # This job also runs in the test stage.
   stage: test    # It can run at the same time as other jobs in the test stage (in parallel).
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build check
 
-deploy-job:      # This job runs in the deploy stage.
+latest:          # This job runs in the deploy stage.
   stage: deploy  # It only runs when the jobs in the test stage complete successfully.
   image: docker:latest
   services:
@@ -106,5 +106,5 @@ pages:           # This job must be named "pages"
       - public/
   script:
     - mv build/results/ public/
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
