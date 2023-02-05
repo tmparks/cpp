@@ -6,6 +6,7 @@ class StretchableArray : public Array
 {
 public:
     using Array::Array;      // inherit all constructors
-    using Array::operator[]; // inherit all overloads
-    double& operator[](gsl::index i) override;
+
+private:
+    void reserve(gsl::index i) override;
 };

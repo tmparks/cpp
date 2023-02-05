@@ -1,7 +1,7 @@
 #include "StretchableArray.hpp"
 #include <iostream>
 
-double& StretchableArray::operator[](gsl::index i)
+void StretchableArray::reserve(gsl::index i)
 {
     if (i >= size_)
     {
@@ -12,7 +12,6 @@ double& StretchableArray::operator[](gsl::index i)
         data_ = std::move(larger_data);
         size_ = larger_size;
     }
-    return Array::operator[](i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

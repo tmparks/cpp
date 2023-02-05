@@ -88,6 +88,7 @@ const double& Array::operator[](gsl::index i) const
 
 double& Array::operator[](gsl::index i)
 {
+    reserve(i);
     check_bounds(i);
     return data_[i];
 }
@@ -114,6 +115,11 @@ void Array::check_bounds(gsl::index i) const
             + std::to_string(i)
             + "< 0");
     }
+}
+
+void Array::reserve(gsl::index)
+{
+    // Does nothing in base class.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
