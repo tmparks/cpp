@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class Point {
@@ -21,13 +23,15 @@ double distance(const Point& a, const Point& b);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Rectangle; // Forward declaration.
+// Forward declarations.
+class Circle;
+class Rectangle;
 
 class Shape {
 public:
     virtual ~Shape() = default;
     double area() const;               // Area.
-    double boundingRadius() const;     // Radius of bounding circle.
+    Circle boundingCircle() const;     // Bounding circle.
     Rectangle boundingBox() const;     // Bounding rectangle.
     void scaleTo(double s);            // Set scale.
     void scaleBy(double ds);           // Adjust scale.
@@ -44,7 +48,9 @@ private:
     virtual double boundingRadiusImpl(double scale) const = 0;
 
     // Does not take position into account.
-    virtual Rectangle boundingBoxImpl(double scale, double rotation) const = 0;
+    // Returns width and height.
+    virtual std::tuple<double, double> boundingBoxImpl(
+            double scale, double rotation) const = 0;
 
     double scale_ { 1.0 };
     double rotation_ { 0.0 };
@@ -60,7 +66,8 @@ public:
 private:
     double areaImpl(double scale) const override;
     double boundingRadiusImpl(double scale) const override;
-    Rectangle boundingBoxImpl(double scale, double rotation) const override;
+    std::tuple<double, double> boundingBoxImpl(
+            double scale, double rotation) const override;
     const double width_ { 0.0 };  // Initial width.
     const double height_ { 0.0 }; // Initial height.
 };
@@ -81,7 +88,8 @@ public:
 private:
     double areaImpl(double scale) const override;
     double boundingRadiusImpl(double scale) const override;
-    Rectangle boundingBoxImpl(double scale, double rotation) const override;
+    std::tuple<double, double> boundingBoxImpl(
+            double scale, double rotation) const override;
     double radius(double angle) const;
     const double a_; // Initial length of semi-major axis.
     const double b_; // Initial length of semi-minor axis.
@@ -93,7 +101,4 @@ private:
 class Circle : public Ellipse {
 public:
     Circle(double radius);
-
-private:
-    Rectangle boundingBoxImpl(double, double) const override;
 };

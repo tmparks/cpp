@@ -42,10 +42,15 @@ double distance(const Point& a, const Point& b) {
 
 double Shape::area() const { return areaImpl(scale_); }
 
-double Shape::boundingRadius() const { return boundingRadiusImpl(scale_); }
+Circle Shape::boundingCircle() const {
+    auto result = Circle(boundingRadiusImpl(scale_));
+    result.moveTo(position_.x(), position_.y());
+    return result;
+}
 
 Rectangle Shape::boundingBox() const {
-    auto result = boundingBoxImpl(scale_, rotation_);
+    auto [width, height] = boundingBoxImpl(scale_, rotation_);
+    auto result = Rectangle(width, height);
     result.moveTo(position_.x(), position_.y());
     return result;
 }
@@ -87,10 +92,11 @@ double Rectangle::areaImpl(double scale) const {
 }
 
 double Rectangle::boundingRadiusImpl(double scale) const {
-    return std::hypot(scale * width_, scale * height_);
+    return std::hypot(scale * width_, scale * height_) / 2;
 }
 
-Rectangle Rectangle::boundingBoxImpl(double scale, double rotation) const {
+std::tuple<double, double> Rectangle::boundingBoxImpl(
+        double scale, double rotation) const {
     // Corners of scaled rectangle.
     auto halfWidth = scale * width_ / 2;
     auto halfHeight = scale * height_ / 2;
@@ -108,7 +114,7 @@ Rectangle Rectangle::boundingBoxImpl(double scale, double rotation) const {
     // Find bounds.
     auto x = { r1.x(), r2.x(), r3.x(), r4.x() };
     auto y = { r1.y(), r2.y(), r3.y(), r4.y() };
-    return Rectangle(std::max(x) - std::min(x), std::max(y) - std::min(y));
+    return { std::max(x) - std::min(x), std::max(y) - std::min(y) };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,10 +143,10 @@ double Ellipse::areaImpl(double scale) const {
 
 double Ellipse::boundingRadiusImpl(double scale) const { return scale * a_; }
 
-Rectangle Ellipse::boundingBoxImpl(double scale, double rotation) const {
-    return Rectangle(
-        2 * scale * radius(rotation),
-        2 * scale * radius(rotation + std::numbers::pi / 2));
+std::tuple<double, double> Ellipse::boundingBoxImpl(
+        double scale, double rotation) const {
+    return { 2 * scale * radius(rotation),
+             2 * scale * radius(rotation + std::numbers::pi / 2) };
 }
 
 // private const
@@ -154,9 +160,3 @@ double Ellipse::radius(double angle) const {
 // public
 
 Circle::Circle(double radius) : Ellipse(2 * radius, 2 * radius) { }
-
-// private const override
-
-Rectangle Circle::boundingBoxImpl(double, double) const {
-    return Square(2 * boundingRadius());
-}
