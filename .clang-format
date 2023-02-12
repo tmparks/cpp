@@ -6,16 +6,25 @@ Standard: c++20
 # See [BraceWrapping](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#bracewrapping)
 BreakBeforeBraces: Custom
 BraceWrapping:
+  BeforeCatch: true
   BeforeElse: true
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
+AlignOperands: AlignAfterOperator
 AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: NonAssignment
 BreakConstructorInitializers: AfterColon
 ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
 Cpp11BracedListStyle: false
 FixNamespaceComments: true
 IndentWidth: 4
+IndentWrappedFunctionNames: true
 PackConstructorInitializers: NextLine
 PointerAlignment: Left
 ReflowComments: false
@@ -23,3 +32,5 @@ SpaceAfterLogicalNot: true
 SpaceBeforeCpp11BracedList: true
 SpaceInEmptyBlock: true
 TabWidth: 4
+
+PenaltyReturnTypeOnItsOwnLine: 200
