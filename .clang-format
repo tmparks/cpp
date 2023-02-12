@@ -1,10 +1,25 @@
-BasedOnStyle: LLVM
+# See [Clang-Format Style Options](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
 
 Language: Cpp
 Standard: c++20
 
+# See [BraceWrapping](https://clang.llvm.org/docs/ClangFormatStyleOptions.html#bracewrapping)
+BreakBeforeBraces: Custom
+BraceWrapping:
+  BeforeElse: true
+
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
 AlignTrailingComments: true
-Cpp11BracedListStyle: true
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerIndentWidth: 8
+Cpp11BracedListStyle: false
 FixNamespaceComments: true
+IndentWidth: 4
+PackConstructorInitializers: NextLine
+PointerAlignment: Left
 ReflowComments: false
+SpaceAfterLogicalNot: true
 SpaceBeforeCpp11BracedList: true
+SpaceInEmptyBlock: true
+TabWidth: 4
