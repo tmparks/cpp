@@ -25,7 +25,10 @@ Cpp11BracedListStyle: false
 FixNamespaceComments: true
 IndentWidth: 4
 IndentWrappedFunctionNames: true
+NamespaceIndentation: All
 PackConstructorInitializers: NextLine
+PenaltyExcessCharacter: 10
+PenaltyReturnTypeOnItsOwnLine: 200
 PointerAlignment: Left
 ReflowComments: false
 SpaceAfterLogicalNot: true
@@ -33,4 +36,3 @@ SpaceBeforeCpp11BracedList: true
 SpaceInEmptyBlock: true
 TabWidth: 4
 
-PenaltyReturnTypeOnItsOwnLine: 200
