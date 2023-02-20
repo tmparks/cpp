@@ -6,8 +6,7 @@
 // A fixed-size array.
 // This is an example of a wrapper for a dynamically allocated array,
 // similar to std::span.
-class Array : protected Verbose
-{
+class Array : protected Verbose {
 public:
     Array();                                   // default constructor
     explicit Array(gsl::index size);           // constructor
@@ -20,11 +19,19 @@ public:
 
     gsl::index size() const noexcept;
     const double& operator[](gsl::index) const;
-    virtual double& operator[](gsl::index);
+    double& operator[](gsl::index);
 
 protected:
     void assign(Array other) noexcept;
     void check_bounds(gsl::index size) const;
-    gsl::index size_ { 0 }; // NOLINT(*-non-private-member-variables-in-classes)
-    std::unique_ptr<double[]> data_ { }; // NOLINT(*-avoid-c-arrays,*-non-private-member-variables-in-classes)
+    // NOLINTBEGIN(*-non-private-member-variables-in-classes)
+    gsl::index size_ { 0 };
+    std::unique_ptr<double[]> data_ {}; // NOLINT(*-avoid-c-arrays)
+    // NOLINTEND(*-non-private-member-variables-in-classes)
+
+private:
+    // See [Non-virtual interface pattern](https://en.wikipedia.org/wiki/Non-virtual_interface_pattern)
+    // See [When should someone use private virtuals?](https://isocpp.org/wiki/faq/strange-inheritance#private-virtuals)
+    // Derived classes can override this method, but cannot call it.
+    virtual void reserve(gsl::index size);
 };
