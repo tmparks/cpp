@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <tuple>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,28 +28,41 @@ double distance(const Point& a, const Point& b);
 class Circle;
 class Rectangle;
 
+// See [What is a "virtual constructor"?](https://isocpp.org/wiki/faq/virtual-functions#virtual-ctors)
+// See [Non-virtual interface pattern](https://en.wikipedia.org/wiki/Non-virtual_interface_pattern)
 class Shape {
 public:
     virtual ~Shape() = default;
-    double area() const;               // Area.
-    Circle boundingCircle() const;     // Bounding circle.
-    Rectangle boundingBox() const;     // Bounding rectangle.
-    void scaleTo(double s);            // Set scale.
-    void scaleBy(double ds);           // Adjust scale.
-    void rotateTo(double angle);       // Set rotation.
-    void rotateBy(double dangle);      // Adjust rotation.
-    void moveTo(double x, double y);   // Set position.
-    void moveBy(double dx, double dy); // Adjust position.
+    std::unique_ptr<Shape> clone() const; // Create a copy.
+    double area() const;                  // Area.
+    Circle boundingCircle() const;        // Bounding circle.
+    Rectangle boundingBox() const;        // Bounding rectangle.
+    Shape& scaleTo(double s);             // Set scale.
+    Shape& scaleBy(double ds);            // Adjust scale.
+    Shape& rotateTo(double radians);      // Set rotation angle.
+    Shape& rotateBy(double dradians);     // Adjust rotation angle.
+    Shape& moveTo(double x, double y);    // Set position.
+    Shape& moveBy(double dx, double dy);  // Adjust position.
+
+protected:
+    Shape() = default;
+    Shape(const Shape&) = default;
+    Shape(Shape&&) = default;
+    Shape& operator=(const Shape&) = default;
+    Shape& operator=(Shape&&) = default;
 
 private:
+    // By convention, derived classes implement a virtual constructor
+    // with a covariant return type, which is not possible with smart pointers.
+    virtual Shape* cloneImpl() const = 0;
+
     // Not affected by rotation or position.
     virtual double areaImpl(double scale) const = 0;
 
     // Not affected by rotation or position.
     virtual double boundingRadiusImpl(double scale) const = 0;
 
-    // Does not take position into account.
-    // Returns width and height.
+    // Not affected by position. Returns width and height.
     virtual std::tuple<double, double> boundingBoxImpl(
             double scale, double rotation) const = 0;
 
@@ -64,6 +78,7 @@ public:
     Rectangle(double width, double height);
 
 private:
+    Rectangle* cloneImpl() const override;
     double areaImpl(double scale) const override;
     double boundingRadiusImpl(double scale) const override;
     std::tuple<double, double> boundingBoxImpl(
@@ -77,6 +92,9 @@ private:
 class Square : public Rectangle {
 public:
     Square(double side);
+
+private:
+    Square* cloneImpl() const override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +104,7 @@ public:
     Ellipse(double width, double height);
 
 private:
+    Ellipse* cloneImpl() const override;
     double areaImpl(double scale) const override;
     double boundingRadiusImpl(double scale) const override;
     std::tuple<double, double> boundingBoxImpl(
@@ -101,4 +120,7 @@ private:
 class Circle : public Ellipse {
 public:
     Circle(double radius);
+
+private:
+    Circle* cloneImpl() const override;
 };
