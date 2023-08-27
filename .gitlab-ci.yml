@@ -25,8 +25,7 @@ build-image:     # This job runs in the .pre stage, wich runs first.
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
-    - docker pull $LATEST || true
-    - docker build --tag $IMAGE --cache-from $LATEST .
+    - docker build --tag $IMAGE --cache-from $IMAGE --cache-to type=inline .
     - docker push $IMAGE
 
 build-all:       # This job runs in the build stage.
