@@ -40,6 +40,14 @@ double distance(const Point& a, const Point& b) {
 
 // public const
 
+std::unique_ptr<Shape> Shape::clone() const {
+    auto* result = cloneImpl();
+    // If a derived class fails to override cloneImpl,
+    // then the returned object will be of the wrong type.
+    Ensures(typeid(*result) == typeid(*this));
+    return std::unique_ptr<Shape>(result);
+}
+
 double Shape::area() const { return areaImpl(scale_); }
 
 Circle Shape::boundingCircle() const {
@@ -57,22 +65,34 @@ Rectangle Shape::boundingBox() const {
 
 // public
 
-void Shape::scaleTo(double s) { scale_ = s; }
-
-void Shape::scaleBy(double ds) { scale_ *= ds; }
-
-void Shape::rotateTo(double angle) {
-    rotation_ = std::fmod(angle, 2 * std::numbers::pi);
+Shape& Shape::scaleTo(double s) {
+    scale_ = s;
+    return *this;
 }
 
-void Shape::rotateBy(double dangle) {
-    rotation_ = std::fmod(rotation_ + dangle, 2 * std::numbers::pi);
+Shape& Shape::scaleBy(double ds) {
+    scale_ *= ds;
+    return *this;
 }
 
-void Shape::moveTo(double x, double y) { position_ = Point::rectangular(x, y); }
+Shape& Shape::rotateTo(double radians) {
+    rotation_ = std::fmod(radians, 2 * std::numbers::pi);
+    return *this;
+}
 
-void Shape::moveBy(double dx, double dy) {
+Shape& Shape::rotateBy(double dradians) {
+    rotation_ = std::fmod(rotation_ + dradians, 2 * std::numbers::pi);
+    return *this;
+}
+
+Shape& Shape::moveTo(double x, double y) {
+    position_ = Point::rectangular(x, y);
+    return *this;
+}
+
+Shape& Shape::moveBy(double dx, double dy) {
     position_ = Point::rectangular(position_.x() + dx, position_.y() + dy);
+    return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +106,10 @@ Rectangle::Rectangle(double width, double height) :
 }
 
 // private const override
+
+Rectangle* Rectangle::cloneImpl() const {
+    return new Rectangle(*this); // NOLINT(*-owning-memory)
+}
 
 double Rectangle::areaImpl(double scale) const {
     return (scale * width_) * (scale * height_);
@@ -123,6 +147,12 @@ std::tuple<double, double> Rectangle::boundingBoxImpl(
 
 Square::Square(double side) : Rectangle(side, side) { }
 
+// private const override
+
+Square* Square::cloneImpl() const {
+    return new Square(*this); // NOLINT(*-owning-memory)
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // public
@@ -136,6 +166,10 @@ Ellipse::Ellipse(double width, double height) :
 }
 
 // private const override
+
+Ellipse* Ellipse::cloneImpl() const {
+    return new Ellipse(*this); // NOLINT(*-owning-memory)
+}
 
 double Ellipse::areaImpl(double scale) const {
     return std::numbers::pi * (scale * a_) * (scale * b_);
@@ -160,3 +194,55 @@ double Ellipse::radius(double angle) const {
 // public
 
 Circle::Circle(double radius) : Ellipse(2 * radius, 2 * radius) { }
+
+// private const override
+
+Circle* Circle::cloneImpl() const {
+    return new Circle(*this); // NOLINT(*-owning-memory)
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#include <gtest/gtest.h>
+
+namespace { // anonymous namespace for definitions that are local to this file
+
+    void TestClone(const Shape& original) {
+        std::cout << gsl::czstring(__func__) << ": " << typeid(original).name()
+                  << std::endl;
+        auto clone = original.clone();
+        EXPECT_NE(clone.get(), &original) << "distinct objects";
+
+        // Necessary (but not sufficient) conditions for two shapes to be the same.
+        EXPECT_DOUBLE_EQ(clone->area(), original.area());
+        EXPECT_DOUBLE_EQ(
+                clone->boundingCircle().area(), original.boundingCircle().area());
+        EXPECT_DOUBLE_EQ(
+                clone->boundingBox().area(), original.boundingBox().area());
+    }
+
+    // NOLINTBEGIN(*-avoid-magic-numbers)
+    void TestScale(const Shape& shape) {
+        auto area1 = shape.clone()->scaleTo(1.0).area();
+        auto area2 = shape.clone()->scaleTo(2.0).area();
+        auto area3 = shape.clone()->scaleTo(3.0).scaleBy(4.0).area();
+        EXPECT_DOUBLE_EQ(4.0 * area1, area2);
+        EXPECT_DOUBLE_EQ(36.0 * area2, area3);
+    }
+    // NOLINTEND(*-avoid-magic-numbers)
+
+} // anonymous namespace
+
+TEST(Shape, clone) {
+    TestClone(Rectangle(3, 4));
+    TestClone(Square(2));
+    TestClone(Ellipse(3, 4));
+    TestClone(Circle(2));
+}
+
+TEST(Shape, scale) {
+    TestScale(Rectangle(3, 4));
+    TestScale(Square(2));
+    TestScale(Ellipse(3, 4));
+    TestScale(Circle(2));
+}
