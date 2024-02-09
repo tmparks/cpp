@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.22)
-project(cpp VERSION 2022.09)
+cmake_minimum_required(VERSION 3.22) # Ubuntu 22.04
+project(cpp VERSION 2024.02)
+
+find_package(Boost REQUIRED)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -80,6 +82,7 @@ add_executable(TestRunner
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp
+    Zip.cpp
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)

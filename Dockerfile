@@ -10,6 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     gdb \
     git  \
     googletest \
+    libboost-dev \
     llvm \
     nano \
     && rm --recursive --force /var/lib/apt/lists/*
