@@ -6,6 +6,7 @@
 class Zip : public testing::Test {
 public:
     void SetUp() override {
+        // NOLINTBEGIN(*-avoid-magic-numbers)
         left = { 1, 2, 3, 4, 5 };
         right = { 1.1, 2.2, 3.3, 4.4, 5.5 };
 
@@ -14,6 +15,7 @@ public:
         for (const auto& name : { "one", "two", "three", "four", "five" }) {
             center.emplace_back(name);
         }
+        // NOLINTEND(*-avoid-magic-numbers)
     }
 
     template <typename T>
@@ -74,7 +76,7 @@ TEST_F(Zip, for_mutable) {
         EXPECT_FLOAT_EQ(0.1 * (a - 1), c);
         EXPECT_EQ('!', b.name().back());
         // Make additional modifications.
-        c = 1.1 * a++;
+        c = 1.1 * a++; // NOLINT(*-avoid-magic-numbers)
         b.name().pop_back();
     }
 
@@ -88,7 +90,7 @@ TEST_F(Zip, for_mutable) {
         EXPECT_EQ('?', b.name().back());
         // Make additional modifications.
         a -= 2;
-        c -= 1.1;
+        c -= 1.1; // NOLINT(*-avoid-magic-numbers)
         b.name().pop_back();
     }
 
