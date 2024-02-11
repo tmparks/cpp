@@ -134,8 +134,6 @@ TEST_F(Zip, for_mutable_tuple) {
     print("after: ", std::ranges::views::zip(left, center, right));
 }
 
-#if __cplusplus >= 201703L
-
 TEST_F(Zip, for_const) {
     const auto& cleft = left;
     const auto& ccenter = center;
@@ -158,6 +156,8 @@ TEST_F(Zip, for_const) {
         // a.name().append("!"); // compile time error
         EXPECT_NE('!', a.name().back());
     }
+
+#if __cplusplus >= 201703L
 
     // Unfortunately using a const lvalue reference does not have the intended
     // effect when iterating over a zipped sequence. This is because each tuple
@@ -186,9 +186,9 @@ TEST_F(Zip, for_const) {
         // c -= a++;             // compile time error
         // b.name().append("!"); // compile time error
     }
-}
 
 #endif // C++17
+}
 
 TEST_F(Zip, for_const_tuple) {
     // We can use a tuple instead of structured binding. The const keyword is
@@ -203,5 +203,56 @@ TEST_F(Zip, for_const_tuple) {
         EXPECT_FLOAT_EQ(1.1 * a, c);
         EXPECT_NE('!', b.name().back());
         // b.name().append("!"); // compile time error
+    }
+}
+
+TEST_F(Zip, for_copy) {
+    // When iterating over a single sequence, convention dictates that we
+    // avoid using a reference when we intend to make copies of the elements.
+    // The absence of a reference indicates that a copy is being made.
+    // The absence of the const keyword indicates that the copies can be modified.
+    for (auto a : center) {
+        a.name().append("!");
+        EXPECT_EQ('!', a.name().back()); // Verify that copy is modified.
+    }
+    for (const auto& a : center) {
+        EXPECT_NE('!', a.name().back()); // Verify that original is not modified.
+    }
+
+#if __cplusplus >= 201703L
+
+    // Unfortunately using the same convention with a zipped sequence does not
+    // have the intended effect. This is because each tuple in the zipped
+    // sequence contains non-const references. The tuple may have been copied,
+    // but the original elements can still be modified!
+    for (auto [a, b, c] : std::ranges::views::zip(left, center, right)) {
+        c -= a++;             // surprise!
+        b.name().append("!"); // surprise!
+        // Put things back the way we found them.
+        c += --a;
+        b.name().pop_back();
+    }
+
+#endif // C++17
+
+    // The least confusing solution is to make copies as we unpack a tuple.
+    for (auto tuple : std::ranges::views::zip(left, center, right)) {
+        auto a = std::get<0>(tuple);
+        auto b = std::get<1>(tuple);
+        auto c = std::get<2>(tuple);
+        EXPECT_FALSE(std::is_reference<decltype(a)>::value);
+        EXPECT_FALSE(std::is_reference<decltype(b)>::value);
+        EXPECT_FALSE(std::is_reference<decltype(c)>::value);
+        // Modify the copies.
+        c -= a++; // NOLINT(*-deadcode.DeadStores)
+        b.name().append("!");
+    }
+    for (const auto& tuple : std::ranges::views::zip(left, center, right)) {
+        const auto& a = std::get<0>(tuple);
+        const auto& b = std::get<1>(tuple);
+        const auto& c = std::get<2>(tuple);
+        // Verify that original values were not modified.
+        EXPECT_FLOAT_EQ(1.1 * a, c);
+        EXPECT_NE('!', b.name().back());
     }
 }
