@@ -60,7 +60,7 @@ TEST_F(Zip, for_mutable) {
     // probably be a bug.
     for (auto [a, b, c] : std::ranges::views::zip(left, center, right)) {
         // Verify previous modifications.
-        EXPECT_TRUE(b.name().ends_with("?"));
+        EXPECT_EQ('?', b.name().back());
         // Make additional modifications.
         c -= a++;
         b.name().append("!");
@@ -72,7 +72,7 @@ TEST_F(Zip, for_mutable) {
     for (const auto& [a, b, c] : std::ranges::views::zip(left, center, right)) {
         // Verify previous modifications.
         EXPECT_FLOAT_EQ(0.1 * (a - 1), c);
-        EXPECT_TRUE(b.name().ends_with("!"));
+        EXPECT_EQ('!', b.name().back());
         // Make additional modifications.
         c = 1.1 * a++;
         b.name().pop_back();
@@ -85,7 +85,7 @@ TEST_F(Zip, for_mutable) {
     for (auto&& [a, b, c] : std::ranges::views::zip(left, center, right)) {
         // Verify previous modifications.
         EXPECT_FLOAT_EQ(1.1 * (a - 1), c);
-        EXPECT_TRUE(b.name().ends_with("?"));
+        EXPECT_EQ('?', b.name().back());
         // Make additional modifications.
         a -= 2;
         c -= 1.1;
@@ -146,7 +146,7 @@ TEST_F(Zip, for_const) {
     // be modified.
     for (const auto& a : center) {
         // a.name().append("!"); // compile time error
-        EXPECT_FALSE(a.name().ends_with("!"));
+        EXPECT_NE('!', a.name().back());
     }
 
     // When the sequence itself is const, the const keyword becomes optional,
@@ -154,7 +154,7 @@ TEST_F(Zip, for_const) {
     // against future changes in the declaration of the sequence.
     for (const auto& a : ccenter) {
         // a.name().append("!"); // compile time error
-        EXPECT_FALSE(a.name().ends_with("!"));
+        EXPECT_NE('!', a.name().back());
     }
 
     // Unfortunately using a const lvalue reference does not have the intended
@@ -170,7 +170,7 @@ TEST_F(Zip, for_const) {
     // const. The const keyword becomes optional, but we can use it anyway
     // to make our intentions clear.
     for (const auto& [a, b, c] : std::ranges::views::zip(cleft, ccenter, cright)) {
-        EXPECT_TRUE(b.name().ends_with("!"));
+        EXPECT_EQ('!', b.name().back());
         // c -= a++;             // compile time error
         // b.name().append("!"); // compile time error
     }
@@ -180,7 +180,7 @@ TEST_F(Zip, for_const) {
     // sequence const before combining them.
     for (const auto& [a, b, c] : std::ranges::views::zip(
                  std::as_const(left), std::as_const(center), std::as_const(right))) {
-        EXPECT_TRUE(b.name().ends_with("!"));
+        EXPECT_EQ('!', b.name().back());
         // c -= a++;             // compile time error
         // b.name().append("!"); // compile time error
     }
