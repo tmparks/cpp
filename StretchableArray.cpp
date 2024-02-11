@@ -1,4 +1,5 @@
 #include "StretchableArray.hpp"
+#include "compat/memory14.hpp"
 #include <iostream>
 
 void StretchableArray::reserve(gsl::index i) {
