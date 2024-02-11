@@ -28,11 +28,31 @@ build-image:     # This job runs in the .pre stage, wich runs first.
     - docker build --tag $IMAGE --cache-from $IMAGE --cache-to type=inline .
     - docker push $IMAGE
 
-build-all:       # This job runs in the build stage.
+.build:
   stage: build
   script:
-    - cmake -S . -B build
+    - cmake $CMAKE_OPTIONS -S . -B build
     - make --directory=build all
+
+build-11:
+  extends: .build
+  variables:
+    CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=11
+
+build-14:
+  extends: .build
+  variables:
+    CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=14
+
+build-17:
+  extends: .build
+  variables:
+    CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=17
+
+build-20:
+  extends: .build
+  variables:
+    CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
 
 # See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
 unit-test-debug: # This job runs in the test stage.

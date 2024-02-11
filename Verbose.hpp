@@ -1,11 +1,10 @@
 #pragma once
 #include <string>
 
-class Verbose
-{
+class Verbose {
 public:
     Verbose() = delete;                            // no default constructor
-    explicit Verbose(const std::string& name);     // constructor
+    Verbose(const std::string& name);              // constructor
     Verbose(const Verbose& other);                 // copy constructor
     Verbose(Verbose&& other) noexcept;             // move constructor
     Verbose& operator=(const Verbose& other);      // copy assignment
@@ -17,5 +16,7 @@ public:
     const std::string& name() const noexcept;
 
 private:
-    std::string name_ { };
+    std::string name_ {};
 };
+
+std::ostream& operator<<(std::ostream& stream, const Verbose& object);
