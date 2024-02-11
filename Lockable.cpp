@@ -1,6 +1,6 @@
 #include "Verbose.hpp"
 
-#include <gsl/gsl>
+#include "compat/gsl14.hpp"
 
 #include <cassert>
 #include <mutex>
@@ -64,6 +64,8 @@ const std::thread::id BasicLockable<T>::none_ {};
 using namespace testing;
 using namespace testing::internal;
 
+#if __cplusplus >= 201703L
+
 TEST(BasicLockable, lock_guard) {
   auto mutex = BasicLockable<std::mutex>();
   auto lock = std::lock_guard(mutex);
@@ -75,6 +77,8 @@ TEST(BasicLockable, unique_lock) {
   auto lock = std::unique_lock(mutex);
   mutex.assert_ownership();
 }
+
+#endif // C++17
 
 // Does not fail for RELEASE build
 TEST(BasicLockable, unowned_expects) {
@@ -91,6 +95,8 @@ TEST(BasicLockable, unowned_assert) {
   mutex.assert_ownership(); // Expected to fail!
 #endif // NDEBUG
 }
+
+#if __cplusplus >= 201703L
 
 TEST(BasicLockable, timing_assert) {
   const auto limit = 10'000'000;
@@ -117,3 +123,5 @@ TEST(BasicLockable, timing_without) {
     auto lock = std::lock_guard(mutex);
   }
 }
+
+#endif // C++17
