@@ -135,10 +135,6 @@ TEST_F(Zip, for_mutable_tuple) {
 }
 
 TEST_F(Zip, for_const) {
-    const auto& cleft = left;
-    const auto& ccenter = center;
-    const auto& cright = right;
-
     // When iterating over a single sequence, convention dictates that we use
     // a const lvalue reference when we do not intend to modify the elements.
     // The presence of the reference makes it clear that no copy is being made.
@@ -152,6 +148,7 @@ TEST_F(Zip, for_const) {
     // When the sequence itself is const, the const keyword becomes optional,
     // but we can use it anyway to make our intentions clear. This also guards
     // against future changes in the declaration of the sequence.
+    const auto& ccenter = center;
     for (const auto& a : ccenter) {
         // a.name().append("!"); // compile time error
         EXPECT_NE('!', a.name().back());
@@ -171,6 +168,8 @@ TEST_F(Zip, for_const) {
     // Instead, we must ensure that the underlying sequences being zipped are
     // const. The const keyword becomes optional, but we can use it anyway
     // to make our intentions clear.
+    const auto& cleft = left;
+    const auto& cright = right;
     for (const auto& [a, b, c] : std::ranges::views::zip(cleft, ccenter, cright)) {
         EXPECT_EQ('!', b.name().back());
         // c -= a++;             // compile time error
