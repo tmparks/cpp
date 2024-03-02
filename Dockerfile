@@ -26,7 +26,7 @@ RUN CMAKE_BUILD_TYPE=Release \
 RUN CMAKE_BUILD_TYPE=Release \
     SOURCE=$(mktemp --directory) \
     BUILD=$(mktemp --directory) \
-    && git clone https://github.com/microsoft/GSL.git --depth 1 --single-branch $SOURCE \
+    && git clone https://github.com/microsoft/GSL.git --depth 1 --branch v4.0.0 $SOURCE \
     && cmake -S $SOURCE -B $BUILD \
     && make --directory=$BUILD install \
     && rm --recursive --force $SOURCE $BUILD
