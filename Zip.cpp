@@ -156,6 +156,12 @@ TEST_F(Zip, for_const) {
 
 #if __cplusplus >= 201703L
 
+    // To make our intentions more obvious, we can explicitly make the sequence const.
+    for (const auto& a : std::as_const(center)) {
+        // a.name().append("!"); // compile time error
+        EXPECT_NE('!', a.name().back());
+    }
+
     // Unfortunately using a const lvalue reference does not have the intended
     // effect when iterating over a zipped sequence. This is because each tuple
     // in the zipped sequence contains non-const references.
@@ -187,6 +193,19 @@ TEST_F(Zip, for_const) {
     }
 
 #endif // C++17
+
+#if __cplusplus >= 202302L
+
+    // To make our intentions more obvious, and to guard against future changes
+    // in the declarations of the sequences, we can explicitly make each
+    // sequence const before combining them.
+    for (const auto& [a, b, c] : std::ranges::views::zip(left, center, right) | std::views::as_const) {
+        EXPECT_EQ('!', b.name().back());
+        // c -= a++;             // compile time error
+        // b.name().append("!"); // compile time error
+    }
+
+#endif // C++23
 }
 
 TEST_F(Zip, for_const_tuple) {
