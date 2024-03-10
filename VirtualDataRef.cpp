@@ -18,8 +18,9 @@ protected:
 private:
     // To simulate virtual data in C++, the base class has a reference to the
     // member object and the derived class’s destructor deletes the object.
-    // No additional memory allocation overhead is imposed.
-    Array& data_;
+    // No additional memory allocation overhead is imposed,
+    // but copy assignment becomes impossible.
+    Array& data_; // NOLINT(*-avoid-const-or-ref-data-members)
     gsl::index index_ { 0 };
 };
 

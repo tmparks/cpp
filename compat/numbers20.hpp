@@ -6,7 +6,7 @@
 
 #else // C++20
 
-#pragma message "emulating C++20 numbers"
+#pragma message "emulating C++20 numbers"  // NOLINT
 
 #include <cmath>
 namespace std {

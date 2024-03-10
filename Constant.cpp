@@ -2,12 +2,16 @@
 // See [static members](https://en.cppreference.com/w/cpp/language/static)
 // See [ODR-use](https://en.cppreference.com/w/cpp/language/definition#ODR-use)
 
+// NOLINTBEGIN(*-avoid-const-or-ref-data-members)
+
 class Const {
 public:
   Const() : uninitialized_ {1} {}
   const int uninitialized_;   // must be initialized in constructor
   const int initialized_ = 2; // may be initialized in constructor
 };
+
+// NOLINTEND(*-avoid-const-or-ref-data-members)
 
 class StaticConst {
 public:

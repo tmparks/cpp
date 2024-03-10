@@ -83,8 +83,8 @@ private:
     double boundingRadiusImpl(double scale) const override;
     std::tuple<double, double> boundingBoxImpl(
             double scale, double rotation) const override;
-    const double width_ { 0.0 };  // Initial width.
-    const double height_ { 0.0 }; // Initial height.
+    double width_ { 0.0 };  // Initial width.
+    double height_ { 0.0 }; // Initial height.
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,9 +110,9 @@ private:
     std::tuple<double, double> boundingBoxImpl(
             double scale, double rotation) const override;
     double radius(double angle) const;
-    const double a_; // Initial length of semi-major axis.
-    const double b_; // Initial length of semi-minor axis.
-    const double e_; // Eccentricity.
+    double a_; // Initial length of semi-major axis.
+    double b_; // Initial length of semi-minor axis.
+    double e_; // Eccentricity.
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@
 
 #if __cplusplus < 201402L
 
-#pragma message "emulating C++14 memory"
+#pragma message "emulating C++14 memory" // NOLINT
 
 namespace std {
 
