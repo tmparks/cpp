@@ -4,6 +4,8 @@
 
 #if __cplusplus < 201402L
 
+#pragma message "emulating C++14 memory"
+
 namespace std {
 
     template <typename T, typename... Args>

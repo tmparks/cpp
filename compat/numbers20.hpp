@@ -6,6 +6,8 @@
 
 #else // C++20
 
+#pragma message "emulating C++20 numbers"
+
 #include <cmath>
 namespace std {
     namespace numbers {

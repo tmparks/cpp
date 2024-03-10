@@ -6,6 +6,8 @@
 
 #else // C++23
 
+#pragma message "emulating C++23 ranges"
+
 #include <boost/range/combine.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_io.hpp>
