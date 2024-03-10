@@ -1,6 +1,8 @@
 #pragma once
 
-// C++23 is newer than C++20
+// Note: GCC does not (yet) use 202302L for C++23,
+// so check for anything strictly newer than C++20
+// See [Predefined macros](https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros)
 #if __cplusplus > 202002L
 
 #include <ranges>
