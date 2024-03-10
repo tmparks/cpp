@@ -1,8 +1,25 @@
 #pragma once
 
-#if __cplusplus >= 202302L
+// C++23 is newer than C++20
+#if __cplusplus > 202002L
 
 #include <ranges>
+
+#include <ostream>
+#include <tuple>
+
+// See https://en.cppreference.com/w/cpp/utility/apply#Example
+template <typename... Ts>
+std::ostream& operator<<(std::ostream& stream, std::tuple<Ts...> const& tuple) {
+    auto f = [&stream](Ts const&... args) {
+        stream << '[';
+        std::size_t n { 0 };
+        ((stream << args << (++n < sizeof...(Ts) ? ", " : "")), ...);
+        stream << ']';
+    };
+    std::apply(f, tuple);
+    return stream;
+}
 
 #else // C++23
 
