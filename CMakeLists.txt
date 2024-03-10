@@ -1,5 +1,7 @@
-cmake_minimum_required(VERSION 3.22)
-project(cpp VERSION 2022.09)
+cmake_minimum_required(VERSION 3.22) # Ubuntu 22.04
+project(cpp VERSION 2024.02)
+
+find_package(Boost REQUIRED)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -63,7 +65,9 @@ endif() # CMAKE_BUILD_TYPE
 
 # Default build options
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Needed by clang-tidy (see below)
-set(CMAKE_CXX_STANDARD 20)
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 20)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(-Werror -Wall -Wextra -Wpedantic)
@@ -80,6 +84,7 @@ add_executable(TestRunner
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp
+    Zip.cpp
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)

@@ -2,6 +2,8 @@
 // (https://isocpp.org/wiki/faq/value-vs-ref-semantics#virt-data)
 
 #include "StretchableArray.hpp"
+#include "compat/gsl14.hpp"
+#include "compat/memory14.hpp"
 
 class StackPtr : private Verbose
 {

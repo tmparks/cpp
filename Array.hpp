@@ -1,6 +1,6 @@
 #pragma once
 #include "Verbose.hpp"
-#include <gsl/gsl>
+#include "compat/gsl14.hpp"
 #include <memory>
 
 // A fixed-size array.

@@ -2,12 +2,16 @@
 // See [static members](https://en.cppreference.com/w/cpp/language/static)
 // See [ODR-use](https://en.cppreference.com/w/cpp/language/definition#ODR-use)
 
+// NOLINTBEGIN(*-avoid-const-or-ref-data-members)
+
 class Const {
 public:
   Const() : uninitialized_ {1} {}
   const int uninitialized_;   // must be initialized in constructor
   const int initialized_ = 2; // may be initialized in constructor
 };
+
+// NOLINTEND(*-avoid-const-or-ref-data-members)
 
 class StaticConst {
 public:
@@ -34,12 +38,16 @@ public:
 const int StaticConst2::dependent_;
 const int StaticConst2::dependent2_;
 
+#if __cplusplus >= 201703L
+
 class ConstExpr {
 public:
   // constexpr int non_static_ = 0; // must be static
   // static constexpr int uninitialized_; // must be initialized
   static constexpr int initialized_ = 2;
 };
+
+#endif // C++17
 
 // a definition outside the class is optional
 // constexpr int ConstExpr::initialized_; // already initialized
@@ -65,6 +73,8 @@ TEST(Const, static_dependent) {
   EXPECT_EQ(203, StaticConst2::dependent2_);
 }
 
+#if __cplusplus >= 201703L
+
 TEST(Const, constexpr) { EXPECT_EQ(2, ConstExpr::initialized_); }
 
 TEST(Const, constexpr_odr_used) {
@@ -73,3 +83,5 @@ TEST(Const, constexpr_odr_used) {
   const auto & ref = ConstExpr::initialized_;
   EXPECT_EQ(2, ref);
 }
+
+#endif // C++17

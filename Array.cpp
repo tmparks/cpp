@@ -1,4 +1,5 @@
 #include "Array.hpp"
+#include "compat/memory14.hpp"
 #include <iostream>
 
 // default constructor

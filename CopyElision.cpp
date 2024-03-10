@@ -65,12 +65,16 @@ Uncopyable rvo_uncopyable()
     return Uncopyable { "unnamed" };
 }
 
+#if __cplusplus >= 201703L
+
 // Unnamed value constructed in return statement.
 // Move constructor need not be available.
 Unmovable rvo_unmovable()
 {
     return Unmovable { "unnamed" };
 }
+
+#endif // C++17
 
 // Unnamed values constructed in all return statements.
 Verbose rvo_conditional(int x)
@@ -91,11 +95,15 @@ Verbose rvo_chained()
     return Verbose { rvo() };
 }
 
+#if __cplusplus >= 201402L
+
 // Unnamed tuple of unnamed values constructed in return statement.
 auto rvo_tuple()
 {
     return std::tuple<Verbose, Verbose>("first", "second");
 }
+
+#endif // C++14
 
 // Unique named return value.
 Verbose nrvo()
@@ -146,16 +154,22 @@ Verbose nrvo_chained()
     return result;
 }
 
+#if __cplusplus >= 201402L
+
 // Unique named tuple return value.
 auto nrvo_tuple_good()
 {
     auto result = std::tuple<Verbose, Verbose>("one", "two");
-    auto &v1 = get<0>(result);
-    auto &v2 = get<1>(result);
+    auto &v1 = std::get<0>(result);
+    auto &v2 = std::get<1>(result);
     v1.name() = "first";
     v2.name() = "second";
     return result;
 }
+
+#endif  // C++14
+
+#if __cplusplus >= 201703L
 
 // Unique named tuple return value.
 auto nrvo_tuple_better()
@@ -167,6 +181,10 @@ auto nrvo_tuple_better()
     return result;
 }
 
+#endif // C++17
+
+#if __cplusplus >= 201402L
+
 // Fail! Named tuple of named values.
 auto nrvo_tuple_bad()
 {
@@ -175,6 +193,8 @@ auto nrvo_tuple_bad()
     auto result = std::make_tuple(v1, v2);
     return result;
 }
+
+#endif // C++14
 
 // Non-unique return values.
 // This actually works with LLVM ?!
@@ -216,12 +236,16 @@ void rvo_output_parameter(Uncopyable& result)
     result = Uncopyable { "parameter" };
 }
 
+#if __cplusplus >= 201703L
+
 // Fail! Unique named value assigned to output parameter.
 void nrvo_output_parameter(Unmovable& result)
 {
     auto v = Unmovable{ "parameter" };
     result = v;
 }
+
+#endif // C++17
 
 // Conversion operator is invoked implicitly.
 // No copy or move operation is invoked, with or wihtout std::move().
@@ -278,6 +302,8 @@ TEST(CopyElision, rvo_uncopyable)
     std::cout << std::endl << actual << std::endl;
 }
 
+#if __cplusplus >= 201703L
+
 TEST(CopyElision, rvo_unmovable)
 {
     CaptureStdout();
@@ -286,6 +312,8 @@ TEST(CopyElision, rvo_unmovable)
     EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }
+
+#endif // C++17
 
 TEST(CopyElision, rvo_conditional)
 {
@@ -382,6 +410,8 @@ TEST(CopyElision, nrvo_parameter)
     std::cout << std::endl << actual << std::endl;
 }
 
+#if __cplusplus >= 201703L
+
 TEST(CopyElision, output_parameter)
 {
     auto name = std::string { "local" };
@@ -402,6 +432,10 @@ TEST(CopyElision, output_parameter)
     std::cout << std::endl << actual << std::endl;
 }
 
+#endif // C++17
+
+#if __cplusplus >= 201402L
+
 TEST(CopyElision, rvo_tuple_get)
 {
     // Good: use get to access tuple elements by reference
@@ -417,6 +451,10 @@ TEST(CopyElision, rvo_tuple_get)
     std::cout << std::endl << actual << std::endl;
 }
 
+#endif // C++14
+
+#if __cplusplus >= 201703L
+
 TEST(CopyElision, rvo_tuple_structured_binding)
 {
     // Better: use structured binding to access tuple elements.
@@ -429,6 +467,10 @@ TEST(CopyElision, rvo_tuple_structured_binding)
     EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }
+
+#endif // C++17
+
+#if __cplusplus >= 201402L
 
 TEST(CopyElision, rvo_tuple_tie)
 {
@@ -464,6 +506,10 @@ TEST(CopyElision, nrvo_tuple_get)
     std::cout << std::endl << actual << std::endl;
 }
 
+#endif // C++14
+
+#if __cplusplus >= 201703L
+
 TEST(CopyElision, nrvo_tuple_structured_binding)
 {
     // Better: use structured binding to access tuple elements.
@@ -495,6 +541,8 @@ TEST(CopyElision, nrvo_tuple_tie)
     EXPECT_THAT(actual, HasSubstr("assignment"));
     std::cout << std::endl << actual << std::endl;
 }
+
+#endif // C++17
 
 TEST(CopyElision, initialization)
 {

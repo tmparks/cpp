@@ -1,6 +1,7 @@
 #include "Shape.hpp"
 
-#include <gsl/gsl>
+#include "compat/gsl14.hpp"
+#include "compat/numbers20.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -57,7 +58,13 @@ Circle Shape::boundingCircle() const {
 }
 
 Rectangle Shape::boundingBox() const {
+#if __cplusplus >= 201703L
     auto [width, height] = boundingBoxImpl(scale_, rotation_);
+#else
+    auto tuple = boundingBoxImpl(scale_, rotation_);
+    auto& width = std::get<0>(tuple);
+    auto& height = std::get<1>(tuple);
+#endif // C++17
     auto result = Rectangle(width, height);
     result.moveTo(position_.x(), position_.y());
     return result;
