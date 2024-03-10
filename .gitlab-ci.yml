@@ -54,6 +54,11 @@ build-20:
   variables:
     CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20
 
+build-23:
+  extends: .build
+  variables:
+    CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=23
+
 # See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
 unit-test-debug: # This job runs in the test stage.
   stage: test    # It only starts when the jobs in the build stage complete successfully.

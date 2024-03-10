@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu:rolling
 
 # Install development tools
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
