@@ -75,15 +75,18 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 ################################################################################
 
 add_executable(TestRunner
+    AbstractWidget.cpp
     Array.cpp
     Constant.cpp
     CopyElision.cpp
     Lockable.cpp
     Shape.cpp
     StretchableArray.cpp
+    TestSharedFromThis.cpp
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp
+    Widget.cpp
     Zip.cpp
 )
 
