@@ -79,6 +79,7 @@ add_executable(TestRunner
     Array.cpp
     Constant.cpp
     CopyElision.cpp
+    Gadget.cpp
     Lockable.cpp
     Shape.cpp
     StretchableArray.cpp

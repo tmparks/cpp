@@ -1,6 +1,7 @@
 #pragma once
 #include "Verbose.hpp"
 #include <memory>
+#include <type_traits>
 
 // Derived publicly from std::enable_shared_from_this
 class AbstractWidget : public std::enable_shared_from_this<AbstractWidget> {
@@ -14,11 +15,7 @@ public:
     virtual ~AbstractWidget() = default;
 
 protected:
-    // Tag type.
-    struct Protected {
-        // Explicit constructor prevents brace initialization.
-        explicit Protected() = default;
-    };
+    struct Protected; // Tag type.
 
     AbstractWidget(const std::string& name);
     AbstractWidget(const AbstractWidget&) = default;
@@ -35,8 +32,18 @@ private:
     Verbose v_;
 };
 
+struct AbstractWidget::Protected {
+    // Explicit constructor prevents brace initialization.
+    explicit Protected() = default;
+};
+
+// Non-member factory function.
 template <typename Derived, typename... Args>
 std::shared_ptr<Derived> create(Args&&... args) {
+    static_assert(
+            not (std::is_base_of_v<AbstractWidget, std::remove_reference_t<Args>>
+                 || ...),
+            "Copy construction is forbidden!");
     return std::make_shared<Derived>(
             AbstractWidget::Protected {}, std::forward<Args>(args)...);
 }

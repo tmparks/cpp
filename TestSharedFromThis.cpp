@@ -1,4 +1,4 @@
-#include "Widget.hpp"
+#include "Gadget.hpp"
 #include "compat/gsl14.hpp"
 #include <gtest/gtest.h>
 
@@ -14,13 +14,21 @@ void share(Widget& w) {
               << std::endl;
 }
 
+TEST(SharedFromThis, create) {
+    auto w1 = create<Widget>();
+    auto g2 = create<Gadget>();
+    // auto w3 = create<Widget>(*w1); // copy forbidden
+    // auto g4 = create<Gadget>(*w1); // copy forbidden
+    // auto g5 = create<Widget>(*g2); // copy forbidden
+}
+
 TEST(SharedFromThis, clone) {
-    auto p1 = create<Widget>();
-    auto p2 = p1->clone();
+    auto w1 = create<Widget>();
+    auto w2 = w1->clone();
 }
 
 TEST(SharedFromThis, share) {
-    auto p = create<Widget>();
-    share(*p);
-    share_const(*p);
+    auto w1 = create<Widget>();
+    share(*w1);
+    share_const(*w1);
 }
