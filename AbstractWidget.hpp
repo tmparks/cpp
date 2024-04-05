@@ -6,9 +6,15 @@
 // Derived publicly from std::enable_shared_from_this
 class AbstractWidget : public std::enable_shared_from_this<AbstractWidget> {
 public:
-    // Non-member factory function.
+    // Non-member factory function. Any number of arguments.
     template <typename Derived, typename... Args>
     friend std::shared_ptr<Derived> create(Args&&... args);
+
+#if __cplusplus < 201703L
+    // Non-member factory function. One or more arguments.
+    template <typename Derived, typename Arg, typename... Args>
+    friend std::shared_ptr<Derived> create(Arg&& arg, Args&&... args);
+#endif // C++17
 
     std::shared_ptr<AbstractWidget> clone() const;
 
@@ -37,7 +43,6 @@ struct AbstractWidget::Protected {
     explicit Protected() = default;
 };
 
-// Non-member factory function.
 template <typename Derived, typename... Args>
 std::shared_ptr<Derived> create(Args&&... args) {
 #if __cplusplus >= 201703L
@@ -49,3 +54,18 @@ std::shared_ptr<Derived> create(Args&&... args) {
     return std::make_shared<Derived>(
             AbstractWidget::Protected {}, std::forward<Args>(args)...);
 }
+
+#if __cplusplus < 201703L
+template <typename Derived, typename Arg, typename... Args>
+std::shared_ptr<Derived> create(Arg&& arg, Args&&... args) {
+    static_assert(
+            not std::is_base_of<
+                    AbstractWidget,
+                    typename std::remove_reference<Arg>::type>::value,
+            "Copy construction is forbidden!");
+    return std::make_shared<Derived>(
+            AbstractWidget::Protected {},
+            std::forward<Arg>(arg),
+            std::forward<Args>(args)...);
+}
+#endif // C++17
