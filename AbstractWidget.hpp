@@ -47,7 +47,7 @@ template <typename Derived, typename... Args>
 std::shared_ptr<Derived> create(Args&&... args) {
 #if __cplusplus >= 201703L
     static_assert(
-            not (std::is_base_of_v<AbstractWidget, std::remove_reference_t<Args>>
+            not (std::is_base_of_v<AbstractWidget, std::decay_t<Args>>
                  || ...),
             "Copy construction is forbidden!");
 #endif // C++17
