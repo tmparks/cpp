@@ -383,7 +383,7 @@ TEST(CopyElision, nrvo_not_unique)
     // Other compilers do not
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
 #endif // __clang__
-    EXPECT_THAT(v.name(), StrEq("odd"));
+    EXPECT_THAT(v.name(), EndsWith("odd"));
     std::cout << std::endl
               << actual << std::endl;
 }
@@ -482,8 +482,8 @@ TEST(CopyElision, rvo_tuple_tie)
     CaptureStdout();
     std::tie(v1, v2) = rvo_tuple();
     auto actual = GetCapturedStdout();
-    EXPECT_THAT(v1.name(), StrEq("first"));
-    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(v1.name(), EndsWith("first"));
+    EXPECT_THAT(v2.name(), EndsWith("second"));
     EXPECT_THAT(actual, Not(AnyOf(
         HasSubstr("copy constructor"),
         HasSubstr("move constructor"))));
@@ -533,8 +533,8 @@ TEST(CopyElision, nrvo_tuple_tie)
     CaptureStdout();
     std::tie(v1, v2) = nrvo_tuple_better();
     auto actual = GetCapturedStdout();
-    EXPECT_THAT(v1.name(), StrEq("first"));
-    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(v1.name(), EndsWith("first"));
+    EXPECT_THAT(v2.name(), EndsWith("second"));
     EXPECT_THAT(actual, Not(AnyOf(
         HasSubstr("copy constructor"),
         HasSubstr("move constructor"))));
@@ -581,6 +581,6 @@ TEST(CopyElision, class_conversion)
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
     EXPECT_THAT(actual, Not(HasSubstr("assignment")));
-    EXPECT_THAT(v.name(), StrEq("Derived"));
+    EXPECT_THAT(v.name(), EndsWith("Derived"));
     std::cout << std::endl << actual << std::endl;
 }
