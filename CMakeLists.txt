@@ -84,6 +84,7 @@ add_executable(TestRunner
     Shape.cpp
     StretchableArray.cpp
     TestSharedFromThis.cpp
+    TestSharedRef.cpp
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp

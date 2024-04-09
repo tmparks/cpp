@@ -66,6 +66,7 @@ SharedRef<T>::operator std::shared_ptr<const T>() const {
 
 template <typename T>
 T& SharedRef<T>::getRef() {
+    std::cout << __func__ << ": ";
     return *this;
 }
 template <typename T>
