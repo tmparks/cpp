@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Verbose.hpp"
+#include "compat/gsl14.hpp"
 #include <iostream>
 #include <memory>
 
@@ -9,9 +10,7 @@
 template <typename T>
 class SharedRef {
 public:
-    template <typename... Args>
-    SharedRef(Args&&... args);
-    SharedRef(std::shared_ptr<T> p); // by value
+    SharedRef(std::shared_ptr<T> p);
     operator T&();
     operator const T&() const;
     operator std::shared_ptr<T>();
@@ -29,11 +28,6 @@ private:
     std::shared_ptr<T> p_;
     Verbose v_ { "SharedRef" };
 };
-
-template <typename T>
-template <typename... Args>
-SharedRef<T>::SharedRef(Args&&... args) :
-        p_ { std::make_shared<T>(std::forward<Args>(args)...) } { }
 
 template <typename T>
 SharedRef<T>::SharedRef(std::shared_ptr<T> p) : p_ { std::move(p) } {
@@ -66,21 +60,24 @@ SharedRef<T>::operator std::shared_ptr<const T>() const {
 
 template <typename T>
 T& SharedRef<T>::getRef() {
-    std::cout << __func__ << ": ";
+    std::cout << gsl::czstring(__func__) << ": ";
     return *this;
 }
+
 template <typename T>
 const T& SharedRef<T>::getRef() const {
-    std::cout << __func__ << ": ";
+    std::cout << gsl::czstring(__func__) << ": ";
     return *this;
 }
+
 template <typename T>
 std::shared_ptr<T> SharedRef<T>::getPtr() {
-    std::cout << __func__ << ": ";
+    std::cout << gsl::czstring(__func__) << ": ";
     return *this;
 }
+
 template <typename T>
 std::shared_ptr<const T> SharedRef<T>::getPtr() const {
-    std::cout << __func__ << ": ";
+    std::cout << gsl::czstring(__func__) << ": ";
     return *this;
 }
