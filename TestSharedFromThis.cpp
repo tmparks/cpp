@@ -24,7 +24,9 @@ TEST(SharedFromThis, create) {
 
 TEST(SharedFromThis, clone) {
     auto w1 = create<Widget>();
+    auto g1 = create<Gadget>();
     auto w2 = w1->clone();
+    auto g2 = g1->clone();
 }
 
 TEST(SharedFromThis, share) {
