@@ -10,6 +10,6 @@ public: // pseudo-protected
     Widget(Protected, const Widget& other);
     Widget(Protected, const std::string& name);
 
-protected:
+private:
     Verbose v_;
 };

@@ -82,6 +82,7 @@ add_executable(TestRunner
     Lockable.cpp
     Shape.cpp
     StretchableArray.cpp
+    TestSharedCloneable.cpp
     TestSharedFromThis.cpp
     TestSharedRef.cpp
     Verbose.cpp
