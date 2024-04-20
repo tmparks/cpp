@@ -75,7 +75,6 @@ add_compile_options(-Werror -Wall -Wextra -Wpedantic)
 ################################################################################
 
 add_executable(TestRunner
-    AbstractWidget.cpp
     Array.cpp
     Constant.cpp
     CopyElision.cpp

@@ -16,6 +16,7 @@ Verbose::Verbose(Verbose&& other) noexcept :
         name_ { std::string("move constructed from ") + other.name_ } {
     std::cout << name_ << ": move constructor this=" << this
               << " other=" << &other << std::endl;
+    other.name_ += " (moved)";
 }
 
 Verbose& Verbose::operator=(const Verbose& other) {
@@ -30,6 +31,7 @@ Verbose& Verbose::operator=(Verbose&& other) noexcept {
     std::cout << name_ << ": move assignment this=" << this
               << " other=" << &other << std::endl;
     name_ = std::string("move assigned from ") + other.name_;
+    other.name_ += " (moved)";
     return *this;
 }
 

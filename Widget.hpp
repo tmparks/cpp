@@ -1,15 +1,15 @@
 #pragma once
-#include "AbstractWidget.hpp"
+#include "SharedObject.hpp"
+#include "Verbose.hpp"
 
-// Derived publicly (and indirectly) from std::enable_shared_from_this
-class Widget : public AbstractWidget {
+// Derived publicly (but indirectly) from std::enable_shared_from_this
+class Widget : public SharedObject {
 public: // pseudo-protected
     explicit Widget(Protected);
-    Widget(Protected, const Widget& w);
+    Widget(Protected, Widget&& other);
+    Widget(Protected, const Widget& other);
+    Widget(Protected, const std::string& name);
 
 protected:
-    Widget(const std::string& name);
-
-private:
-    std::shared_ptr<AbstractWidget> cloneImpl() const override;
+    Verbose v_;
 };

@@ -1,12 +1,10 @@
 #include "Gadget.hpp"
 #include "compat/gsl14.hpp"
 
-Gadget::Gadget(Protected) : Gadget { gsl::czstring(__func__) } { }
+Gadget::Gadget(Protected p) : Widget { p, gsl::czstring(__func__) } { }
 
-Gadget::Gadget(Protected, const Gadget& g) : Gadget { g } { }
+Gadget::Gadget(Protected, Gadget&& other) : Gadget { std::move(other) } { }
 
-Gadget::Gadget(const std::string& name) : Widget { name } { }
+Gadget::Gadget(Protected, const Gadget& other) : Gadget { other } { }
 
-std::shared_ptr<AbstractWidget> Gadget::cloneImpl() const {
-    return std::make_shared<Gadget>(Protected {}, *this);
-}
+Gadget::Gadget(Protected p, const std::string& name) : Widget { p, name } { }

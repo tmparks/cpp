@@ -17,16 +17,21 @@ void share(Widget& w) {
 TEST(SharedFromThis, create) {
     auto w1 = create<Widget>();
     auto g2 = create<Gadget>();
-    // auto w3 = create<Widget>(*w1); // copy forbidden
-    // auto g4 = create<Gadget>(*w1); // copy forbidden
-    // auto g5 = create<Widget>(*g2); // copy forbidden
 }
 
-TEST(SharedFromThis, clone) {
+TEST(SharedFromThis, copy) {
     auto w1 = create<Widget>();
+    auto w2 = create<Widget>(*w1); // copy construction
+    auto w3 = create<Widget>("three");
+    *w3 = *w1; // copy assignment
+}
+
+TEST(SharedFromThis, move) {
     auto g1 = create<Gadget>();
-    auto w2 = w1->clone();
-    auto g2 = g1->clone();
+    auto g2 = create<Gadget>(std::move(*g1)); // move construction
+    auto g3 = create<Gadget>("three");
+    auto g4 = create<Gadget>("four");
+    *g4 = std::move(*g3); // move assignment
 }
 
 TEST(SharedFromThis, share) {
