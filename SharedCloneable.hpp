@@ -31,10 +31,10 @@ std::shared_ptr<Derived> SharedCloneable<Derived, Base>::clone() const {
     // Derived class must override cloneImpl!
     Ensures(typeid(*result) == typeid(*this));
     static_assert(
-            not (std::is_copy_constructible_v<Derived>
-                 || std::is_move_constructible_v<Derived>
-                 || std::is_copy_assignable_v<Derived>
-                 || std::is_move_assignable_v<Derived>),
+            not (std::is_copy_constructible<Derived>::value
+                 || std::is_move_constructible<Derived>::value
+                 || std::is_copy_assignable<Derived>::value
+                 || std::is_move_assignable<Derived>::value),
             "Derived class must not be copy/move constructible/assignable!");
 
     return result;
