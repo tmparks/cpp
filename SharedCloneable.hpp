@@ -10,9 +10,10 @@ template <typename Derived, typename Base = SharedObject>
 class SharedCloneable : public Base {
 public:
     std::shared_ptr<Derived> clone() const;
-    ~SharedCloneable() override = default; 
+    ~SharedCloneable() override = default;
 
 protected:
+    using Base::Base; // Inherit all constructors from Base.
     SharedCloneable() = default;
     SharedCloneable(SharedCloneable&&) = delete;
     SharedCloneable(const SharedCloneable&) = default;
@@ -26,7 +27,16 @@ private:
 template <typename Derived, typename Base>
 std::shared_ptr<Derived> SharedCloneable<Derived, Base>::clone() const {
     auto result = std::static_pointer_cast<Derived>(std::move(cloneImpl()));
+
+    // Derived class must override cloneImpl!
     Ensures(typeid(*result) == typeid(*this));
+    static_assert(
+            not (std::is_copy_constructible_v<Derived>
+                 || std::is_move_constructible_v<Derived>
+                 || std::is_copy_assignable_v<Derived>
+                 || std::is_move_assignable_v<Derived>),
+            "Derived class must not be copy/move constructible/assignable!");
+
     return result;
 }
 
