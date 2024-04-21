@@ -4,9 +4,6 @@
 
 // Derived publicly from [std::enable_shared_from_this](https://en.cppreference.com/w/cpp/memory/enable_shared_from_this#Example)
 class SharedObject : public std::enable_shared_from_this<SharedObject> {
-protected:
-    struct Protected; // Tag type available to derived classes.
-
 public:
     // Non-member factory function. Any number of arguments.
     template <typename Derived, typename... Args>
@@ -15,6 +12,8 @@ public:
     virtual ~SharedObject() = default;
 
 protected:
+    struct Protected; // Tag type available to derived classes.
+
     SharedObject() = default;
     SharedObject(SharedObject&& other) = default;
     SharedObject(const SharedObject& other) = default;
@@ -29,6 +28,14 @@ struct SharedObject::Protected {
 
 template <typename Derived, typename... Args>
 std::shared_ptr<Derived> create(Args&&... args) {
+    static_assert(
+            std::is_convertible<Derived*, SharedObject*>::value,
+            "SharedObject must be a public base class of Derived!");
+    static_assert(
+            not (std::is_default_constructible<Derived>::value
+                 || std::is_copy_constructible<Derived>::value
+                 || std::is_move_constructible<Derived>::value),
+            "Constructors should not be publicly accessible!");
     return std::make_shared<Derived>(
             SharedObject::Protected {}, std::forward<Args>(args)...);
 }

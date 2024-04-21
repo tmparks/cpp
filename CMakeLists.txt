@@ -78,7 +78,6 @@ add_executable(TestRunner
     Array.cpp
     Constant.cpp
     CopyElision.cpp
-    Gadget.cpp
     Lockable.cpp
     Shape.cpp
     StretchableArray.cpp
@@ -88,7 +87,6 @@ add_executable(TestRunner
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp
-    Widget.cpp
     Zip.cpp
 )
 
