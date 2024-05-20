@@ -5,27 +5,33 @@ Verbose::Verbose(const std::string& name) : name_ { name } {
     std::cout << name_ << ": constructor this=" << this << std::endl;
 }
 
-Verbose::Verbose(const Verbose& other) : name_ { other.name_ } {
+Verbose::Verbose(const Verbose& other) :
+        name_ { std::string("copy constructed from ") + other.name_ } {
     std::cout << name_ << ": copy constructor this=" << this
               << " other=" << &other << std::endl;
 }
 
-Verbose::Verbose(Verbose&& other) noexcept : name_ { std::move(other.name_) } {
+// Note that other.name_ is *not* moved from.
+Verbose::Verbose(Verbose&& other) noexcept :
+        name_ { std::string("move constructed from ") + other.name_ } {
     std::cout << name_ << ": move constructor this=" << this
               << " other=" << &other << std::endl;
+    other.name_ += " (moved)";
 }
 
 Verbose& Verbose::operator=(const Verbose& other) {
     std::cout << name_ << ": copy assignment this=" << this
               << " other=" << &other << std::endl;
-    name_ = other.name_;
+    name_ = std::string("copy assigned from ") + other.name_;
     return *this;
 }
 
+// Note that other.name_ is *not* moved from.
 Verbose& Verbose::operator=(Verbose&& other) noexcept {
     std::cout << name_ << ": move assignment this=" << this
               << " other=" << &other << std::endl;
-    name_ = std::move(other.name_);
+    name_ = std::string("move assigned from ") + other.name_;
+    other.name_ += " (moved)";
     return *this;
 }
 
