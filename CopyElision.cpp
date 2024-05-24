@@ -227,7 +227,7 @@ Verbose nrvo_const_ref_parameter(const Verbose& v)
 // Fail! Return value is function parameter.
 Verbose nrvo_move_parameter(Verbose&& v)
 {
-    return v;
+    return std::move(v);
 }
 
 // Fail! Unnamed value assigned to output parameter.
