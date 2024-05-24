@@ -6,7 +6,7 @@
 
 #else // C++14
 
-#pragma message "emulating C++14 gsl" // NOLINT
+#pragma message "emulating C++14 gsl"
 
 #include <cassert>
 #define Expects assert

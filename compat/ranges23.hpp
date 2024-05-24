@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& stream, std::tuple<Ts...> const& tuple) {
 
 #else // C++23
 
-#pragma message "emulating C++23 ranges" // NOLINT
+#pragma message "emulating C++23 ranges"
 
 #include <boost/range/combine.hpp>
 #include <boost/tuple/tuple.hpp>
