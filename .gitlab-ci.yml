@@ -1,3 +1,4 @@
+---
 # Pipeline executes for default branch or when started from the web interface.
 workflow:
   rules:
@@ -30,6 +31,8 @@ build-image:     # This job runs in the .pre stage, wich runs first.
 
 .build:
   stage: build
+  variables:
+    CXXFLAGS: -Werror
   script:
     - cmake $CMAKE_OPTIONS -S . -B build
     - make --directory=build all
@@ -118,3 +121,5 @@ pages:           # This job must be named "pages"
     - mv build/results/ public/
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+...
