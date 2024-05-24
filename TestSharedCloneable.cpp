@@ -35,6 +35,7 @@ protected:
 };
 
 TEST(SharedCloneable, clone) {
+    int unused = 0; // -Werror
     auto p1 = create<ConcreteObject>();
     auto p2 = p1->shared_from_this(); // copy of pointer
     auto p3 = p1->clone();
