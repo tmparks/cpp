@@ -2,6 +2,7 @@
 // (https://isocpp.org/wiki/faq/value-vs-ref-semantics#virt-data)
 
 #include "StretchableArray.hpp"
+#include <functional>
 #include <iostream>
 
 class StackRef : private Verbose
@@ -20,7 +21,7 @@ private:
     // member object and the derived class’s destructor deletes the object.
     // No additional memory allocation overhead is imposed,
     // but copy assignment becomes impossible.
-    Array& data_; // NOLINT(*-avoid-const-or-ref-data-members)
+    std::reference_wrapper<Array> data_;
     gsl::index index_ { 0 };
 };
 
@@ -60,17 +61,17 @@ StackRef::StackRef(const std::string& name, Array& data) :
     Verbose { name },
     data_ { data }
 {
-    std::cout << gsl::czstring(__func__) << ": &data_=" << &data_ << std::endl;
+    std::cout << gsl::czstring(__func__) << ": &data_=" << &data_.get() << std::endl;
 }
 
 void StackRef::Push(double x)
 {
-    data_[index_++] = x; // may throw
+    data_.get()[index_++] = x; // may throw
 }
 
 double StackRef::Pop()
 {
-    return data_[--index_]; // may throw
+    return data_.get()[--index_]; // may throw
 }
 
 ////////////////////////////////////////////////////////////////////////////////
