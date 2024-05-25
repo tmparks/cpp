@@ -1,6 +1,7 @@
 ---
 # See [Using clang-tidy](https://clang.llvm.org/extra/clang-tidy/#using-clang-tidy)
 WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
 
 # See [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
 # Default checks are disabled.
