@@ -21,6 +21,7 @@ protected:
     SharedCloneable& operator=(const SharedCloneable&) = delete;
 
 private:
+    // NOLINTNEXTLINE(*-explicit-virtual-functions)
     virtual std::shared_ptr<SharedObject> cloneImpl() const;
 };
 

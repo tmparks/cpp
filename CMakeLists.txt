@@ -103,6 +103,6 @@ gtest_discover_tests(TestRunner
 # See [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/)
 # See [How to use clang-tidy in CMake](https://stackoverflow.com/questions/67999371/how-to-use-clang-tidy-in-cmake)
 add_custom_target(check
-    COMMAND run-clang-tidy
+    COMMAND run-clang-tidy -quiet
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )

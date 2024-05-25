@@ -25,7 +25,7 @@ protected:
     void assign(Array other) noexcept;
     void check_bounds(gsl::index size) const;
     gsl::index size_ { 0 };
-    std::unique_ptr<double[]> data_ {};
+    std::unique_ptr<double[]> data_ {}; // NOLINT(*-avoid-c-arrays)
 
 private:
     // See [Non-virtual interface pattern](https://en.wikipedia.org/wiki/Non-virtual_interface_pattern)

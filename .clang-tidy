@@ -4,11 +4,13 @@ WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 
 # See [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
-# Default checks are disabled.
 Checks:
- - -*
- - cppcoreguidelines-*
- - modernize-use-auto
+  - -* # Disable default checks.
+  - cppcoreguidelines-*
+  - modernize-use-auto
+# Disable some checks by choice.
+  - -cppcoreguidelines-non-private-member-variables-in-classes
+
 CheckOptions:
   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true
   modernize-use-auto.MinTypeNameLength: 0
