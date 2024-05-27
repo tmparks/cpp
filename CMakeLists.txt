@@ -70,7 +70,7 @@ if(NOT DEFINED CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-add_compile_options(-Werror -Wall -Wextra -Wpedantic)
+add_compile_options(-Wall -Wextra -Wpedantic)
 
 ################################################################################
 
@@ -102,8 +102,4 @@ gtest_discover_tests(TestRunner
 # we define a custom target to run clang-tidy.
 # See [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/)
 # See [How to use clang-tidy in CMake](https://stackoverflow.com/questions/67999371/how-to-use-clang-tidy-in-cmake)
-get_target_property(CHECK_SOURCES TestRunner SOURCES)
-add_custom_target(check
-    COMMAND clang-tidy --quiet -p ${CMAKE_BINARY_DIR} ${CHECK_SOURCES}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+add_custom_target(check COMMAND run-clang-tidy -quiet -p ${CMAKE_BINARY_DIR})

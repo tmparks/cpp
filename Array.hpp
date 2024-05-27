@@ -24,10 +24,8 @@ public:
 protected:
     void assign(Array other) noexcept;
     void check_bounds(gsl::index size) const;
-    // NOLINTBEGIN(*-non-private-member-variables-in-classes)
     gsl::index size_ { 0 };
     std::unique_ptr<double[]> data_ {}; // NOLINT(*-avoid-c-arrays)
-    // NOLINTEND(*-non-private-member-variables-in-classes)
 
 private:
     // See [Non-virtual interface pattern](https://en.wikipedia.org/wiki/Non-virtual_interface_pattern)

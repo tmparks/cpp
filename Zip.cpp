@@ -5,8 +5,10 @@
 
 class Zip : public testing::Test {
 public:
+
+    // NOLINTBEGIN(*-avoid-magic-numbers)
+
     void SetUp() override {
-        // NOLINTBEGIN(*-avoid-magic-numbers)
         left = { 1, 2, 3, 4, 5 };
         right = { 1.1, 2.2, 3.3, 4.4, 5.5 };
 
@@ -15,8 +17,9 @@ public:
         for (const auto& name : { "one", "two", "three", "four", "five" }) {
             center.emplace_back(name);
         }
-        // NOLINTEND(*-avoid-magic-numbers)
     }
+
+    // NOLINTEND(*-avoid-magic-numbers)
 
     template <typename T>
     void print(const std::string& label, const T& range) {
@@ -199,7 +202,8 @@ TEST_F(Zip, for_const) {
     // To make our intentions more obvious, and to guard against future changes
     // in the declarations of the sequences, we can explicitly make each
     // sequence const before combining them.
-    for (const auto& [a, b, c] : std::ranges::views::zip(left, center, right) | std::views::as_const) {
+    for (const auto& [a, b, c] :
+         std::ranges::views::zip(left, center, right) | std::views::as_const) {
         EXPECT_EQ('!', b.name().back());
         // c -= a++;             // compile time error
         // b.name().append("!"); // compile time error
@@ -262,7 +266,7 @@ TEST_F(Zip, for_copy) {
         EXPECT_FALSE(std::is_reference<decltype(b)>::value);
         EXPECT_FALSE(std::is_reference<decltype(c)>::value);
         // Modify the copies.
-        c -= a++; // NOLINT(*-deadcode.DeadStores)
+        c -= a++;
         b.name().append("!");
     }
     for (const auto& tuple : std::ranges::views::zip(left, center, right)) {

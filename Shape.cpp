@@ -229,6 +229,7 @@ namespace { // anonymous namespace for definitions that are local to this file
     }
 
     // NOLINTBEGIN(*-avoid-magic-numbers)
+
     void TestScale(const Shape& shape) {
         auto area1 = shape.clone()->scaleTo(1.0).area();
         auto area2 = shape.clone()->scaleTo(2.0).area();
@@ -236,6 +237,7 @@ namespace { // anonymous namespace for definitions that are local to this file
         EXPECT_DOUBLE_EQ(4.0 * area1, area2);
         EXPECT_DOUBLE_EQ(36.0 * area2, area3);
     }
+
     // NOLINTEND(*-avoid-magic-numbers)
 
 } // anonymous namespace
