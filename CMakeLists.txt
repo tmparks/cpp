@@ -84,6 +84,7 @@ add_executable(TestRunner
     TestSharedCloneable.cpp
     TestSharedFromThis.cpp
     TestSharedRef.cpp
+    TestUniqueRef.cpp
     Verbose.cpp
     VirtualDataPtr.cpp
     VirtualDataRef.cpp

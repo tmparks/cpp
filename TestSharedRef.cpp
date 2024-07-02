@@ -7,32 +7,37 @@
 using namespace testing;
 using namespace testing::internal;
 
-template <typename T>
-using SharedVector = std::vector<SharedRef<T>>;
+// Anonymous namespace for definitions that are local to this file.
+namespace {
+    template <typename T>
+    using SharedVector = std::vector<SharedRef<T>>;
 
-// Create a shared reference to a newly constructed object of type T.
-template <typename T, typename... Args>
-SharedRef<T> create(Args&&... args) {
-    return SharedRef<T> { std::make_shared<T>(std::forward<Args>(args)...) };
-}
-
-// Test that two objects are distinct (different addresses)
-bool distinct(const Verbose& a, const Verbose& b) { return &a != &b; }
-
-// Test that two objects are equal (same name)
-bool equal(const Verbose& a, const Verbose& b) { return a.name() == b.name(); }
-
-// Print the elements of a vector of shared references.
-void print(const SharedVector<Verbose>& v) {
-    for (auto& elem : v) {
-        std::cout << gsl::czstring(__func__) << ": "
-                  << elem // resolves to operator<< for Verbose
-                  << std::endl;
-        const auto& name = elem.getRef().name();
-        EXPECT_THAT(name, Not(HasSubstr("copy")));
-        EXPECT_THAT(name, Not(HasSubstr("move")));
+    // Create a shared reference to a newly constructed object of type T.
+    template <typename T, typename... Args>
+    SharedRef<T> create(Args&&... args) {
+        return std::make_shared<T>(std::forward<Args>(args)...);
     }
-}
+
+    // Test that two objects are distinct (different addresses)
+    bool distinct(const Verbose& a, const Verbose& b) { return &a != &b; }
+
+    // Test that two objects are equal (same name)
+    bool equal(const Verbose& a, const Verbose& b) {
+        return a.name() == b.name();
+    }
+
+    // Print the elements of a vector of shared references.
+    void print(const SharedVector<Verbose>& v) {
+        for (auto& elem : v) {
+            std::cout << gsl::czstring(__func__) << ": "
+                      << elem // resolves to operator<< for Verbose
+                      << std::endl;
+            const auto& name = elem.getRef().name();
+            EXPECT_THAT(name, Not(HasSubstr("copy")));
+            EXPECT_THAT(name, Not(HasSubstr("move")));
+        }
+    }
+} // anonymous namespace
 
 TEST(SharedRef, constructor) {
     auto a = create<Verbose>("one");
@@ -44,6 +49,10 @@ TEST(SharedRef, constructor) {
 }
 
 TEST(SharedRef, copy) {
+    // SharedRef is copyable because shared_ptr is copyable.
+    EXPECT_TRUE(std::is_copy_constructible<SharedRef<int>>::value);
+    EXPECT_TRUE(std::is_copy_assignable<SharedRef<int>>::value);
+
     auto a = create<Verbose>("one");
     auto b = create<Verbose>("two");
     auto c = create<Verbose>("three");
@@ -75,35 +84,16 @@ TEST(SharedRef, copy) {
 }
 
 TEST(SharedRef, move) {
-    auto a = create<Verbose>("one");
-    auto b = create<Verbose>("two");
-    auto c = create<Verbose>("three");
-    auto d = SharedRef<Verbose> { std::move(a) }; // move constructor
-    c = std::move(b);                             // move assignment
-
-    // Moving modifies the reference, not the referenced object.
-
-    const auto& cName = c.getRef().name();
-    EXPECT_THAT(cName, EndsWith("two"));
-    EXPECT_THAT(cName, Not(HasSubstr("three")));
-    EXPECT_THAT(cName, Not(HasSubstr("copy")));
-    EXPECT_THAT(cName, Not(HasSubstr("move")));
-    EXPECT_THAT(cName, Not(HasSubstr("construct")));
-    EXPECT_THAT(cName, Not(HasSubstr("assign")));
-
-    const auto& dName = d.getRef().name();
-    EXPECT_THAT(dName, EndsWith("one"));
-    EXPECT_THAT(dName, Not(HasSubstr("copy")));
-    EXPECT_THAT(dName, Not(HasSubstr("move")));
-    EXPECT_THAT(dName, Not(HasSubstr("construct")));
-    EXPECT_THAT(dName, Not(HasSubstr("assign")));
+    // SharedRef is not moveable because the moved-from shared_ptr would be null.
+    EXPECT_FALSE(std::is_move_constructible<SharedRef<int>>::value);
+    EXPECT_FALSE(std::is_move_assignable<SharedRef<int>>::value);
 }
 
-TEST(SharedRef, vector) {
+TEST(SharedRef, container) {
     SharedVector<Verbose> v1;
-    v1.emplace_back(create<Verbose>("one"));
-    v1.emplace_back(create<Verbose>("two"));
-    v1.emplace_back(create<Verbose>("three"));
+    v1.emplace_back(std::make_shared<Verbose>("one"));
+    v1.emplace_back(std::make_shared<Verbose>("two"));
+    v1.emplace_back(std::make_shared<Verbose>("three"));
 
     print(v1);
 
