@@ -17,6 +17,7 @@ void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept;
 template <typename T>
 class SharedRef {
 public:
+    using Type = T;
     virtual ~SharedRef() = default; // destructor
     SharedRef(std::shared_ptr<T> p);
     void reset(std::shared_ptr<T> p);
@@ -47,7 +48,7 @@ private:
 template <typename T>
 SharedRef<T>::SharedRef(std::shared_ptr<T> p) : p_ { std::move(p) } {
     Expects(p_ != nullptr);
-    std::cout << "conversion from shared_ptr" << std::endl;
+    std::cout << v_ << ": conversion from shared_ptr" << std::endl;
 }
 
 template <typename T>
@@ -58,13 +59,13 @@ void SharedRef<T>::reset(std::shared_ptr<T> p) {
 
 template <typename T>
 SharedRef<T>::operator T&() {
-    std::cout << "conversion to reference" << std::endl;
+    std::cout << v_ << ": conversion to reference" << std::endl;
     return *p_;
 }
 
 template <typename T>
 SharedRef<T>::operator const T&() const {
-    std::cout << "conversion to const reference" << std::endl;
+    std::cout << v_ << ": conversion to const reference" << std::endl;
     return *p_;
 }
 
@@ -80,13 +81,13 @@ const T& SharedRef<T>::get() const {
 
 template <typename T>
 SharedRef<T>::operator std::shared_ptr<T>() {
-    std::cout << "conversion to shared_ptr" << std::endl;
+    std::cout << v_ << ": conversion to shared_ptr" << std::endl;
     return p_;
 }
 
 template <typename T>
 SharedRef<T>::operator std::shared_ptr<const T>() const {
-    std::cout << "conversion to const shared_ptr" << std::endl;
+    std::cout << v_ << ": conversion to const shared_ptr" << std::endl;
     return p_;
 }
 

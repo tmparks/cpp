@@ -109,6 +109,20 @@ TEST(SharedRef, move) {
     EXPECT_FALSE(std::is_move_assignable<SharedRef<int>>::value);
 }
 
+TEST(SharedRef, reset) {
+    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
+    a.reset(std::make_shared<Verbose>("two"));
+    EXPECT_EQ("two", a.get().name());
+}
+
+TEST(SharedRef, swap) {
+    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
+    SharedRef<Verbose> b { std::make_shared<Verbose>("two") };
+    swap(a, b);
+    EXPECT_EQ("one", b.get().name());
+    EXPECT_EQ("two", a.get().name());
+}
+
 TEST(SharedRef, container) {
     SharedContainer<Verbose> container;
     container.emplace_back(std::make_shared<Verbose>("one"));

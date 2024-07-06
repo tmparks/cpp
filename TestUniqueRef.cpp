@@ -74,6 +74,20 @@ TEST(UniqueRef, move) {
     EXPECT_FALSE(std::is_move_assignable<UniqueRef<int>>::value);
 }
 
+TEST(UniqueRef, reset) {
+    UniqueRef<Verbose> a { std::make_unique<Verbose>("one") };
+    a.reset(std::make_unique<Verbose>("two"));
+    EXPECT_EQ("two", a.get().name());
+}
+
+TEST(UniqueRef, swap) {
+    UniqueRef<Verbose> a { std::make_unique<Verbose>("one") };
+    UniqueRef<Verbose> b { std::make_unique<Verbose>("two") };
+    swap(a, b);
+    EXPECT_EQ("one", b.get().name());
+    EXPECT_EQ("two", a.get().name());
+}
+
 TEST(UniqueRef, container) {
     UniqueContainer<Verbose> container;
     container.emplace_back(std::make_unique<Verbose>("one"));

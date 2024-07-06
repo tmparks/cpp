@@ -18,6 +18,7 @@ void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept;
 template <typename T>
 class UniqueRef {
 public:
+    using Type = T;
     virtual ~UniqueRef() = default; // destructor
     UniqueRef(std::unique_ptr<T> p);
     void reset(std::unique_ptr<T> p);
@@ -44,7 +45,7 @@ private:
 template <typename T>
 UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) : p_ { std::move(p) } {
     Expects(p_ != nullptr);
-    std::cout << "conversion from unique_ptr" << std::endl;
+    std::cout << v_ << ": conversion from unique_ptr" << std::endl;
 }
 
 template <typename T>
@@ -55,13 +56,13 @@ void UniqueRef<T>::reset(std::unique_ptr<T> p) {
 
 template <typename T>
 UniqueRef<T>::operator T&() {
-    std::cout << "conversion to reference" << std::endl;
+    std::cout << v_ << ": conversion to reference" << std::endl;
     return *p_;
 }
 
 template <typename T>
 UniqueRef<T>::operator const T&() const {
-    std::cout << "conversion to const reference" << std::endl;
+    std::cout << v_ << ": conversion to const reference" << std::endl;
     return *p_;
 }
 
