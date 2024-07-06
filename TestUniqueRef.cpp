@@ -32,9 +32,9 @@ namespace {
     // Print the elements of a container of unique references.
     template <typename T>
     void print(const T& container) {
-        for (auto& elem : container) {
+        for (const auto& elem : container) {
             std::cout << gsl::czstring(__func__) << ": "
-                      << elem // resolves to operator<< for Verbose
+                      << elem // implicit conversion for operator<<
                       << std::endl;
             const auto& name = elem.get().name();
             EXPECT_THAT(name, Not(HasSubstr("copy")));
@@ -72,13 +72,11 @@ TEST(UniqueRef, container) {
 
     print(a1);
 
-    for (size_t i = 0; i < a1.size(); i++) {
-        const auto& elem = a1[i].get(); // explicitly call get()
-        std::cout << elem.name() << std::endl;
+    for (const auto& elem : a1) {
+        std::cout << elem.get().name() << std::endl; // explicitly get reference
     }
 
-    for (size_t i = 0; i < a1.size(); i++) {
-        const Verbose& elem = a1[i]; // implicit conversion (cannot use auto)
+    for (const Verbose& elem : a1) { // implicit conversion (cannot use auto)
         std::cout << elem.name() << std::endl;
     }
 }

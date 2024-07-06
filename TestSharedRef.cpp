@@ -28,11 +28,11 @@ namespace {
 
     // Print the elements of a vector of shared references.
     void print(const SharedVector<Verbose>& v) {
-        for (auto& elem : v) {
+        for (const auto& elem : v) {
             std::cout << gsl::czstring(__func__) << ": "
-                      << elem // resolves to operator<< for Verbose
+                      << elem // implicit conversion for operator<<
                       << std::endl;
-            const auto& name = elem.getRef().name();
+            const auto& name = elem.get().name();
             EXPECT_THAT(name, Not(HasSubstr("copy")));
             EXPECT_THAT(name, Not(HasSubstr("move")));
         }
@@ -67,7 +67,7 @@ TEST(SharedRef, copy) {
     EXPECT_TRUE(equal(b, c));
     EXPECT_FALSE(distinct(b, c)); // both refer to same object
 
-    const auto& cName = c.getRef().name();
+    const auto& cName = c.get().name();
     EXPECT_THAT(cName, EndsWith("two"));
     EXPECT_THAT(cName, Not(HasSubstr("three")));
     EXPECT_THAT(cName, Not(HasSubstr("copy")));
@@ -75,7 +75,7 @@ TEST(SharedRef, copy) {
     EXPECT_THAT(cName, Not(HasSubstr("construct")));
     EXPECT_THAT(cName, Not(HasSubstr("assign")));
 
-    const auto& dName = d.getRef().name();
+    const auto& dName = d.get().name();
     EXPECT_THAT(dName, EndsWith("one"));
     EXPECT_THAT(dName, Not(HasSubstr("copy")));
     EXPECT_THAT(dName, Not(HasSubstr("move")));
@@ -90,20 +90,18 @@ TEST(SharedRef, move) {
 }
 
 TEST(SharedRef, container) {
-    SharedVector<Verbose> v1;
-    v1.emplace_back(std::make_shared<Verbose>("one"));
-    v1.emplace_back(std::make_shared<Verbose>("two"));
-    v1.emplace_back(std::make_shared<Verbose>("three"));
+    SharedVector<Verbose> v1 {
+        std::make_shared<Verbose>("one"),
+        std::make_shared<Verbose>("two"),
+        std::make_shared<Verbose>("three") };
 
     print(v1);
 
-    for (size_t i = 0; i < v1.size(); i++) {
-        const auto& elem = v1[i].getRef(); // explicitly call getRef()
-        std::cout << elem.name() << std::endl;
+    for (const auto& elem : v1) {
+        std::cout << elem.get().name() << std::endl; // explicitly get reference
     }
 
-    for (size_t i = 0; i < v1.size(); i++) {
-        const Verbose& elem = v1[i]; // implicit conversion (cannot use auto)
+    for (const Verbose& elem : v1) { // implicit conversion (cannot use auto)
         std::cout << elem.name() << std::endl;
     }
 

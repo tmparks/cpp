@@ -5,9 +5,15 @@
 #include <iostream>
 #include <memory>
 
+// Forward declarations.
+template <typename T>
+class SharedRef;
+
+template <typename T>
+void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept;
+
 // Inspired by std::reference_wrapper, but holds a shared_ptr instead of a raw pointer.
-// Cannot be moved because it maintains the invariant that the contained
-// shared_ptr is never null.
+// Cannot be moved because the held shared_ptr must never be null.
 template <typename T>
 class SharedRef {
 public:
@@ -16,12 +22,12 @@ public:
     void reset(std::shared_ptr<T> p);
     operator T&();
     operator const T&() const;
+    T& get();
+    const T& get() const;
     operator std::shared_ptr<T>();
     operator std::shared_ptr<const T>() const;
-    T& getRef();
-    const T& getRef() const;
-    std::shared_ptr<T> getPtr();
-    std::shared_ptr<const T> getPtr() const;
+    std::shared_ptr<T> share();
+    std::shared_ptr<const T> share() const;
     SharedRef(const SharedRef&) = default;               // copy constructor
     SharedRef& operator=(const SharedRef&) = default;    // copy assignment
     friend void swap<>(SharedRef&, SharedRef&) noexcept; // non-member swap
@@ -34,20 +40,20 @@ private:
     SharedRef(SharedRef&&) noexcept = delete; // no move constructor
     SharedRef& operator=(SharedRef&&) noexcept = delete; // no move assignment
 
-    std::shared_ptr<T> p_;
+    std::shared_ptr<T> p_; // never null
     Verbose v_ { "SharedRef" };
 };
 
 template <typename T>
 SharedRef<T>::SharedRef(std::shared_ptr<T> p) : p_ { std::move(p) } {
+    Expects(p_ != nullptr);
     std::cout << "conversion from shared_ptr" << std::endl;
-    Ensures(p_ != nullptr);
 }
 
 template <typename T>
 void SharedRef<T>::reset(std::shared_ptr<T> p) {
+    Expects(p != nullptr);
     p_ = std::move(p);
-    Ensures(p_ != nullptr);
 }
 
 template <typename T>
@@ -59,6 +65,16 @@ SharedRef<T>::operator T&() {
 template <typename T>
 SharedRef<T>::operator const T&() const {
     std::cout << "conversion to const reference" << std::endl;
+    return *p_;
+}
+
+template <typename T>
+T& SharedRef<T>::get() {
+    return *p_;
+}
+
+template <typename T>
+const T& SharedRef<T>::get() const {
     return *p_;
 }
 
@@ -75,26 +91,12 @@ SharedRef<T>::operator std::shared_ptr<const T>() const {
 }
 
 template <typename T>
-T& SharedRef<T>::getRef() {
-    std::cout << gsl::czstring(__func__) << ": ";
-    return *p_;
-}
-
-template <typename T>
-const T& SharedRef<T>::getRef() const {
-    std::cout << gsl::czstring(__func__) << ": ";
-    return *p_;
-}
-
-template <typename T>
-std::shared_ptr<T> SharedRef<T>::getPtr() {
-    std::cout << gsl::czstring(__func__) << ": ";
+std::shared_ptr<T> SharedRef<T>::share() {
     return p_;
 }
 
 template <typename T>
-std::shared_ptr<const T> SharedRef<T>::getPtr() const {
-    std::cout << gsl::czstring(__func__) << ": ";
+std::shared_ptr<const T> SharedRef<T>::share() const {
     return p_;
 }
 

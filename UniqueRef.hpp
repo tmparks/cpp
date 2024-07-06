@@ -5,12 +5,16 @@
 #include <iostream>
 #include <memory>
 
+// Forward declarations.
+template <typename T>
+class UniqueRef;
+
+template <typename T>
+void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept;
+
 // Inspired by std::reference_wrapper, but holds a unique_ptr instead of a raw pointer.
-// Cannot be copied because it maintains the same invariant as unique_ptr:
-// that it is the sole owner of the managed object.
-// Cannot be moved because it maintains the invariant that the contained
-// unique_ptr is never null.
-// These restrictions limit the ability to use UniqueRef with containers.
+// Cannot be copied because unique_ptr cannot be copied.
+// Cannot be moved because the held unique_ptr must never be null.
 template <typename T>
 class UniqueRef {
 public:
@@ -33,20 +37,20 @@ private:
     UniqueRef& operator=(const UniqueRef&) = delete; // no copy assignment
     UniqueRef& operator=(UniqueRef&&) noexcept = delete; // no move assignment
 
-    std::unique_ptr<T> p_;
+    std::unique_ptr<T> p_; // never null
     Verbose v_ { "UniqueRef" };
 };
 
 template <typename T>
 UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) : p_ { std::move(p) } {
+    Expects(p_ != nullptr);
     std::cout << "conversion from unique_ptr" << std::endl;
-    Ensures(p_ != nullptr);
 }
 
 template <typename T>
 void UniqueRef<T>::reset(std::unique_ptr<T> p) {
+    Expects(p != nullptr);
     p_ = std::move(p);
-    Ensures(p_ != nullptr);
 }
 
 template <typename T>
@@ -63,13 +67,11 @@ UniqueRef<T>::operator const T&() const {
 
 template <typename T>
 T& UniqueRef<T>::get() {
-    std::cout << gsl::czstring(__func__) << ": ";
     return *p_;
 }
 
 template <typename T>
 const T& UniqueRef<T>::get() const {
-    std::cout << gsl::czstring(__func__) << ": ";
     return *p_;
 }
 
