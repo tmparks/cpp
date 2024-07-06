@@ -3,6 +3,7 @@
 #include "compat/gsl14.hpp"
 
 #include <gmock/gmock.h>
+#include <vector>
 
 using namespace testing;
 using namespace testing::internal;
@@ -10,11 +11,11 @@ using namespace testing::internal;
 // Anonymous namespace for definitions that are local to this file.
 namespace {
     template <typename T>
-    using SharedVector = std::vector<SharedRef<T>>;
+    using SharedContainer = std::vector<SharedRef<T>>;
 
 #if __cplusplus >= 201703L
 
-    // Create a shared reference to a newly constructed object of type T.
+    // Create a smart reference to a newly constructed object of type T.
     // Note: copy elision is guaranteed since C++17
     template <typename T, typename... Args>
     SharedRef<T> create(Args&&... args) {
@@ -31,9 +32,9 @@ namespace {
         return a.name() == b.name();
     }
 
-    // Print the elements of a vector of shared references.
-    void print(const SharedVector<Verbose>& v) {
-        for (const auto& elem : v) {
+    // Print the elements of a container of smart references.
+    void print(const SharedContainer<Verbose>& container) {
+        for (const auto& elem : container) {
             std::cout << gsl::czstring(__func__) << ": "
                       << elem // implicit conversion for operator<<
                       << std::endl;
@@ -109,22 +110,22 @@ TEST(SharedRef, move) {
 }
 
 TEST(SharedRef, container) {
-    SharedVector<Verbose> v1 { {
-        { std::make_shared<Verbose>("one") },
-        { std::make_shared<Verbose>("two") },
-        { std::make_shared<Verbose>("three") } } };
+    SharedContainer<Verbose> container;
+    container.emplace_back(std::make_shared<Verbose>("one"));
+    container.emplace_back(std::make_shared<Verbose>("two"));
+    container.emplace_back(std::make_shared<Verbose>("three"));
 
-    print(v1);
+    print(container);
 
-    for (const auto& elem : v1) {
+    for (const auto& elem : container) {
         std::cout << elem.get().name() << std::endl; // explicitly get reference
     }
 
-    for (const Verbose& elem : v1) { // implicit conversion (cannot use auto)
+    for (const Verbose& elem : container) { // implicit conversion (cannot use auto)
         std::cout << elem.name() << std::endl;
     }
 
-    // Copying a vector of shared references does not copy the referenced objects.
-    auto v2 = v1;
-    print(v2);
+    // Copying a container of shared references does not copy the referenced objects.
+    auto container_copy = container;
+    print(container_copy);
 }

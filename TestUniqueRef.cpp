@@ -3,19 +3,21 @@
 #include "compat/gsl14.hpp"
 
 #include <gmock/gmock.h>
+#include <list>
 
 using namespace testing;
 using namespace testing::internal;
 
 // Anonymous namespace for definitions that are local to this file.
 namespace {
-
-    template <typename T, int N>
-    using UniqueArray = std::array<UniqueRef<T>, N>;
+    // UniqueRef is neither copyable nor movable, so we use std::list instead
+    // of std::vector, which sometimes needs to reallocate its storage.
+    template <typename T>
+    using UniqueContainer = std::list<UniqueRef<T>>;
 
 #if __cplusplus >= 201703L
 
-    // Create a unique reference to a newly constructed object of type T.
+    // Create a smart reference to a newly constructed object of type T.
     // Note: copy elision is guaranteed since C++17
     template <typename T, typename... Args>
     UniqueRef<T> create(Args&&... args) {
@@ -32,9 +34,8 @@ namespace {
         return a.name() == b.name();
     }
 
-    // Print the elements of a container of unique references.
-    template <typename T>
-    void print(const T& container) {
+    // Print the elements of a container of smart references.
+    void print(const UniqueContainer<Verbose>& container) {
         for (const auto& elem : container) {
             std::cout << gsl::czstring(__func__) << ": "
                       << elem // implicit conversion for operator<<
@@ -74,18 +75,18 @@ TEST(UniqueRef, move) {
 }
 
 TEST(UniqueRef, container) {
-    UniqueArray<Verbose, 3> a1 { {
-        { std::make_unique<Verbose>("one") },
-        { std::make_unique<Verbose>("two") },
-        { std::make_unique<Verbose>("three") } } };
+    UniqueContainer<Verbose> container;
+    container.emplace_back(std::make_unique<Verbose>("one"));
+    container.emplace_back(std::make_unique<Verbose>("two"));
+    container.emplace_back(std::make_unique<Verbose>("three"));
 
-    print(a1);
+    print(container);
 
-    for (const auto& elem : a1) {
+    for (const auto& elem : container) {
         std::cout << elem.get().name() << std::endl; // explicitly get reference
     }
 
-    for (const Verbose& elem : a1) { // implicit conversion (cannot use auto)
+    for (const Verbose& elem : container) { // implicit conversion (cannot use auto)
         std::cout << elem.name() << std::endl;
     }
 }
