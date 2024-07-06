@@ -4,8 +4,6 @@
 
 #include <gmock/gmock.h>
 
-#include <type_traits>
-
 using namespace testing;
 using namespace testing::internal;
 
@@ -13,13 +11,18 @@ using namespace testing::internal;
 namespace {
 
     template <typename T, int N>
-    using UniqueArray = std::array<UniqueRef<T>,N>;
+    using UniqueArray = std::array<UniqueRef<T>, N>;
+
+#if __cplusplus >= 201703L
 
     // Create a unique reference to a newly constructed object of type T.
+    // Note: copy elision is guaranteed since C++17
     template <typename T, typename... Args>
     UniqueRef<T> create(Args&&... args) {
         return std::make_unique<T>(std::forward<Args>(args)...);
     }
+
+#endif // C++17
 
     // Test that two objects are distinct (different addresses)
     bool distinct(const Verbose& a, const Verbose& b) { return &a != &b; }
@@ -44,9 +47,15 @@ namespace {
 } // anonymous namespace
 
 TEST(UniqueRef, constructor) {
+#if __cplusplus >= 201703L
     auto a = create<Verbose>("one");
     auto b = create<Verbose>("two");
     // auto c = UniqueRef<Verbose> { }; // no dangling references!
+#else
+    UniqueRef<Verbose> a { std::make_unique<Verbose>("one") };
+    UniqueRef<Verbose> b { std::make_unique<Verbose>("two") };
+    // UniqueRef<Verbose> c { }; // no dangling references!
+#endif // C++17
 
     EXPECT_FALSE(equal(a, b));
     EXPECT_TRUE(distinct(a, b));
@@ -65,10 +74,10 @@ TEST(UniqueRef, move) {
 }
 
 TEST(UniqueRef, container) {
-    UniqueArray<Verbose, 3> a1 {
-        std::make_unique<Verbose>("one"),
-        std::make_unique<Verbose>("two"),
-        std::make_unique<Verbose>("three") };
+    UniqueArray<Verbose, 3> a1 { {
+        { std::make_unique<Verbose>("one") },
+        { std::make_unique<Verbose>("two") },
+        { std::make_unique<Verbose>("three") } } };
 
     print(a1);
 
