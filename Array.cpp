@@ -3,11 +3,11 @@
 #include <iostream>
 
 // default constructor
-Array::Array() : Verbose { gsl::czstring(__func__) } { }
+Array::Array() : Verbose { gsl::czstring { __func__ } } { }
 
 // constructor
 Array::Array(gsl::index size) :
-        Verbose { gsl::czstring(__func__) },
+        Verbose { gsl::czstring { __func__ } },
         size_ { size },
         data_ { std::make_unique<double[]>(size_) } { // NOLINT(*-avoid-c-arrays)
 }

@@ -9,7 +9,8 @@
 // NOLINTNEXTLINE *-special-member-functions
 class ConcreteObject : public SharedCloneable<ConcreteObject> {
 public: // pseudo-protected
-    ConcreteObject(Protected) : ConcreteObject { gsl::czstring(__func__) } { }
+    ConcreteObject(Protected) :
+            ConcreteObject { gsl::czstring { __func__ } } { }
     ConcreteObject(Protected, const ConcreteObject& other) :
             ConcreteObject { other } { }
 
@@ -25,7 +26,7 @@ private:
 // NOLINTNEXTLINE *-special-member-functions
 class DerivedObject : public SharedCloneable<DerivedObject, ConcreteObject> {
 public: // pseudo-protected
-    DerivedObject(Protected) : DerivedObject { gsl::czstring(__func__) } { }
+    DerivedObject(Protected) : DerivedObject { gsl::czstring { __func__ } } { }
     DerivedObject(Protected, const DerivedObject& other) :
             DerivedObject { other } { }
 

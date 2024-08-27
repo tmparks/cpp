@@ -39,7 +39,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 StackPtr::StackPtr(gsl::index size) :
-        StackPtr(gsl::czstring(__func__), std::make_unique<Array>(size)) { }
+        StackPtr(gsl::czstring { __func__ }, std::make_unique<Array>(size)) { }
 
 StackPtr::StackPtr(const std::string& name, std::unique_ptr<Array> data) :
         Verbose { name }, data_ { std::move(data) } { }
@@ -55,7 +55,7 @@ double StackPtr::Pop() {
 ////////////////////////////////////////////////////////////////////////////////
 
 StretchableStackPtr::StretchableStackPtr(gsl::index size) :
-        StackPtr { gsl::czstring(__func__),
+        StackPtr { gsl::czstring { __func__ },
                    std::make_unique<StretchableArray>(size) } { }
 
 ////////////////////////////////////////////////////////////////////////////////

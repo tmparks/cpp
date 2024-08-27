@@ -10,7 +10,7 @@
 template <typename T>
 class BasicLockable : protected Verbose {
 public:
-    BasicLockable() : Verbose { gsl::czstring(__func__) } { }
+    BasicLockable() : Verbose { gsl::czstring { __func__ } } { }
 
     void lock() {
         lock_.lock();

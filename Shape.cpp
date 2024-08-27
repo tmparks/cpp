@@ -215,8 +215,8 @@ Circle* Circle::cloneImpl() const {
 namespace { // anonymous namespace for definitions that are local to this file
 
     void TestClone(const Shape& original) {
-        std::cout << gsl::czstring(__func__) << ": " << typeid(original).name()
-                  << std::endl;
+        std::cout << gsl::czstring { __func__ } << ": "
+                  << typeid(original).name() << std::endl;
         auto clone = original.clone();
         EXPECT_NE(clone.get(), &original) << "distinct objects";
 
