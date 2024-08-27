@@ -151,8 +151,8 @@ TEST(Verbose, Swap) {
 TEST(Verbose, VectorMove) {
     std::vector<Verbose> v {};
     v.reserve(1);
-    auto limit = gsl::index(v.capacity());
-    for (auto i = gsl::index(0); i < limit; i++) {
+    auto limit = gsl::narrow_cast<gsl::index>(v.capacity());
+    for (auto i = gsl::index { 0 }; i < limit; i++) {
         v.emplace_back(std::to_string(i));
     }
     CaptureStdout();

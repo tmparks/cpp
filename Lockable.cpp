@@ -43,10 +43,10 @@ public:
 
 private:
 #ifndef NDEBUG
-    static const std::thread::id none_;
-    std::thread::id owner_ { none_ }; // initially unowned
-#endif // NDEBUG
-    T lock_;                          // initially unlocked
+    static const std::thread::id none_; // initialized later
+    std::thread::id owner_ { none_ };   // initially unowned
+#endif                                  // NDEBUG
+    T lock_ {};                         // initially unlocked
 };
 
 #ifndef NDEBUG
@@ -63,21 +63,21 @@ using namespace testing;
 using namespace testing::internal;
 
 TEST(BasicLockable, lock_guard) {
-    BasicLockable<std::mutex> mutex;
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    /* auto mutex = */ BasicLockable<std::mutex> mutex {};
+    /* auto lock = */ std::lock_guard<decltype(mutex)> lock { mutex };
     mutex.assert_ownership();
 }
 
 TEST(BasicLockable, unique_lock) {
-    BasicLockable<std::mutex> mutex;
-    std::unique_lock<decltype(mutex)> lock(mutex);
+    /* auto mutex = */ BasicLockable<std::mutex> mutex {};
+    /* auto lock = */ std::unique_lock<decltype(mutex)> lock { mutex };
     mutex.assert_ownership();
 }
 
 // Does not fail for RELEASE build
 TEST(BasicLockable, unowned_expects) {
 #ifdef NDEBUG
-    BasicLockable<std::mutex> mutex;
+    /* auto mutex = */ BasicLockable<std::mutex> mutex {};
     Expects(mutex.owner_is_this_thread()); // Expected to fail!
 #endif // NDEBUG
 }
@@ -85,7 +85,7 @@ TEST(BasicLockable, unowned_expects) {
 // Does not abort for RELEASE build
 TEST(BasicLockable, unowned_assert) {
 #ifdef NDEBUG
-    auto mutex = BasicLockable<std::mutex>();
+    /* auto mutex = */ BasicLockable<std::mutex> mutex {};
     mutex.assert_ownership(); // Expected to fail!
 #endif // NDEBUG
 }
@@ -98,9 +98,9 @@ TEST(BasicLockable, timing_assert) {
 #else
     const auto limit = 100'000;
 #endif // NDEBUG
-    auto mutex = BasicLockable<std::mutex>();
+    auto mutex = BasicLockable<std::mutex> {};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard(mutex);
+        auto lock = std::lock_guard { mutex };
         mutex.assert_ownership();
     }
 }
@@ -111,18 +111,18 @@ TEST(BasicLockable, timing_expects) {
 #else
     const auto limit = 100'000;
 #endif // NDEBUG
-    auto mutex = BasicLockable<std::mutex>();
+    auto mutex = BasicLockable<std::mutex> {};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard(mutex);
+        auto lock = std::lock_guard { mutex };
         Expects(mutex.owner_is_this_thread());
     }
 }
 
 TEST(BasicLockable, timing_without) {
     const auto limit = 100'000'000;
-    auto mutex = std::mutex();
+    auto mutex = std::mutex {};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard(mutex);
+        auto lock = std::lock_guard { mutex };
     }
 }
 

@@ -17,12 +17,12 @@ public: // pseudo-protected
     Widget(Protected, const std::string& name) : v_ { name } { }
 
 protected:
-    Widget() : v_ { gsl::czstring(__func__) } { }
+    Widget() : v_ { gsl::czstring { __func__ } } { }
     Widget(Widget&& other) = default;
     Widget(const Widget& other) = default;
 
 private:
-    Verbose v_;
+    Verbose v_; // initialized later
 };
 
 // Derived publicly (but indirectly) from std::enable_shared_from_this
@@ -39,20 +39,20 @@ public: // pseudo-protected
     Gadget(Protected tag, const std::string& name) : Widget { tag, name } { }
 
 protected:
-    Gadget() : Widget { Protected {}, gsl::czstring(__func__) } { }
+    Gadget() : Widget { Protected {}, gsl::czstring { __func__ } } { }
     Gadget(Gadget&& other) = default;
     Gadget(const Gadget& other) = default;
 };
 
 void share_const(const Widget& w) {
     auto p = w.shared_from_this();
-    std::cout << gsl::czstring(__func__) << ": use_count=" << p.use_count()
+    std::cout << gsl::czstring { __func__ } << ": use_count=" << p.use_count()
               << std::endl;
 }
 
 void share(Widget& w) {
     auto p = w.shared_from_this();
-    std::cout << gsl::czstring(__func__) << ": use_count=" << p.use_count()
+    std::cout << gsl::czstring { __func__ } << ": use_count=" << p.use_count()
               << std::endl;
 }
 

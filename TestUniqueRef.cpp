@@ -37,7 +37,7 @@ namespace {
     // Print the elements of a container of smart references.
     void print(const UniqueContainer<Verbose>& container) {
         for (const auto& elem : container) {
-            std::cout << gsl::czstring(__func__) << ": "
+            std::cout << gsl::czstring { __func__ } << ": "
                       << elem // implicit conversion for operator<<
                       << std::endl;
             const auto& name = elem.get().name();
