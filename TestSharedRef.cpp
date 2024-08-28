@@ -110,14 +110,14 @@ TEST(SharedRef, move) {
 }
 
 TEST(SharedRef, reset) {
-    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
+    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") }; // C++17
     a.reset(std::make_shared<Verbose>("two"));
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(SharedRef, swap) {
-    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
-    /* auto b = */ SharedRef<Verbose> b { std::make_shared<Verbose>("two") };
+    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") }; // C++17
+    /* auto b = */ SharedRef<Verbose> b { std::make_shared<Verbose>("two") }; // C++17
     swap(a, b);
     EXPECT_EQ("one", b.get().name());
     EXPECT_EQ("two", a.get().name());
