@@ -11,10 +11,10 @@
 
 // public static
 
-Point Point::rectangular(double x, double y) { return Point(x, y); }
+Point Point::rectangular(double x, double y) { return Point { x, y }; }
 
 Point Point::polar(double radius, double angle) {
-    return Point(radius * std::cos(angle), radius * std::sin(angle));
+    return Point { radius * std::cos(angle), radius * std::sin(angle) };
 }
 
 // public const
@@ -46,13 +46,13 @@ std::unique_ptr<Shape> Shape::clone() const {
     // If a derived class fails to override cloneImpl,
     // then the returned object will be of the wrong type.
     Ensures(typeid(*result) == typeid(*this));
-    return std::unique_ptr<Shape>(result);
+    return std::unique_ptr<Shape> { result };
 }
 
 double Shape::area() const { return areaImpl(scale_); }
 
 Circle Shape::boundingCircle() const {
-    auto result = Circle(boundingRadiusImpl(scale_));
+    auto result = Circle { boundingRadiusImpl(scale_) };
     result.moveTo(position_.x(), position_.y());
     return result;
 }
@@ -65,7 +65,7 @@ Rectangle Shape::boundingBox() const {
     auto& width = std::get<0>(tuple);
     auto& height = std::get<1>(tuple);
 #endif // C++17
-    auto result = Rectangle(width, height);
+    auto result = Rectangle { width, height };
     result.moveTo(position_.x(), position_.y());
     return result;
 }
@@ -115,7 +115,7 @@ Rectangle::Rectangle(double width, double height) :
 // private const override
 
 Rectangle* Rectangle::cloneImpl() const {
-    return new Rectangle(*this); // NOLINT(*-owning-memory)
+    return new Rectangle { *this }; // NOLINT(*-owning-memory)
 }
 
 double Rectangle::areaImpl(double scale) const {
@@ -152,12 +152,12 @@ std::tuple<double, double> Rectangle::boundingBoxImpl(
 
 // public
 
-Square::Square(double side) : Rectangle(side, side) { }
+Square::Square(double side) : Rectangle { side, side } { }
 
 // private const override
 
 Square* Square::cloneImpl() const {
-    return new Square(*this); // NOLINT(*-owning-memory)
+    return new Square { *this }; // NOLINT(*-owning-memory)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +175,7 @@ Ellipse::Ellipse(double width, double height) :
 // private const override
 
 Ellipse* Ellipse::cloneImpl() const {
-    return new Ellipse(*this); // NOLINT(*-owning-memory)
+    return new Ellipse { *this }; // NOLINT(*-owning-memory)
 }
 
 double Ellipse::areaImpl(double scale) const {
@@ -200,12 +200,12 @@ double Ellipse::radius(double angle) const {
 
 // public
 
-Circle::Circle(double radius) : Ellipse(2 * radius, 2 * radius) { }
+Circle::Circle(double radius) : Ellipse { 2 * radius, 2 * radius } { }
 
 // private const override
 
 Circle* Circle::cloneImpl() const {
-    return new Circle(*this); // NOLINT(*-owning-memory)
+    return new Circle { *this }; // NOLINT(*-owning-memory)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,8 +215,8 @@ Circle* Circle::cloneImpl() const {
 namespace { // anonymous namespace for definitions that are local to this file
 
     void TestClone(const Shape& original) {
-        std::cout << gsl::czstring(__func__) << ": " << typeid(original).name()
-                  << std::endl;
+        std::cout << gsl::czstring { __func__ } << ": "
+                  << typeid(original).name() << std::endl;
         auto clone = original.clone();
         EXPECT_NE(clone.get(), &original) << "distinct objects";
 

@@ -35,7 +35,7 @@ namespace {
     // Print the elements of a container of smart references.
     void print(const SharedContainer<Verbose>& container) {
         for (const auto& elem : container) {
-            std::cout << gsl::czstring(__func__) << ": "
+            std::cout << gsl::czstring { __func__ } << ": "
                       << elem // implicit conversion for operator<<
                       << std::endl;
             const auto& name = elem.get().name();
@@ -77,7 +77,7 @@ TEST(SharedRef, copy) {
     SharedRef<Verbose> d { a }; // copy constructor
 #endif // C++17
 
-    c = b;                             // copy assignment
+    c = b; // copy assignment
 
     // Copying modifies the reference, not the referenced object.
 
@@ -110,21 +110,21 @@ TEST(SharedRef, move) {
 }
 
 TEST(SharedRef, reset) {
-    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
+    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") }; // C++17
     a.reset(std::make_shared<Verbose>("two"));
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(SharedRef, swap) {
-    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
-    SharedRef<Verbose> b { std::make_shared<Verbose>("two") };
+    /* auto a = */ SharedRef<Verbose> a { std::make_shared<Verbose>("one") }; // C++17
+    /* auto b = */ SharedRef<Verbose> b { std::make_shared<Verbose>("two") }; // C++17
     swap(a, b);
     EXPECT_EQ("one", b.get().name());
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(SharedRef, container) {
-    SharedContainer<Verbose> container;
+    auto container = SharedContainer<Verbose> {};
     container.emplace_back(std::make_shared<Verbose>("one"));
     container.emplace_back(std::make_shared<Verbose>("two"));
     container.emplace_back(std::make_shared<Verbose>("three"));

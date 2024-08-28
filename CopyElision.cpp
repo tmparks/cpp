@@ -7,117 +7,93 @@
 #include <tuple>
 
 // A class that can be moved but not copied.
-class Uncopyable : public Verbose
-{
+class Uncopyable : public Verbose {
 public:
-    using Verbose::Verbose;                                 // inherit constructors
-    Uncopyable(Uncopyable&&) noexcept = default;            // move constructor
+    using Verbose::Verbose;                      // inherit constructors
+    Uncopyable(Uncopyable&&) noexcept = default; // move constructor
     Uncopyable& operator=(Uncopyable&&) noexcept = default; // move assignment
     ~Uncopyable() override = default;                       // destructor
 
-    Uncopyable() = delete;                                  // no default constructor
-    Uncopyable(const Uncopyable&) = delete;                 // no copy constructor
-    Uncopyable& operator=(const Uncopyable&) = delete;      // no copy assignment
+    Uncopyable() = delete;                             // no default constructor
+    Uncopyable(const Uncopyable&) = delete;            // no copy constructor
+    Uncopyable& operator=(const Uncopyable&) = delete; // no copy assignment
 };
 
 // A class that can be copied but not moved.
-class Unmovable : public Verbose
-{
+class Unmovable : public Verbose {
 public:
-    using Verbose::Verbose;                              // inherit constructors
-    Unmovable(const Unmovable&) = default;               // copy constructor
-    Unmovable& operator=(const Unmovable&) = default;    // copy assignment
-    ~Unmovable() override = default;                     // destructor
+    using Verbose::Verbose;                           // inherit constructors
+    Unmovable(const Unmovable&) = default;            // copy constructor
+    Unmovable& operator=(const Unmovable&) = default; // copy assignment
+    ~Unmovable() override = default;                  // destructor
 
-    Unmovable() = delete;                                // no default constructor
-    Unmovable(Unmovable&&) noexcept = delete;            // no move constructor
+    Unmovable() = delete;                     // no default constructor
+    Unmovable(Unmovable&&) noexcept = delete; // no move constructor
     Unmovable& operator=(Unmovable&&) noexcept = delete; // no move assignment
 };
 
 // An unrelated class that is convertible to Verbose.
-class Convertible
-{
+class Convertible {
 public:
-    operator Verbose()
-    {
-        std::cout << "Convertible: conversion to Verbose this=" << this << std::endl;
-        return Verbose("Converted to Verbose"); // rvo?
+    operator Verbose() {
+        std::cout << "Convertible: conversion to Verbose this=" << this
+                  << std::endl;
+        return Verbose { "Converted to Verbose" }; // rvo?
     }
 };
 
 // A derived class.
-class Derived : public Verbose
-{
+class Derived : public Verbose {
 public:
-    Derived() : Verbose{"Derived"} {}
+    Derived() : Verbose { "Derived" } { }
 };
 
 // Unnamed value constructed in return statement.
-Verbose rvo()
-{
-    return Verbose { "unnamed" };
-}
+Verbose rvo() { return Verbose { "unnamed" }; }
 
 // Unnamed value constructed in return statement.
 // Copy constructor need not be available.
-Uncopyable rvo_uncopyable()
-{
-    return Uncopyable { "unnamed" };
-}
+Uncopyable rvo_uncopyable() { return Uncopyable { "unnamed" }; }
 
 #if __cplusplus >= 201703L
 
 // Unnamed value constructed in return statement.
 // Move constructor need not be available.
-Unmovable rvo_unmovable()
-{
-    return Unmovable { "unnamed" };
-}
+Unmovable rvo_unmovable() { return Unmovable { "unnamed" }; }
 
 #endif // C++17
 
 // Unnamed values constructed in all return statements.
-Verbose rvo_conditional(int x)
-{
-    if (x % 2 == 0)
-    {
+Verbose rvo_conditional(int x) {
+    if (x % 2 == 0) {
         return Verbose { "even" };
     }
-    else
-    {
+    else {
         return Verbose { "odd" };
     }
 }
 
 // Unnamed value constructed from return value in return statement.
-Verbose rvo_chained()
-{
-    return Verbose { rvo() };
-}
+Verbose rvo_chained() { return Verbose { rvo() }; }
 
 #if __cplusplus >= 201402L
 
 // Unnamed tuple of unnamed values constructed in return statement.
-auto rvo_tuple()
-{
-    return std::tuple<Verbose, Verbose>("first", "second");
-}
+auto rvo_tuple() { return std::tuple<Verbose, Verbose> { "first", "second" }; }
 
 #endif // C++14
 
 // Unique named return value.
-Verbose nrvo()
-{
-    Verbose result { "unique" };
+Verbose nrvo() {
+    auto result = Verbose { "unique" };
     return result;
 }
 
 // Unique named movable return value.
 // Copy constructor not available.
 // How does this work ?!
-Uncopyable nrvo_uncopyable()
-{
-    Uncopyable result { "unique" };
+Uncopyable nrvo_uncopyable() {
+    auto result = Uncopyable { "unique" };
     return result;
 }
 
@@ -126,56 +102,50 @@ Uncopyable nrvo_uncopyable()
 /*
 Unmovable nrvo_unmovable()
 {
-    Unmovable result { "unique" };
+    auto result Unmovable { "unique" };
     return result;
 }
 */
 
 // Unique named return value in all return statements.
-Verbose nrvo_conditional(int x)
-{
-    Verbose result { "unknown" };
-    if (x % 2 == 0)
-    {
+Verbose nrvo_conditional(int x) {
+    auto result = Verbose { "unknown" };
+    if (x % 2 == 0) {
         result.name() = "even";
         return result;
     }
-    else
-    {
+    else {
         result.name() = "odd";
         return result;
     }
 }
 
 // Unique named return value constructed from return value.
-Verbose nrvo_chained()
-{
-    Verbose result { nrvo() };
+Verbose nrvo_chained() {
+    auto result = Verbose { nrvo() };
     return result;
 }
 
 #if __cplusplus >= 201402L
 
 // Unique named tuple return value.
-auto nrvo_tuple_good()
-{
-    auto result = std::tuple<Verbose, Verbose>("one", "two");
-    auto &v1 = std::get<0>(result);
-    auto &v2 = std::get<1>(result);
+auto nrvo_tuple_good() {
+    auto result = std::tuple<Verbose, Verbose> { "one", "two" };
+    auto& v1 = std::get<0>(result);
+    auto& v2 = std::get<1>(result);
     v1.name() = "first";
     v2.name() = "second";
     return result;
 }
 
-#endif  // C++14
+#endif // C++14
 
 #if __cplusplus >= 201703L
 
 // Unique named tuple return value.
-auto nrvo_tuple_better()
-{
-    auto result = std::tuple<Verbose, Verbose>("one", "two");
-    auto &[v1, v2] = result;
+auto nrvo_tuple_better() {
+    auto result = std::tuple<Verbose, Verbose> { "one", "two" };
+    auto& [v1, v2] = result;
     v1.name() = "first";
     v2.name() = "second";
     return result;
@@ -186,8 +156,7 @@ auto nrvo_tuple_better()
 #if __cplusplus >= 201402L
 
 // Fail! Named tuple of named values.
-auto nrvo_tuple_bad()
-{
+auto nrvo_tuple_bad() {
     auto v1 = Verbose { "first" };
     auto v2 = Verbose { "second" };
     auto result = std::make_tuple(v1, v2);
@@ -198,50 +167,36 @@ auto nrvo_tuple_bad()
 
 // Non-unique return values.
 // This actually works with LLVM ?!
-Verbose nrvo_not_unique(int x)
-{
-    if (x % 2 == 0)
-    {
-        Verbose even { "even" };
+Verbose nrvo_not_unique(int x) {
+    if (x % 2 == 0) {
+        auto even = Verbose { "even" };
         return even;
     }
-    else
-    {
-        Verbose odd { "odd" };
+    else {
+        auto odd = Verbose { "odd" };
         return odd;
     }
 }
 
 // Fail! Return value is function parameter.
-Verbose nrvo_value_parameter(Verbose v)
-{
-    return v;
-}
+Verbose nrvo_value_parameter(Verbose v) { return v; }
 
 // Fail! Return value is function parameter.
-Verbose nrvo_const_ref_parameter(const Verbose& v)
-{
-    return v;
-}
+Verbose nrvo_const_ref_parameter(const Verbose& v) { return v; }
 
 // Fail! Return value is function parameter.
-Verbose nrvo_move_parameter(Verbose&& v)
-{
-    return std::move(v);
-}
+Verbose nrvo_move_parameter(Verbose&& v) { return std::move(v); }
 
 // Fail! Unnamed value assigned to output parameter.
-void rvo_output_parameter(Uncopyable& result)
-{
+void rvo_output_parameter(Uncopyable& result) {
     result = Uncopyable { "parameter" };
 }
 
 #if __cplusplus >= 201703L
 
 // Fail! Unique named value assigned to output parameter.
-void nrvo_output_parameter(Unmovable& result)
-{
-    auto v = Unmovable{ "parameter" };
+void nrvo_output_parameter(Unmovable& result) {
+    auto v = Unmovable { "parameter" };
     result = v;
 }
 
@@ -250,27 +205,24 @@ void nrvo_output_parameter(Unmovable& result)
 // Conversion operator is invoked implicitly.
 // No copy or move operation is invoked, with or wihtout std::move().
 // Using std::move() produces a GNU (but not LLVM) compiler warning.
-Verbose implicit_conversion()
-{
-    Convertible c;
+Verbose implicit_conversion() {
+    auto c = Convertible {};
     return c; // std::move() has no effect
 }
 
 // Conversion operator is invoked explicitly.
 // No copy or move operation is invoked, with or without std::move().
 // Using std::move() does not produce a compiler warning.
-Verbose explicit_conversion()
-{
-    Convertible c;
+Verbose explicit_conversion() {
+    auto c = Convertible {};
     return static_cast<Verbose>(c); // std::move() has no effect
 }
 
 // Convert to base type.
 // Copy or move constructor is invoked, with or without std::move().
 // Using std::move() produces a GNU (but not LLVM) compiler warning.
-Verbose class_conversion()
-{
-    auto d = Derived { };
+Verbose class_conversion() {
+    auto d = Derived {};
     return d; // std::move() has no effect
 }
 
@@ -281,11 +233,10 @@ Verbose class_conversion()
 using namespace testing;
 using namespace testing::internal;
 
-constexpr int even_number { 2 };
-constexpr int odd_number { 17 };
+constexpr auto even_number { 2 };
+constexpr auto odd_number { 17 };
 
-TEST(CopyElision, rvo)
-{
+TEST(CopyElision, rvo) {
     CaptureStdout();
     auto v = rvo();
     auto actual = GetCapturedStdout();
@@ -293,8 +244,7 @@ TEST(CopyElision, rvo)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, rvo_uncopyable)
-{
+TEST(CopyElision, rvo_uncopyable) {
     CaptureStdout();
     auto u = rvo_uncopyable();
     auto actual = GetCapturedStdout();
@@ -304,8 +254,7 @@ TEST(CopyElision, rvo_uncopyable)
 
 #if __cplusplus >= 201703L
 
-TEST(CopyElision, rvo_unmovable)
-{
+TEST(CopyElision, rvo_unmovable) {
     CaptureStdout();
     auto u = rvo_unmovable();
     auto actual = GetCapturedStdout();
@@ -315,8 +264,7 @@ TEST(CopyElision, rvo_unmovable)
 
 #endif // C++17
 
-TEST(CopyElision, rvo_conditional)
-{
+TEST(CopyElision, rvo_conditional) {
     CaptureStdout();
     auto v = rvo_conditional(even_number);
     auto actual = GetCapturedStdout();
@@ -325,8 +273,7 @@ TEST(CopyElision, rvo_conditional)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, rvo_chained)
-{
+TEST(CopyElision, rvo_chained) {
     CaptureStdout();
     auto v = rvo_chained();
     auto actual = GetCapturedStdout();
@@ -334,8 +281,7 @@ TEST(CopyElision, rvo_chained)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo)
-{
+TEST(CopyElision, nrvo) {
     CaptureStdout();
     auto v = nrvo();
     auto actual = GetCapturedStdout();
@@ -343,8 +289,7 @@ TEST(CopyElision, nrvo)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_uncopyable)
-{
+TEST(CopyElision, nrvo_uncopyable) {
     CaptureStdout();
     auto v = nrvo_uncopyable();
     auto actual = GetCapturedStdout();
@@ -352,8 +297,7 @@ TEST(CopyElision, nrvo_uncopyable)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_conditional)
-{
+TEST(CopyElision, nrvo_conditional) {
     CaptureStdout();
     auto v = nrvo_conditional(odd_number);
     auto actual = GetCapturedStdout();
@@ -362,8 +306,7 @@ TEST(CopyElision, nrvo_conditional)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_chained)
-{
+TEST(CopyElision, nrvo_chained) {
     CaptureStdout();
     auto v = nrvo_chained();
     auto actual = GetCapturedStdout();
@@ -371,8 +314,7 @@ TEST(CopyElision, nrvo_chained)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_not_unique)
-{
+TEST(CopyElision, nrvo_not_unique) {
     CaptureStdout();
     auto v = nrvo_not_unique(odd_number);
     auto actual = GetCapturedStdout();
@@ -384,12 +326,10 @@ TEST(CopyElision, nrvo_not_unique)
     EXPECT_THAT(actual, AnyOf(HasSubstr("copy"), HasSubstr("move")));
 #endif // __clang__
     EXPECT_THAT(v.name(), EndsWith("odd"));
-    std::cout << std::endl
-              << actual << std::endl;
+    std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_parameter)
-{
+TEST(CopyElision, nrvo_parameter) {
     auto p = Verbose { "local" };
     CaptureStdout();
     auto v1 = nrvo_value_parameter(p);
@@ -412,8 +352,7 @@ TEST(CopyElision, nrvo_parameter)
 
 #if __cplusplus >= 201703L
 
-TEST(CopyElision, output_parameter)
-{
+TEST(CopyElision, output_parameter) {
     auto name = std::string { "local" };
     auto p1 = Uncopyable { name };
     CaptureStdout();
@@ -436,8 +375,7 @@ TEST(CopyElision, output_parameter)
 
 #if __cplusplus >= 201402L
 
-TEST(CopyElision, rvo_tuple_get)
-{
+TEST(CopyElision, rvo_tuple_get) {
     // Good: use get to access tuple elements by reference
     // without copying or moving.
     CaptureStdout();
@@ -455,8 +393,7 @@ TEST(CopyElision, rvo_tuple_get)
 
 #if __cplusplus >= 201703L
 
-TEST(CopyElision, rvo_tuple_structured_binding)
-{
+TEST(CopyElision, rvo_tuple_structured_binding) {
     // Better: use structured binding to access tuple elements.
     // Same efficiency, less verbose.
     CaptureStdout();
@@ -472,8 +409,7 @@ TEST(CopyElision, rvo_tuple_structured_binding)
 
 #if __cplusplus >= 201402L
 
-TEST(CopyElision, rvo_tuple_tie)
-{
+TEST(CopyElision, rvo_tuple_tie) {
     // Bad: use tie to access tuple elements.
     // Constructor invoked for each local variable.
     // Assignment operator invoked for each local variable.
@@ -484,21 +420,22 @@ TEST(CopyElision, rvo_tuple_tie)
     auto actual = GetCapturedStdout();
     EXPECT_THAT(v1.name(), EndsWith("first"));
     EXPECT_THAT(v2.name(), EndsWith("second"));
-    EXPECT_THAT(actual, Not(AnyOf(
-        HasSubstr("copy constructor"),
-        HasSubstr("move constructor"))));
+    EXPECT_THAT(
+            actual,
+            Not(
+                    AnyOf(HasSubstr("copy constructor"),
+                          HasSubstr("move constructor"))));
     EXPECT_THAT(actual, HasSubstr("assignment"));
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_tuple_get)
-{
+TEST(CopyElision, nrvo_tuple_get) {
     // Good: use get to access tuple elements by reference
     // without copying or moving.
     CaptureStdout();
     auto result = nrvo_tuple_good();
-    auto &v1 = std::get<0>(result);
-    auto &v2 = std::get<1>(result);
+    auto& v1 = std::get<0>(result);
+    auto& v2 = std::get<1>(result);
     auto actual = GetCapturedStdout();
     EXPECT_THAT(v1.name(), StrEq("first"));
     EXPECT_THAT(v2.name(), StrEq("second"));
@@ -510,8 +447,7 @@ TEST(CopyElision, nrvo_tuple_get)
 
 #if __cplusplus >= 201703L
 
-TEST(CopyElision, nrvo_tuple_structured_binding)
-{
+TEST(CopyElision, nrvo_tuple_structured_binding) {
     // Better: use structured binding to access tuple elements.
     // Same efficiency, less verbose.
     CaptureStdout();
@@ -523,8 +459,7 @@ TEST(CopyElision, nrvo_tuple_structured_binding)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, nrvo_tuple_tie)
-{
+TEST(CopyElision, nrvo_tuple_tie) {
     // Bad: use tie to access tuple elements.
     // Local variables must be constructed before call.
     // Results are assigned to local variables.
@@ -535,27 +470,27 @@ TEST(CopyElision, nrvo_tuple_tie)
     auto actual = GetCapturedStdout();
     EXPECT_THAT(v1.name(), EndsWith("first"));
     EXPECT_THAT(v2.name(), EndsWith("second"));
-    EXPECT_THAT(actual, Not(AnyOf(
-        HasSubstr("copy constructor"),
-        HasSubstr("move constructor"))));
+    EXPECT_THAT(
+            actual,
+            Not(
+                    AnyOf(HasSubstr("copy constructor"),
+                          HasSubstr("move constructor"))));
     EXPECT_THAT(actual, HasSubstr("assignment"));
     std::cout << std::endl << actual << std::endl;
 }
 
 #endif // C++17
 
-TEST(CopyElision, initialization)
-{
+TEST(CopyElision, initialization) {
     CaptureStdout();
-    Verbose v1 = Verbose { "one" };
+    auto v1 = Verbose { "one" };
     auto v2 = Verbose { "two" };
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, implicit_conversion)
-{
+TEST(CopyElision, implicit_conversion) {
     CaptureStdout();
     auto v = implicit_conversion();
     auto actual = GetCapturedStdout();
@@ -564,8 +499,7 @@ TEST(CopyElision, implicit_conversion)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, explicit_conversion)
-{
+TEST(CopyElision, explicit_conversion) {
     CaptureStdout();
     auto v = explicit_conversion();
     auto actual = GetCapturedStdout();
@@ -574,8 +508,7 @@ TEST(CopyElision, explicit_conversion)
     std::cout << std::endl << actual << std::endl;
 }
 
-TEST(CopyElision, class_conversion)
-{
+TEST(CopyElision, class_conversion) {
     CaptureStdout();
     auto v = class_conversion();
     auto actual = GetCapturedStdout();
