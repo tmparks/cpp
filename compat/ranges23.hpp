@@ -15,7 +15,7 @@ template <typename... Ts>
 std::ostream& operator<<(std::ostream& stream, std::tuple<Ts...> const& tuple) {
     auto f = [&stream](Ts const&... args) {
         stream << '[';
-        std::size_t n { 0 };
+        auto n = std::size_t { 0 };
         ((stream << args << (++n < sizeof...(Ts) ? ", " : "")), ...);
         stream << ']';
     };

@@ -11,7 +11,7 @@
 #include <cmath>
 namespace std {
     namespace numbers {
-        constexpr double pi = M_PI;
+        constexpr auto pi = M_PI;
     } // namespace numbers
 } // namespace std
 
