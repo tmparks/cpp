@@ -2,6 +2,8 @@
 
 // Emulate C++17 language features.
 
+// NOLINTBEGIN(*-macro-usage)
+
 #if __cplusplus < 201703L
 
 #define STRUCTURED_BINDING_1(a, tuple) auto&& a = std::get<0>(tuple);
@@ -43,3 +45,5 @@
     auto&& [a, b, c, d, e, f] = tuple;
 
 #endif // C++17
+
+// NOLINTEND(*-macro-usage)
