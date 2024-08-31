@@ -443,6 +443,20 @@ TEST(CopyElision, nrvo_tuple_get) {
     std::cout << std::endl << actual << std::endl;
 }
 
+#include "compat/lang17.hpp"
+
+TEST(CopyElision, nrvo_tuple_macro) {
+    // Good-ish: use macro to access tuple elements without copying or moving.
+    CaptureStdout();
+    auto result = nrvo_tuple_good();
+    STRUCTURED_BINDING_2(v1, v2, result);
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
 #endif // C++14
 
 #if __cplusplus >= 201703L

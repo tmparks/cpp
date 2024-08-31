@@ -63,21 +63,21 @@ using namespace testing;
 using namespace testing::internal;
 
 TEST(BasicLockable, lock_guard) {
-    /* auto mutex = */ BasicLockable<std::mutex> mutex {};             // C++17
-    /* auto lock = */ std::lock_guard<decltype(mutex)> lock { mutex }; // C++17
+    auto&& mutex = BasicLockable<std::mutex> {};                        // C++17
+    auto&& lock = std::lock_guard<BasicLockable<std::mutex>> { mutex }; // C++17
     mutex.assert_ownership();
 }
 
 TEST(BasicLockable, unique_lock) {
-    /* auto mutex = */ BasicLockable<std::mutex> mutex {};              // C++17
-    /* auto lock = */ std::unique_lock<decltype(mutex)> lock { mutex }; // C++17
+    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
+    auto&& lock = std::unique_lock<BasicLockable<std::mutex>> { mutex }; // C++17
     mutex.assert_ownership();
 }
 
 // Does not fail for RELEASE build
 TEST(BasicLockable, unowned_expects) {
 #ifdef NDEBUG
-    /* auto mutex = */ BasicLockable<std::mutex> mutex {}; // C++17
+    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
     Expects(mutex.owner_is_this_thread()); // Expected to fail!
 #endif // NDEBUG
 }
@@ -85,7 +85,7 @@ TEST(BasicLockable, unowned_expects) {
 // Does not abort for RELEASE build
 TEST(BasicLockable, unowned_assert) {
 #ifdef NDEBUG
-    /* auto mutex = */ BasicLockable<std::mutex> mutex {}; // C++17
+    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
     mutex.assert_ownership(); // Expected to fail!
 #endif // NDEBUG
 }

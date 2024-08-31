@@ -11,6 +11,7 @@ BraceWrapping:
 
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
+AlignEscapedNewlines: DontAlign
 AlignOperands: AlignAfterOperator
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true
