@@ -163,7 +163,17 @@ auto nrvo_tuple_bad() {
     return result;
 }
 
-// Unique named struct return value.
+// Unique named return value using a local, unnamed struct.
+// Pros:
+//   + Returned values can have meaningful names, unlike std::tuple.
+//   + No need to unpack returned values with std::get or std::tie.
+//   + Works with structured binding, just like std::tuple.
+// Cons:
+//   - Cannot be declared as a return type, unlike std::tuple,
+//     making the number of and types of returned values unclear.
+//   - Requires return type deduction. (C++14)
+//       * Cannot be used for virtual member functions.
+//       * Implemtation must be in same translation unit as declaration.
 auto nrvo_struct() {
     struct {
         Verbose first { "first" };
