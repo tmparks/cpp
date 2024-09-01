@@ -163,6 +163,15 @@ auto nrvo_tuple_bad() {
     return result;
 }
 
+// Unique named struct return value.
+auto nrvo_struct() {
+    struct {
+        Verbose first { "first" };
+        Verbose second { "second" };
+    } result;
+    return result;
+}
+
 #endif // C++14
 
 // Non-unique return values.
@@ -490,6 +499,34 @@ TEST(CopyElision, nrvo_tuple_tie) {
                     AnyOf(HasSubstr("copy constructor"),
                           HasSubstr("move constructor"))));
     EXPECT_THAT(actual, HasSubstr("assignment"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+#endif // C++17
+
+#if __cplusplus >= 201402L
+
+TEST(CopyElision, nrvo_struct) {
+    CaptureStdout();
+    auto result = nrvo_struct();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(result.first.name(), EndsWith("first"));
+    EXPECT_THAT(result.second.name(), EndsWith("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+#endif // C++14
+
+#if __cplusplus >= 201703L
+
+TEST(CopyElision, nrvo_struct_structured_binding) {
+    CaptureStdout();
+    auto [v1, v2] = nrvo_struct();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }
 
