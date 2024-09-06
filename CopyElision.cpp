@@ -1,6 +1,7 @@
 // See [Copy elision](https://en.cppreference.com/w/cpp/language/copy_elision)
 // See [Return value optimizations](https://www.fluentcpp.com/2016/11/28/return-value-optimizations/)
 // See [Understanding when not to std::move in C++](https://developers.redhat.com/blog/2019/04/12/understanding-when-not-to-stdmove-in-c)
+// See [How to Return Several Values from a Function in C++](https://www.fluentcpp.com/2021/07/09/how-to-return-several-values-from-a-function-in-c)
 
 #include "Verbose.hpp"
 #include <iostream>
