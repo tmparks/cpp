@@ -1,6 +1,7 @@
 // See [Copy elision](https://en.cppreference.com/w/cpp/language/copy_elision)
 // See [Return value optimizations](https://www.fluentcpp.com/2016/11/28/return-value-optimizations/)
 // See [Understanding when not to std::move in C++](https://developers.redhat.com/blog/2019/04/12/understanding-when-not-to-stdmove-in-c)
+// See [How to Return Several Values from a Function in C++](https://www.fluentcpp.com/2021/07/09/how-to-return-several-values-from-a-function-in-c)
 
 #include "Verbose.hpp"
 #include <iostream>
@@ -160,6 +161,25 @@ auto nrvo_tuple_bad() {
     auto v1 = Verbose { "first" };
     auto v2 = Verbose { "second" };
     auto result = std::make_tuple(v1, v2);
+    return result;
+}
+
+// Unique named return value using a local, unnamed struct.
+// Pros:
+//   + Returned values can have meaningful names, unlike std::tuple.
+//   + No need to unpack returned values with std::get or std::tie.
+//   + Works with structured binding, just like std::tuple.
+// Cons:
+//   - Cannot be declared as a return type, unlike std::tuple,
+//     making the number of and types of returned values unclear.
+//   - Requires return type deduction. (C++14)
+//       * Cannot be used for virtual member functions.
+//       * Implemtation must be in same translation unit as declaration.
+auto nrvo_struct() {
+    struct {
+        Verbose first { "first" };
+        Verbose second { "second" };
+    } result;
     return result;
 }
 
@@ -490,6 +510,34 @@ TEST(CopyElision, nrvo_tuple_tie) {
                     AnyOf(HasSubstr("copy constructor"),
                           HasSubstr("move constructor"))));
     EXPECT_THAT(actual, HasSubstr("assignment"));
+    std::cout << std::endl << actual << std::endl;
+}
+
+#endif // C++17
+
+#if __cplusplus >= 201402L
+
+TEST(CopyElision, nrvo_struct) {
+    CaptureStdout();
+    auto result = nrvo_struct();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(result.first.name(), EndsWith("first"));
+    EXPECT_THAT(result.second.name(), EndsWith("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
+    std::cout << std::endl << actual << std::endl;
+}
+
+#endif // C++14
+
+#if __cplusplus >= 201703L
+
+TEST(CopyElision, nrvo_struct_structured_binding) {
+    CaptureStdout();
+    auto [v1, v2] = nrvo_struct();
+    auto actual = GetCapturedStdout();
+    EXPECT_THAT(v1.name(), StrEq("first"));
+    EXPECT_THAT(v2.name(), StrEq("second"));
+    EXPECT_THAT(actual, Not(AnyOf(HasSubstr("copy"), HasSubstr("move"))));
     std::cout << std::endl << actual << std::endl;
 }
 
