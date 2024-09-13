@@ -10,10 +10,17 @@ struct Mass {
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
+#if __cplusplus >= 201703L
 struct Length : StrongType<double> { };
 struct Width : Length { };
 struct Height : Length { };
 struct Area : StrongType<double> { };
+#else  // C++17
+struct Length : StrongType<double> { using base::base; };
+struct Width : Length { using Length::Length; };
+struct Height : Length { using Length::Length; };
+struct Area : StrongType<double> { using base::base; };
+#endif // C++17
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,13 +37,18 @@ STRONG_IDENTIFIER(BlueId);
 // Generate the next ID.
 template <typename E>
 typename std::enable_if<std::is_enum<E>::value, E>::type next() {
-    static auto previous = static_cast<std::underlying_type<E>::type>(E::null);
+    static auto previous =
+            static_cast<typename std::underlying_type<E>::type>(E::null);
     return static_cast<E>(++previous);
 }
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
+#if __cplusplus >= 201703L
 struct GreenId : StrongIdentifier<> { };
+#else  // C++17
+struct GreenId : StrongIdentifier<> { using base::base; };
+#endif // C++17
 
 // Generate the next ID.
 template <typename T>
@@ -66,12 +78,21 @@ TEST(StrongIdentifier, initialization) {
 }
 
 TEST(StrongIdentifier, equal) {
+#if __cplusplus >= 201703L
     auto red = RedId{1};
     auto rojo = RedId{1};
     auto rouge = RedId::null;
     auto blue = BlueId{2};
     auto azul = BlueId{2};
     auto bleu = BlueId::null;
+#else // C++17
+    auto red = static_cast<RedId>(1);
+    auto rojo = static_cast<RedId>(1);
+    auto rouge = RedId::null;
+    auto blue = static_cast<BlueId>(2);
+    auto azul = static_cast<BlueId>(2);
+    auto bleu = BlueId::null;
+#endif // C++17
 
     EXPECT_EQ(red, rojo);
     EXPECT_EQ(blue, azul);
