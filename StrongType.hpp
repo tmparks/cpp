@@ -7,11 +7,23 @@
 template <typename T = intmax_t>
 struct StrongType {
     using type = T; // underlying type
-    T value{};      // default-initialized value
+    T value{};      // zero-initialized value
 };
 
 // A simple strong identifier.
 template <typename T = uintmax_t>
 struct StrongIdentifier : StrongType<T> {
-    constexpr static T null = 0;
+    constexpr static StrongIdentifier null{};      // zero-initialized
+    bool operator==(StrongIdentifier other) const; // equal
+    bool operator<(StrongIdentifier other) const;  // less
 };
+
+template <typename T>
+bool StrongIdentifier<T>::operator==(StrongIdentifier other) const {
+    return this->value == other.value;
+}
+
+template <typename T>
+bool StrongIdentifier<T>::operator<(StrongIdentifier other) const {
+    return this->value < other.value;
+}
