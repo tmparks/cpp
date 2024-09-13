@@ -41,12 +41,30 @@ struct GreenId : StrongIdentifier<> { };
 template <typename T>
 typename std::enable_if<not std::is_enum<T>::value, T>::type next() {
     static auto previous = T::null;
-    return {++previous};
+    return T{++(previous.value)};
 }
 
 STRONG_FLOATING_POINT_OPERATORS(Length)
 
-TEST(StrongType, id) {
+TEST(StrongType, initialization) {
+    auto w = Width{3.0};
+    auto h = Height{4.0};
+    auto area = Area{Length{w} * Length{h}};
+    EXPECT_EQ(Area{12.0}, area);
+}
+
+TEST(StrongIdentifier, initialization) {
+    GreenId zero{0};
+    GreenId default1;
+    GreenId default2{};
+
+    EXPECT_EQ(zero, GreenId::null);
+    EXPECT_EQ(default1, GreenId::null);
+    EXPECT_EQ(default2, GreenId::null);
+    EXPECT_EQ(default1, default2);
+}
+
+TEST(StrongIdentifier, equal) {
     auto red = RedId{1};
     auto rojo = RedId{1};
     auto rouge = RedId::null;
@@ -77,10 +95,18 @@ TEST(StrongType, id) {
     // EXPECT_EQ(blue, 2); // compile time error
 }
 
-TEST(StrongType, initialization) {
-    // Strong types can be initialized the same way as their underlying types.
-    auto w = Width{3.0};
-    auto h = Height{4.0};
-    auto area = Area{Length{w} * Length{h}};
-    EXPECT_EQ(Area{12.0}, area);
+TEST(StrongIdentifier, container) {
+    auto collection = std::set<GreenId> {};
+    EXPECT_EQ(0, collection.size());
+
+    collection.insert(next<GreenId>()); // 1
+    collection.insert(next<GreenId>()); // 2
+    collection.insert(next<GreenId>()); // 3
+    EXPECT_EQ(3, collection.size());
+
+    collection.insert(GreenId{3}); // duplicate
+    EXPECT_EQ(3, collection.size()); // size unchanged
+
+    EXPECT_EQ(1, collection.erase(GreenId{1})); // remove smallest
+    EXPECT_EQ(2, collection.cbegin()->value); // new smallest
 }
