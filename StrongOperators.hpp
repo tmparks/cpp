@@ -3,6 +3,8 @@
 // Simplify operator overloading for strong types.
 // [Operator Overloading](https://en.cppreference.com/w/cpp/language/operators)
 
+// NOLINTBEGIN(*-macro-usage)
+
 #define STRONG_INFIX_OPERATOR(TYPE, OP) \
     template <typename TYPE> \
     auto operator OP(TYPE a, TYPE b) { \
@@ -79,3 +81,5 @@
     STRONG_ARITHMETIC_OPERATORS(TYPE) \
     STRONG_COMPARISON_OPERATORS(TYPE) \
     STRONG_ARITHMETIC_ASSIGNMENT_OPERATORS(TYPE)
+
+// NOLINTEND(*-macro-usage)

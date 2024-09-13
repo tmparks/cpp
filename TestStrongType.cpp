@@ -22,6 +22,7 @@ enum class RedId : uintmax_t { null = 0 }; // Strong identifier.
 
 // Bad: Use MACRO because scoped enum does not allow inheritance.
 // [Don’t use macros for constants or “functions”](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#es31-dont-use-macros-for-constants-or-functions)
+// NOLINTNEXTLINE(*-macro-usage)
 #define STRONG_IDENTIFIER(type) enum class type : uintmax_t { null = 0 }
 
 STRONG_IDENTIFIER(BlueId);
@@ -47,8 +48,8 @@ typename std::enable_if<not std::is_enum<T>::value, T>::type next() {
 STRONG_FLOATING_POINT_OPERATORS(Length)
 
 TEST(StrongType, initialization) {
-    auto w = Width{3.0};
-    auto h = Height{4.0};
+    auto w = Width{3.0};  // NOLINT(*-avoid-magic-numbers)
+    auto h = Height{4.0}; // NOLINT(*-avoid-magic-numbers)
     auto area = Area{Length{w} * Length{h}};
     EXPECT_EQ(Area{12.0}, area);
 }
@@ -96,7 +97,7 @@ TEST(StrongIdentifier, equal) {
 }
 
 TEST(StrongIdentifier, container) {
-    auto collection = std::set<GreenId> {};
+    auto collection = std::set<GreenId>{};
     EXPECT_EQ(0, collection.size());
 
     collection.insert(next<GreenId>()); // 1
@@ -104,9 +105,9 @@ TEST(StrongIdentifier, container) {
     collection.insert(next<GreenId>()); // 3
     EXPECT_EQ(3, collection.size());
 
-    collection.insert(GreenId{3}); // duplicate
+    collection.insert(GreenId{3});   // duplicate
     EXPECT_EQ(3, collection.size()); // size unchanged
 
     EXPECT_EQ(1, collection.erase(GreenId{1})); // remove smallest
-    EXPECT_EQ(2, collection.cbegin()->value); // new smallest
+    EXPECT_EQ(2, collection.cbegin()->value);   // new smallest
 }

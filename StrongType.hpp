@@ -13,10 +13,13 @@ struct StrongType {
 // A simple strong identifier.
 template <typename T = uintmax_t>
 struct StrongIdentifier : StrongType<T> {
-    constexpr static StrongIdentifier null{};      // zero-initialized
+    const static StrongIdentifier<T> null;         // initialized later
     bool operator==(StrongIdentifier other) const; // equal
     bool operator<(StrongIdentifier other) const;  // less
 };
+
+template <typename T>
+const StrongIdentifier<T> StrongIdentifier<T>::null{}; // zero-initialized
 
 template <typename T>
 bool StrongIdentifier<T>::operator==(StrongIdentifier other) const {
