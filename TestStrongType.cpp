@@ -4,9 +4,8 @@
 #include <gtest/gtest.h>
 
 // Good: Use simple struct for strong type, comment expresses intent.
-struct Mass {
-    double asDouble{0.0};
-}; // Strong type.
+// Use simple [aggregate initialization](https://en.cppreference.com/w/cpp/language/aggregate_initialization)
+struct Mass { double asDouble{0.0}; }; // Strong type.
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
@@ -60,6 +59,9 @@ typename std::enable_if<not std::is_enum<T>::value, T>::type next() {
 STRONG_FLOATING_POINT_OPERATORS(Length)
 
 TEST(StrongType, initialization) {
+    auto m = Mass{2.0}; // NOLINT(*-avoid-magic-numbers)
+    EXPECT_EQ(2.0, m.asDouble);
+
     auto w = Width{3.0};  // NOLINT(*-avoid-magic-numbers)
     auto h = Height{4.0}; // NOLINT(*-avoid-magic-numbers)
     auto area = Area{Length{w} * Length{h}};
@@ -85,7 +87,7 @@ TEST(StrongIdentifier, equal) {
     auto blue = BlueId{2};
     auto azul = BlueId{2};
     auto bleu = BlueId::null;
-#else // C++17
+#else  // C++17
     auto red = static_cast<RedId>(1);
     auto rojo = static_cast<RedId>(1);
     auto rouge = RedId::null;

@@ -9,6 +9,8 @@ struct StrongType {
     using type = T; // underlying type
     T value{};      // zero-initialized value
 #if __cplusplus < 201703L
+    // Until C++17, [aggregate initialization](https://en.cppreference.com/w/cpp/language/aggregate_initialization)
+    // cannot be used with derived types, so provide a constructor to inherit.
     using base = StrongType;                            // base type
     StrongType(T v) : value{v} {};                      // constructor
     StrongType() = default;                             // default constructor
