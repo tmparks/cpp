@@ -1,24 +1,31 @@
 #include "StrongOperators.hpp"
+
+namespace Inherited {
 #include "StrongType.hpp"
+}
+
+namespace Tagged {
+#include "TaggedStrongType.hpp"
+}
 
 #include <gtest/gtest.h>
 
-// Good: Use simple struct for strong type, comment expresses intent.
+// Good: Use a simple struct for a strong type, comment expresses intent.
 // Use simple [aggregate initialization](https://en.cppreference.com/w/cpp/language/aggregate_initialization)
 struct Mass { double asDouble{0.0}; }; // Strong type.
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
 #if __cplusplus >= 201703L
-struct Length : StrongType<double> { };
+struct Length : Inherited::StrongType<double> { };
 struct Width : Length { };
 struct Height : Length { };
-struct Area : StrongType<double> { };
+using Area = Tagged::StrongType<double, struct AreaTag>;
 #else  // C++17
-struct Length : StrongType<double> { using base::base; };
+struct Length : Inherited::StrongType<double> { using base::base; };
 struct Width : Length { using Length::Length; };
 struct Height : Length { using Length::Length; };
-struct Area : StrongType<double> { using base::base; };
+using Area = Tagged::StrongType<double, struct AreaTag>;
 #endif // C++17
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,9 +51,9 @@ typename std::enable_if<std::is_enum<E>::value, E>::type next() {
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
 #if __cplusplus >= 201703L
-struct GreenId : StrongIdentifier<> { };
+struct GreenId : Inherited::StrongIdentifier<int> { };
 #else  // C++17
-struct GreenId : StrongIdentifier<> { using base::base; };
+struct GreenId : Inherited::StrongIdentifier<int> { using base::base; };
 #endif // C++17
 
 // Generate the next ID.
@@ -58,15 +65,20 @@ typename std::enable_if<not std::is_enum<T>::value, T>::type next() {
 
 STRONG_FLOATING_POINT_OPERATORS(Length)
 
+// NOLINTBEGIN(*-avoid-magic-numbers)
+
 TEST(StrongType, initialization) {
-    auto m = Mass{2.0}; // NOLINT(*-avoid-magic-numbers)
+    auto m = Mass{2.0};
     EXPECT_EQ(2.0, m.asDouble);
 
-    auto w = Width{3.0};  // NOLINT(*-avoid-magic-numbers)
-    auto h = Height{4.0}; // NOLINT(*-avoid-magic-numbers)
+    auto w = Width{3.0};
+    auto h = Height{4.0};
     auto area = Area{Length{w} * Length{h}};
-    EXPECT_EQ(Area{12.0}, area);
+    auto expected = Area{12.0};
+    EXPECT_EQ(expected, area);
 }
+
+// NOLINTEND(*-avoid-magic-numbers)
 
 TEST(StrongIdentifier, initialization) {
     GreenId zero{0};
