@@ -8,7 +8,7 @@
 // similar to std::span.
 class Array : protected Verbose {
 public:
-    Array();                                   // default constructor
+    Array() noexcept;                          // default constructor
     explicit Array(gsl::index size);           // constructor
     Array(const Array& other);                 // copy constructor
     Array(Array&& other) noexcept;             // move constructor

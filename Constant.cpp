@@ -6,7 +6,7 @@
 
 class Const {
 public:
-    Const() : uninitialized_ { 1 } { }
+    Const() noexcept : uninitialized_ { 1 } { }
     const int uninitialized_; // must be initialized in constructor NOLINT(*-use-default-member-init)
     const int initialized_ { 2 }; // may be initialized in constructor
 };

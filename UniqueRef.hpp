@@ -32,7 +32,7 @@ public:
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
     // T& operator.();
 private:
-    UniqueRef() = delete;                            // no default constructor
+    UniqueRef() noexcept = delete;                   // no default constructor
     UniqueRef(const UniqueRef&) = delete;            // no copy constructor
     UniqueRef(UniqueRef&&) noexcept = delete;        // no move constructor
     UniqueRef& operator=(const UniqueRef&) = delete; // no copy assignment

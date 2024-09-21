@@ -3,7 +3,7 @@
 #include <iostream>
 
 // default constructor
-Array::Array() : Verbose { gsl::czstring { __func__ } } { }
+Array::Array() noexcept : Verbose { gsl::czstring { __func__ } } { }
 
 // constructor
 Array::Array(gsl::index size) :

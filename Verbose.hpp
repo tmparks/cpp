@@ -3,7 +3,7 @@
 
 class Verbose {
 public:
-    Verbose() = delete;                            // no default constructor
+    Verbose() noexcept = delete;                   // no default constructor
     Verbose(const std::string& name);              // constructor
     Verbose(const Verbose& other);                 // copy constructor
     Verbose(Verbose&& other) noexcept;             // move constructor

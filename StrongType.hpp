@@ -15,7 +15,7 @@ struct StrongType {
     // cannot be used with derived types until C++17.
     using base = StrongType;                     // base type
     explicit StrongType(T v) : value{v} {};      // constructor
-    StrongType() = default;                      // default constructor
+    StrongType() noexcept = default;             // default constructor
     StrongType(const StrongType&) = default;     // copy constructor
     StrongType(StrongType&&) noexcept = default; // move constructor
     StrongType& operator=(const StrongType&) = default;     // copy assignment

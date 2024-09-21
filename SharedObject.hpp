@@ -14,7 +14,7 @@ public:
 protected:
     struct Protected; // Tag type available to derived classes.
 
-    SharedObject() = default;
+    SharedObject() noexcept = default;
     SharedObject(const SharedObject& other) = default;
     SharedObject(SharedObject&& other) noexcept = default;
     SharedObject& operator=(const SharedObject& other) = default;
@@ -23,7 +23,7 @@ protected:
 
 // [Making sure that people use make_unique and make_shared to make your object](https://devblogs.microsoft.com/oldnewthing/20220721-00/?p=106879)
 struct SharedObject::Protected {
-    explicit Protected() = default;
+    explicit Protected() noexcept = default;
 };
 
 template <typename Derived, typename... Args>

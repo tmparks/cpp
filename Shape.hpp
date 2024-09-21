@@ -45,7 +45,7 @@ public:
     Shape& moveBy(double dx, double dy);  // Adjust position.
 
 protected:
-    Shape() = default;
+    Shape() noexcept = default;
     Shape(const Shape&) = default;
     Shape(Shape&&) noexcept = default;
     Shape& operator=(const Shape&) = default;

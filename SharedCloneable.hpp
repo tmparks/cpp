@@ -14,7 +14,7 @@ public:
 
 protected:
     using Base::Base; // Inherit all constructors from Base.
-    SharedCloneable() = default;
+    SharedCloneable() noexcept = default;
     SharedCloneable(const SharedCloneable&) = default;
     SharedCloneable(SharedCloneable&&) noexcept = delete;
     SharedCloneable& operator=(const SharedCloneable&) = delete;

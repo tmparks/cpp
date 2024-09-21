@@ -11,13 +11,13 @@ public:
     Widget& operator=(Widget&& other) noexcept = default;
 
 public: // pseudo-protected
-    explicit Widget(Protected) : Widget {} { }
+    explicit Widget(Protected) noexcept : Widget {} { }
     Widget(Protected, const Widget& other) : Widget { other } { }
     Widget(Protected, Widget&& other) noexcept : Widget { std::move(other) } { }
     Widget(Protected, const std::string& name) : v_ { name } { }
 
 protected:
-    Widget() : v_ { gsl::czstring { __func__ } } { }
+    Widget() noexcept : v_ { gsl::czstring { __func__ } } { }
     Widget(const Widget& other) = default;
     Widget(Widget&& other) noexcept = default;
 
@@ -33,13 +33,13 @@ public:
     Gadget& operator=(Gadget&& other) noexcept = default;
 
 public: // pseudo-protected
-    explicit Gadget(Protected) : Gadget {} { }
+    explicit Gadget(Protected) noexcept : Gadget {} { }
     Gadget(Protected, const Gadget& other) : Gadget { other } { }
     Gadget(Protected, Gadget&& other) noexcept : Gadget { std::move(other) } { }
     Gadget(Protected tag, const std::string& name) : Widget { tag, name } { }
 
 protected:
-    Gadget() : Widget { Protected {}, gsl::czstring { __func__ } } { }
+    Gadget() noexcept : Widget { Protected {}, gsl::czstring { __func__ } } { }
     Gadget(const Gadget& other) = default;
     Gadget(Gadget&& other) noexcept = default;
 };

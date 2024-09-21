@@ -37,7 +37,7 @@ public:
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
     // T& operator.();
 private:
-    SharedRef() = delete;                     // no default constructor
+    SharedRef() noexcept = delete;            // no default constructor
     SharedRef(SharedRef&&) noexcept = delete; // no move constructor
     SharedRef& operator=(SharedRef&&) noexcept = delete; // no move assignment
 
