@@ -35,7 +35,7 @@ Verbose& Verbose::operator=(Verbose&& other) noexcept {
     return *this;
 }
 
-Verbose::~Verbose() {
+Verbose::~Verbose() noexcept {
     std::cout << name_ << ": destructor this=" << this << std::endl;
 }
 

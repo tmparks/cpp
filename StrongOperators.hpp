@@ -31,6 +31,8 @@
     STRONG_PREFIX_OPERATOR(TYPE, +) \
     STRONG_PREFIX_OPERATOR(TYPE, -)
 
+// Comparison operators should be noexcept
+// [Make == symmetric with respect to operand types and noexcept](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-eq)
 #define STRONG_COMPARISON_OPERATORS(TYPE) \
     STRONG_INFIX_OPERATOR(TYPE, ==) \
     STRONG_INFIX_OPERATOR(TYPE, !=) \

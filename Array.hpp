@@ -14,7 +14,7 @@ public:
     Array(Array&& other) noexcept;             // move constructor
     Array& operator=(const Array& other);      // copy assignment
     Array& operator=(Array&& other) noexcept;  // move assignment
-    ~Array() override = default;               // destructor
+    ~Array() noexcept override = default;      // destructor
     friend void swap(Array&, Array&) noexcept; // non-member swap
 
     gsl::index size() const noexcept;

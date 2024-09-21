@@ -9,16 +9,16 @@ public:
     template <typename Derived, typename... Args>
     friend std::shared_ptr<Derived> create(Args&&... args);
 
-    virtual ~SharedObject() = default;
+    virtual ~SharedObject() noexcept = default;
 
 protected:
     struct Protected; // Tag type available to derived classes.
 
     SharedObject() = default;
-    SharedObject(SharedObject&& other) = default;
     SharedObject(const SharedObject& other) = default;
-    SharedObject& operator=(SharedObject&& other) = default;
+    SharedObject(SharedObject&& other) noexcept = default;
     SharedObject& operator=(const SharedObject& other) = default;
+    SharedObject& operator=(SharedObject&& other) noexcept = default;
 };
 
 // [Making sure that people use make_unique and make_shared to make your object](https://devblogs.microsoft.com/oldnewthing/20220721-00/?p=106879)

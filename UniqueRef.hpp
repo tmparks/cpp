@@ -19,9 +19,9 @@ template <typename T>
 class UniqueRef {
 public:
     using Type = T;
-    virtual ~UniqueRef() = default; // destructor
-    UniqueRef(std::unique_ptr<T> p);
-    void reset(std::unique_ptr<T> p);
+    virtual ~UniqueRef() noexcept = default; // destructor
+    UniqueRef(std::unique_ptr<T> p) noexcept;
+    void reset(std::unique_ptr<T> p) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
@@ -43,13 +43,13 @@ private:
 };
 
 template <typename T>
-UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) : p_ { std::move(p) } {
+UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_ { std::move(p) } {
     Expects(p_ != nullptr);
     std::cout << v_ << ": conversion from unique_ptr" << std::endl;
 }
 
 template <typename T>
-void UniqueRef<T>::reset(std::unique_ptr<T> p) {
+void UniqueRef<T>::reset(std::unique_ptr<T> p) noexcept {
     Expects(p != nullptr);
     p_ = std::move(p);
 }

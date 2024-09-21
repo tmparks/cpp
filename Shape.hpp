@@ -32,7 +32,7 @@ class Rectangle;
 // See [Non-virtual interface pattern](https://en.wikipedia.org/wiki/Non-virtual_interface_pattern)
 class Shape {
 public:
-    virtual ~Shape() = default;
+    virtual ~Shape() noexcept = default;
     std::unique_ptr<Shape> clone() const; // Create a copy.
     double area() const;                  // Area.
     Circle boundingCircle() const;        // Bounding circle.
@@ -47,9 +47,9 @@ public:
 protected:
     Shape() = default;
     Shape(const Shape&) = default;
-    Shape(Shape&&) = default;
+    Shape(Shape&&) noexcept = default;
     Shape& operator=(const Shape&) = default;
-    Shape& operator=(Shape&&) = default;
+    Shape& operator=(Shape&&) noexcept = default;
 
 private:
     // By convention, derived classes implement a virtual constructor

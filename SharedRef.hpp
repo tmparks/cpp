@@ -18,9 +18,9 @@ template <typename T>
 class SharedRef {
 public:
     using Type = T;
-    virtual ~SharedRef() = default; // destructor
-    SharedRef(std::shared_ptr<T> p);
-    void reset(std::shared_ptr<T> p);
+    virtual ~SharedRef() noexcept = default; // destructor
+    SharedRef(std::shared_ptr<T> p) noexcept;
+    void reset(std::shared_ptr<T> p) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
@@ -46,13 +46,13 @@ private:
 };
 
 template <typename T>
-SharedRef<T>::SharedRef(std::shared_ptr<T> p) : p_ { std::move(p) } {
+SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_ { std::move(p) } {
     Expects(p_ != nullptr);
     std::cout << v_ << ": conversion from shared_ptr" << std::endl;
 }
 
 template <typename T>
-void SharedRef<T>::reset(std::shared_ptr<T> p) {
+void SharedRef<T>::reset(std::shared_ptr<T> p) noexcept {
     Expects(p != nullptr);
     p_ = std::move(p);
 }

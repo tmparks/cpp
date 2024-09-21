@@ -10,15 +10,15 @@ template <typename Derived, typename Base = SharedObject>
 class SharedCloneable : public Base {
 public:
     std::shared_ptr<Derived> clone() const;
-    ~SharedCloneable() override = default;
+    ~SharedCloneable() noexcept override = default;
 
 protected:
     using Base::Base; // Inherit all constructors from Base.
     SharedCloneable() = default;
-    SharedCloneable(SharedCloneable&&) = delete;
     SharedCloneable(const SharedCloneable&) = default;
-    SharedCloneable& operator=(SharedCloneable&&) = delete;
+    SharedCloneable(SharedCloneable&&) noexcept = delete;
     SharedCloneable& operator=(const SharedCloneable&) = delete;
+    SharedCloneable& operator=(SharedCloneable&&) noexcept = delete;
 
 private:
     // NOLINTNEXTLINE(*-explicit-virtual-functions)

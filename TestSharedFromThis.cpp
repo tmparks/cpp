@@ -6,20 +6,20 @@
 // Derived publicly (but indirectly) from std::enable_shared_from_this
 class Widget : public SharedObject {
 public:
-    ~Widget() override = default;
-    Widget& operator=(Widget&& other) = default;
+    ~Widget() noexcept override = default;
     Widget& operator=(const Widget& other) = default;
+    Widget& operator=(Widget&& other) noexcept = default;
 
 public: // pseudo-protected
     explicit Widget(Protected) : Widget {} { }
-    Widget(Protected, Widget&& other) : Widget { std::move(other) } { }
     Widget(Protected, const Widget& other) : Widget { other } { }
+    Widget(Protected, Widget&& other) noexcept : Widget { std::move(other) } { }
     Widget(Protected, const std::string& name) : v_ { name } { }
 
 protected:
     Widget() : v_ { gsl::czstring { __func__ } } { }
-    Widget(Widget&& other) = default;
     Widget(const Widget& other) = default;
+    Widget(Widget&& other) noexcept = default;
 
 private:
     Verbose v_; // initialized later
@@ -28,20 +28,20 @@ private:
 // Derived publicly (but indirectly) from std::enable_shared_from_this
 class Gadget : public Widget {
 public:
-    ~Gadget() override = default;
-    Gadget& operator=(Gadget&& other) = default;
+    ~Gadget() noexcept override = default;
     Gadget& operator=(const Gadget& other) = default;
+    Gadget& operator=(Gadget&& other) noexcept = default;
 
 public: // pseudo-protected
     explicit Gadget(Protected) : Gadget {} { }
-    Gadget(Protected, Gadget&& other) : Gadget { std::move(other) } { }
     Gadget(Protected, const Gadget& other) : Gadget { other } { }
+    Gadget(Protected, Gadget&& other) noexcept : Gadget { std::move(other) } { }
     Gadget(Protected tag, const std::string& name) : Widget { tag, name } { }
 
 protected:
     Gadget() : Widget { Protected {}, gsl::czstring { __func__ } } { }
-    Gadget(Gadget&& other) = default;
     Gadget(const Gadget& other) = default;
+    Gadget(Gadget&& other) noexcept = default;
 };
 
 void share_const(const Widget& w) {

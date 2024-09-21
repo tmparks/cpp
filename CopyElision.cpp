@@ -13,7 +13,7 @@ public:
     using Verbose::Verbose;                      // inherit constructors
     Uncopyable(Uncopyable&&) noexcept = default; // move constructor
     Uncopyable& operator=(Uncopyable&&) noexcept = default; // move assignment
-    ~Uncopyable() override = default;                       // destructor
+    ~Uncopyable() noexcept override = default;              // destructor
 
     Uncopyable() = delete;                             // no default constructor
     Uncopyable(const Uncopyable&) = delete;            // no copy constructor
@@ -26,7 +26,7 @@ public:
     using Verbose::Verbose;                           // inherit constructors
     Unmovable(const Unmovable&) = default;            // copy constructor
     Unmovable& operator=(const Unmovable&) = default; // copy assignment
-    ~Unmovable() override = default;                  // destructor
+    ~Unmovable() noexcept override = default;         // destructor
 
     Unmovable() = delete;                     // no default constructor
     Unmovable(Unmovable&&) noexcept = delete; // no move constructor
