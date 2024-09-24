@@ -9,8 +9,15 @@
 #pragma message "emulating C++20 numbers"
 
 #include <cmath>
-namespace std::numbers {
-    constexpr auto pi = M_PI;
-} // namespace std::numbers
+
+// NOLINTBEGIN(*-concat-nested-namespaces) until C++17
+
+namespace std {
+    namespace numbers {
+        constexpr auto pi = M_PI;
+    } // namespace numbers
+} // namespace std
+
+// NOLINTEND(*-concat-nested-namespaces)
 
 #endif // C++20

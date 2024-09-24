@@ -1,9 +1,10 @@
 ---
-# See [Using clang-tidy](https://clang.llvm.org/extra/clang-tidy/#using-clang-tidy)
+# [Using clang-tidy](https://clang.llvm.org/extra/clang-tidy/#using-clang-tidy)
+# [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
+
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 
-# See [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
 Checks:
   - -* # Disable default checks.
   - cppcoreguidelines-*
