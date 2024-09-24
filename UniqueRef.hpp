@@ -19,20 +19,20 @@ template <typename T>
 class UniqueRef {
 public:
     using Type = T;
-    virtual ~UniqueRef() = default; // destructor
-    UniqueRef(std::unique_ptr<T> p);
-    void reset(std::unique_ptr<T> p);
+    virtual ~UniqueRef() noexcept = default; // destructor
+    UniqueRef(std::unique_ptr<T> p) noexcept;
+    void reset(std::unique_ptr<T> p) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
-    const T& get() const;
+    [[nodiscard]] const T& get() const;
     friend void swap<>(UniqueRef&, UniqueRef&) noexcept; // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
     // T& operator.();
 private:
-    UniqueRef() = delete;                            // no default constructor
+    UniqueRef() noexcept = delete;                   // no default constructor
     UniqueRef(const UniqueRef&) = delete;            // no copy constructor
     UniqueRef(UniqueRef&&) noexcept = delete;        // no move constructor
     UniqueRef& operator=(const UniqueRef&) = delete; // no copy assignment
@@ -43,13 +43,13 @@ private:
 };
 
 template <typename T>
-UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) : p_ { std::move(p) } {
+UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_ { std::move(p) } {
     Expects(p_ != nullptr);
     std::cout << v_ << ": conversion from unique_ptr" << std::endl;
 }
 
 template <typename T>
-void UniqueRef<T>::reset(std::unique_ptr<T> p) {
+void UniqueRef<T>::reset(std::unique_ptr<T> p) noexcept {
     Expects(p != nullptr);
     p_ = std::move(p);
 }

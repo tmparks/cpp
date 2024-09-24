@@ -13,9 +13,9 @@ public:
     using Verbose::Verbose;                      // inherit constructors
     Uncopyable(Uncopyable&&) noexcept = default; // move constructor
     Uncopyable& operator=(Uncopyable&&) noexcept = default; // move assignment
-    ~Uncopyable() override = default;                       // destructor
+    ~Uncopyable() noexcept override = default;              // destructor
 
-    Uncopyable() = delete;                             // no default constructor
+    Uncopyable() noexcept = delete;                    // no default constructor
     Uncopyable(const Uncopyable&) = delete;            // no copy constructor
     Uncopyable& operator=(const Uncopyable&) = delete; // no copy assignment
 };
@@ -26,9 +26,9 @@ public:
     using Verbose::Verbose;                           // inherit constructors
     Unmovable(const Unmovable&) = default;            // copy constructor
     Unmovable& operator=(const Unmovable&) = default; // copy assignment
-    ~Unmovable() override = default;                  // destructor
+    ~Unmovable() noexcept override = default;         // destructor
 
-    Unmovable() = delete;                     // no default constructor
+    Unmovable() noexcept = delete;            // no default constructor
     Unmovable(Unmovable&&) noexcept = delete; // no move constructor
     Unmovable& operator=(Unmovable&&) noexcept = delete; // no move assignment
 };
@@ -46,7 +46,7 @@ public:
 // A derived class.
 class Derived : public Verbose {
 public:
-    Derived() : Verbose { "Derived" } { }
+    Derived() noexcept : Verbose { "Derived" } { }
 };
 
 // Unnamed value constructed in return statement.

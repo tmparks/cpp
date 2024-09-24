@@ -1,7 +1,7 @@
 #include "Verbose.hpp"
 #include <iostream>
 
-Verbose::Verbose(const std::string& name) : name_ { name } {
+Verbose::Verbose(std::string name) : name_ { std::move(name) } {
     std::cout << name_ << ": constructor this=" << this << std::endl;
 }
 
@@ -35,7 +35,7 @@ Verbose& Verbose::operator=(Verbose&& other) noexcept {
     return *this;
 }
 
-Verbose::~Verbose() {
+Verbose::~Verbose() noexcept {
     std::cout << name_ << ": destructor this=" << this << std::endl;
 }
 

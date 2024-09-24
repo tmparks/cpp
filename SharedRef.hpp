@@ -18,17 +18,17 @@ template <typename T>
 class SharedRef {
 public:
     using Type = T;
-    virtual ~SharedRef() = default; // destructor
-    SharedRef(std::shared_ptr<T> p);
-    void reset(std::shared_ptr<T> p);
+    virtual ~SharedRef() noexcept = default; // destructor
+    SharedRef(std::shared_ptr<T> p) noexcept;
+    void reset(std::shared_ptr<T> p) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
-    const T& get() const;
+    [[nodiscard]] const T& get() const;
     operator std::shared_ptr<T>();
     operator std::shared_ptr<const T>() const;
     std::shared_ptr<T> share();
-    std::shared_ptr<const T> share() const;
+    [[nodiscard]] std::shared_ptr<const T> share() const;
     SharedRef(const SharedRef&) = default;               // copy constructor
     SharedRef& operator=(const SharedRef&) = default;    // copy assignment
     friend void swap<>(SharedRef&, SharedRef&) noexcept; // non-member swap
@@ -37,7 +37,7 @@ public:
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
     // T& operator.();
 private:
-    SharedRef() = delete;                     // no default constructor
+    SharedRef() noexcept = delete;            // no default constructor
     SharedRef(SharedRef&&) noexcept = delete; // no move constructor
     SharedRef& operator=(SharedRef&&) noexcept = delete; // no move assignment
 
@@ -46,13 +46,13 @@ private:
 };
 
 template <typename T>
-SharedRef<T>::SharedRef(std::shared_ptr<T> p) : p_ { std::move(p) } {
+SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_ { std::move(p) } {
     Expects(p_ != nullptr);
     std::cout << v_ << ": conversion from shared_ptr" << std::endl;
 }
 
 template <typename T>
-void SharedRef<T>::reset(std::shared_ptr<T> p) {
+void SharedRef<T>::reset(std::shared_ptr<T> p) noexcept {
     Expects(p != nullptr);
     p_ = std::move(p);
 }

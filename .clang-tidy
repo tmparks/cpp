@@ -1,15 +1,21 @@
 ---
-# See [Using clang-tidy](https://clang.llvm.org/extra/clang-tidy/#using-clang-tidy)
+# [Using clang-tidy](https://clang.llvm.org/extra/clang-tidy/#using-clang-tidy)
+# [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
+
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 
-# See [Clang-Tidy Checks](https://clang.llvm.org/extra/clang-tidy/checks/list.html)
 Checks:
   - -* # Disable default checks.
   - cppcoreguidelines-*
-  - modernize-use-auto
+  - modernize-*
 # Disable some checks by choice.
   - -cppcoreguidelines-non-private-member-variables-in-classes
+  - -modernize-use-equals-delete
+  - -modernize-use-trailing-return-type
+# Disable checks that are inappropriate for C++11
+  - -modernize-type-traits # since C++14
+  - -modernize-use-constraints # since C++20
 
 CheckOptions:
   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true

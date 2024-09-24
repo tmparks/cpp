@@ -8,16 +8,16 @@
 // similar to std::span.
 class Array : protected Verbose {
 public:
-    Array();                                   // default constructor
+    Array() noexcept;                          // default constructor
     explicit Array(gsl::index size);           // constructor
     Array(const Array& other);                 // copy constructor
     Array(Array&& other) noexcept;             // move constructor
     Array& operator=(const Array& other);      // copy assignment
     Array& operator=(Array&& other) noexcept;  // move assignment
-    ~Array() override = default;               // destructor
+    ~Array() noexcept override = default;      // destructor
     friend void swap(Array&, Array&) noexcept; // non-member swap
 
-    gsl::index size() const noexcept;
+    [[nodiscard]] gsl::index size() const noexcept;
     const double& operator[](gsl::index) const;
     double& operator[](gsl::index);
 
