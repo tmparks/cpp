@@ -6,6 +6,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     && apt-get install --yes \
         build-essential \
         clang  \
+        clang-format \
         clang-tidy \
         cmake \
         gcovr \
