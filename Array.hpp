@@ -17,7 +17,7 @@ public:
     ~Array() noexcept override = default;      // destructor
     friend void swap(Array&, Array&) noexcept; // non-member swap
 
-    gsl::index size() const noexcept;
+    [[nodiscard]] gsl::index size() const noexcept;
     const double& operator[](gsl::index) const;
     double& operator[](gsl::index);
 

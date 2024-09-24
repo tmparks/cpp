@@ -24,11 +24,11 @@ public:
     operator T&();
     operator const T&() const;
     T& get();
-    const T& get() const;
+    [[nodiscard]] const T& get() const;
     operator std::shared_ptr<T>();
     operator std::shared_ptr<const T>() const;
     std::shared_ptr<T> share();
-    std::shared_ptr<const T> share() const;
+    [[nodiscard]] std::shared_ptr<const T> share() const;
     SharedRef(const SharedRef&) = default;               // copy constructor
     SharedRef& operator=(const SharedRef&) = default;    // copy assignment
     friend void swap<>(SharedRef&, SharedRef&) noexcept; // non-member swap

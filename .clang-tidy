@@ -7,9 +7,14 @@ HeaderFilterRegex: '.*'
 Checks:
   - -* # Disable default checks.
   - cppcoreguidelines-*
-  - modernize-use-auto
+  - modernize-*
 # Disable some checks by choice.
   - -cppcoreguidelines-non-private-member-variables-in-classes
+  - -modernize-use-equals-delete
+  - -modernize-use-trailing-return-type
+# Disable checks that are inappropriate for C++11
+  - -modernize-type-traits # since C++14
+  - -modernize-use-constraints # since C++20
 
 CheckOptions:
   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true

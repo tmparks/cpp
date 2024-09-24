@@ -9,10 +9,8 @@
 #pragma message "emulating C++20 numbers"
 
 #include <cmath>
-namespace std {
-    namespace numbers {
-        constexpr auto pi = M_PI;
-    } // namespace numbers
-} // namespace std
+namespace std::numbers {
+    constexpr auto pi = M_PI;
+} // namespace std::numbers
 
 #endif // C++20

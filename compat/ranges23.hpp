@@ -35,20 +35,16 @@ namespace std {
 
     using boost::get;
 
-    namespace ranges {
+    namespace ranges::views {
 
-        namespace views {
+        // See [Function Aliases In C++](https://www.fluentcpp.com/2017/10/27/function-aliases-cpp/)
+        template <typename... Args>
+        inline auto zip(Args&&... args)
+                -> decltype(boost::combine(std::forward<Args>(args)...)) {
+            return boost::combine(std::forward<Args>(args)...);
+        }
 
-            // See [Function Aliases In C++](https://www.fluentcpp.com/2017/10/27/function-aliases-cpp/)
-            template <typename... Args>
-            inline auto zip(Args&&... args)
-                    -> decltype(boost::combine(std::forward<Args>(args)...)) {
-                return boost::combine(std::forward<Args>(args)...);
-            }
-
-        } // namespace views
-
-    } // namespace ranges
+    } // namespace ranges::views
 
 } // namespace std
 

@@ -21,8 +21,8 @@ protected:
     SharedCloneable& operator=(SharedCloneable&&) noexcept = delete;
 
 private:
-    // NOLINTNEXTLINE(*-explicit-virtual-functions)
-    virtual std::shared_ptr<SharedObject> cloneImpl() const;
+    // NOLINTNEXTLINE(*-explicit-virtual-functions, *-use-override)
+    [[nodiscard]] virtual std::shared_ptr<SharedObject> cloneImpl() const;
 };
 
 template <typename Derived, typename Base>

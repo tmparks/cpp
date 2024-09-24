@@ -25,7 +25,7 @@ public:
     operator T&();
     operator const T&() const;
     T& get();
-    const T& get() const;
+    [[nodiscard]] const T& get() const;
     friend void swap<>(UniqueRef&, UniqueRef&) noexcept; // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
