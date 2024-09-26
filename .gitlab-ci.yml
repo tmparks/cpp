@@ -123,8 +123,10 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+# [Enable Code Quality](https://docs.gitlab.com/ee/ci/testing/code_quality.html#enable-code-quality)
 # [Configure SAST in your CI/CD YAML](https://docs.gitlab.com/ee/user/application_security/sast/#configure-sast-in-your-cicd-yaml)
 include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
   - template: Jobs/SAST.gitlab-ci.yml
 
 ...
