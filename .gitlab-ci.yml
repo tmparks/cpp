@@ -5,7 +5,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "web"
 
-stages:          # List of stages for jobs, and their order of execution
+stages:
   - .pre
   - build
   - test
@@ -18,7 +18,7 @@ variables:
 default:
   image: $IMAGE
 
-build-image:     # This job runs in the .pre stage, wich runs first.
+build-image:
   stage: .pre
   image: docker:latest
   services:
@@ -62,9 +62,9 @@ build-23:
   variables:
     CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=23
 
-# See (Test Coverage Examples)[https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples]
-unit-test-debug: # This job runs in the test stage.
-  stage: test    # It only starts when the jobs in the build stage complete successfully.
+# See [Test Coverage Examples](https://docs.gitlab.com/ee/ci/pipelines/settings.html#test-coverage-examples)
+unit-test-debug:
+  stage: test
   artifacts:
     when: always
     paths:
@@ -79,7 +79,7 @@ unit-test-debug: # This job runs in the test stage.
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build all test coverage
 
-unit-test-release: # This job also runs in the test stage.
+unit-test-release:
   stage: test
   artifacts:
     when: always
@@ -92,14 +92,14 @@ unit-test-release: # This job also runs in the test stage.
     - cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
     - make --directory=build all test
 
-lint-test:       # This job also runs in the test stage.
-  stage: test    # It can run at the same time as other jobs in the test stage (in parallel).
+lint-test:
+  stage: test
   script:
     - cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build
     - make --directory=build check
 
-latest:          # This job runs in the deploy stage.
-  stage: deploy  # It only runs when the jobs in the test stage complete successfully.
+latest:
+  stage: deploy
   image: docker:latest
   services:
     - docker:dind
@@ -110,7 +110,7 @@ latest:          # This job runs in the deploy stage.
     - docker tag $IMAGE $LATEST
     - docker push $LATEST
     
-pages:           # This job must be named "pages"
+pages:
   stage: deploy
   dependencies:
     - unit-test-debug
@@ -121,5 +121,11 @@ pages:           # This job must be named "pages"
     - mv build/results/ public/
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# [Enable Code Quality](https://docs.gitlab.com/ee/ci/testing/code_quality.html#enable-code-quality)
+# [Configure SAST in your CI/CD YAML](https://docs.gitlab.com/ee/user/application_security/sast/#configure-sast-in-your-cicd-yaml)
+include:
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
 
 ...
