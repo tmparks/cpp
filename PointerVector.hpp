@@ -16,6 +16,26 @@ using UniquePointerVector = PointerVector<std::unique_ptr<T>>;
 template <typename T>
 using SharedPointerVector = PointerVector<std::shared_ptr<T>>;
 
+template <typename V>
+RawPointerVector<typename V::value_type> mask(V& vector, std::vector<bool>& mask) {
+    auto result = RawPointerVector<typename V::value_type>{};
+    auto size = std::min(vector.size(), mask.size());
+    result.reserve(size);
+    for (typename V::size_type i = 0; i < size; i++) {
+        if (mask[i]) {
+            result.push_back(&vector[i]);
+        }
+    }
+    return result;
+}
+
+template <typename V>
+const RawPointerVector<typename V::value_type> mask(
+        const V& vector, std::vector<bool>& mask) {
+    return const_cast<const RawPointerVector<typename V::value_type>>(
+            mask(const_cast<V&>(vector), mask)); // NOLINT(*-const-cast)
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename P>
