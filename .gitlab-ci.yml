@@ -14,7 +14,6 @@ stages:
 variables:
   IMAGE: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
   LATEST: ${CI_REGISTRY_IMAGE}:latest
-  SECURE_LOG_LEVEL: "debug"
 
 default:
   image: $IMAGE
