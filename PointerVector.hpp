@@ -44,8 +44,8 @@ private:
     using base = std::vector<P>;
 
 public:
-    using value_type = std::pointer_traits<P>::element_type;
-    using size_type = base::size_type;
+    using value_type = typename std::pointer_traits<P>::element_type;
+    using size_type = typename base::size_type;
     using reference = value_type&;
     using const_reference = const value_type&;
     using pointer = P;
@@ -116,10 +116,12 @@ public:
     }
 
 private:
-    PointerVector(base::size_type, base::const_reference);
-    explicit PointerVector(base::size_type);
-    base::iterator insert(
-            base::const_iterator, base::size_type, base::const_reference);
+    PointerVector(typename base::size_type, typename base::const_reference);
+    explicit PointerVector(typename base::size_type);
+    typename base::iterator insert(
+            typename base::const_iterator,
+            typename base::size_type,
+            typename base::const_reference);
     using base::data;
     using base::resize;
 };
