@@ -4,36 +4,39 @@
 #include <memory>
 #include <vector>
 
-template <typename Value, typename Pointer>
+template <typename P>
 class PointerVector;
 
 template <typename T>
-using RawPointerVector = PointerVector<T, T*>;
+using RawPointerVector = PointerVector<T*>;
 
 template <typename T>
-using UniquePointerVector = PointerVector<T, std::unique_ptr<T>>;
+using UniquePointerVector = PointerVector<std::unique_ptr<T>>;
 
 template <typename T>
-using SharedPointerVector = PointerVector<T, std::shared_ptr<T>>;
+using SharedPointerVector = PointerVector<std::shared_ptr<T>>;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Value, typename Pointer>
-class PointerVector : public std::vector<Pointer> {
+template <typename P>
+class PointerVector : public std::vector<P> {
 private:
-    using base = std::vector<Pointer>;
+    using base = std::vector<P>;
 
 public:
-    using value_type = Value;
+    using value_type = std::pointer_traits<P>::element_type;
     using size_type = base::size_type;
     using reference = value_type&;
     using const_reference = const value_type&;
-    using pointer = Pointer;
-    using iterator = boost::indirect_iterator<typename base::iterator>;
+    using pointer = P;
+    using iterator =
+            boost::indirect_iterator<typename base::iterator>;
     using const_iterator =
             boost::indirect_iterator<typename base::const_iterator>;
-    using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using reverse_iterator =
+            boost::indirect_iterator<typename base::reverse_iterator>;
+    using const_reverse_iterator =
+            boost::indirect_iterator<typename base::const_reverse_iterator>;
 
     using base::base;
     ~PointerVector() = default;
@@ -93,8 +96,10 @@ public:
     }
 
 private:
-    PointerVector(size_type, const_reference);
-    explicit PointerVector(size_type);
+    PointerVector(base::size_type, base::const_reference);
+    explicit PointerVector(base::size_type);
+    base::iterator insert(
+            base::const_iterator, base::size_type, base::const_reference);
     using base::data;
     using base::resize;
 };
