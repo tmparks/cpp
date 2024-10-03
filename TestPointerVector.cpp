@@ -1,4 +1,5 @@
 #include "PointerVector.hpp"
+#include "PointerMap.hpp"
 
 #include "Verbose.hpp"
 #include "compat/gsl14.hpp"

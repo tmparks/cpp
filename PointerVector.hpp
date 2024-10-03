@@ -16,40 +16,40 @@ using UniquePointerVector = PointerVector<std::unique_ptr<T>>;
 template <typename T>
 using SharedPointerVector = PointerVector<std::shared_ptr<T>>;
 
-template <typename V>
-RawPointerVector<typename V::value_type> reference(V& vector) {
-    auto result = RawPointerVector<typename V::value_type>{};
-    result.reserve(vector.size());
-    for (auto& element : vector) {
+template <typename S>
+RawPointerVector<typename S::value_type> reference(S& sequence) {
+    auto result = RawPointerVector<typename S::value_type>{};
+    result.reserve(sequence.size());
+    for (auto& element : sequence) {
         result.push_pack(&element);
     }
     return result;
 }
 
-template <typename V>
-const RawPointerVector<typename V::value_type> reference(const V& vector) {
-    return const_cast<const RawPointerVector<typename V::value_type>>(
-            reference(const_cast<V&>(vector))); // NOLINT(*-const-cast)
+template <typename S>
+const RawPointerVector<typename S::value_type> reference(const S& sequence) {
+    return const_cast<const RawPointerVector<typename S::value_type>>(
+            reference(const_cast<S&>(sequence))); // NOLINT(*-const-cast)
 }
 
-template <typename V>
-RawPointerVector<typename V::value_type> mask(V& vector, std::vector<bool>& mask) {
-    auto result = RawPointerVector<typename V::value_type>{};
-    auto size = std::min(vector.size(), mask.size());
+template <typename S>
+RawPointerVector<typename S::value_type> mask(S& sequence, std::vector<bool>& mask) {
+    auto result = RawPointerVector<typename S::value_type>{};
+    auto size = std::min(sequence.size(), mask.size());
     result.reserve(size);
-    for (typename V::size_type i = 0; i < size; i++) {
+    for (typename S::size_type i = 0; i < size; i++) {
         if (mask[i]) {
-            result.push_back(&vector[i]);
+            result.push_back(&sequence[i]);
         }
     }
     return result;
 }
 
-template <typename V>
-const RawPointerVector<typename V::value_type> mask(
-        const V& vector, std::vector<bool>& mask) {
-    return const_cast<const RawPointerVector<typename V::value_type>>(
-            mask(const_cast<V&>(vector), mask)); // NOLINT(*-const-cast)
+template <typename S>
+const RawPointerVector<typename S::value_type> mask(
+        const S& sequence, std::vector<bool>& mask) {
+    return const_cast<const RawPointerVector<typename S::value_type>>(
+            mask(const_cast<S&>(sequence), mask)); // NOLINT(*-const-cast)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +60,7 @@ public:
     using base_type = typename std::vector<P>;
     using value_type = typename std::pointer_traits<P>::element_type;
     using size_type = typename base_type::size_type;
+    using difference_type = typename base_type::difference_type;
     using reference = value_type&;
     using const_reference = const value_type&;
     using iterator =
