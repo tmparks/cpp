@@ -21,7 +21,7 @@ RawPointerVector<typename S::value_type> reference(S& sequence) {
     auto result = RawPointerVector<typename S::value_type>{};
     result.base.reserve(sequence.size());
     for (auto& element : sequence) {
-        result.push_pack(&element);
+        result.base.emplace_back(&element);
     }
     return result;
 }
@@ -33,7 +33,8 @@ const RawPointerVector<typename S::value_type> reference(const S& sequence) {
 }
 
 template <typename S>
-RawPointerVector<typename S::value_type> mask(S& sequence, std::vector<bool>& mask) {
+RawPointerVector<typename S::value_type> mask(
+        S& sequence, const std::vector<bool>& mask) {
     auto result = RawPointerVector<typename S::value_type>{};
     auto size = std::min(sequence.size(), mask.size());
     result.base.reserve(size);
@@ -47,7 +48,7 @@ RawPointerVector<typename S::value_type> mask(S& sequence, std::vector<bool>& ma
 
 template <typename S>
 const RawPointerVector<typename S::value_type> mask(
-        const S& sequence, std::vector<bool>& mask) {
+        const S& sequence, const std::vector<bool>& mask) {
     return const_cast<const RawPointerVector<typename S::value_type>>(
             mask(const_cast<S&>(sequence), mask)); // NOLINT(*-const-cast)
 }
