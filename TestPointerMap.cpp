@@ -20,6 +20,27 @@ namespace {
             EXPECT_THAT(name, Not(HasSubstr("move")));
         }
     }
+
+#if __cplusplus >= 202002L // since C++20
+
+    using std::erase_if;
+
+#else // until C++20
+
+    template <typename M, typename Predicate>
+    typename M::size_type erase_if(M& m, Predicate p) {
+        auto size = m.size();
+        for (auto i = m.begin(); i != m.end();) {
+            if (p(*i))
+                i = m.erase(i);
+            else
+                ++i;
+        }
+        return size - m.size();
+    }
+
+#endif // C++20
+
 } // anonymous namespace
 
 TEST(SharedPointerMap, emplace) {
@@ -37,95 +58,60 @@ TEST(SharedPointerMap, insert) {
     // Place elements into container as pointers.
     auto container = SharedPointerMap<std::string, Verbose>{};
     auto& base = container.base;
-    base.insert(std::make_pair(
-            std::string{"one"}, std::make_shared<Verbose>("one")));
-    base.insert(std::make_pair(
-            std::string{"two"}, std::make_shared<Verbose>("two")));
-    base.insert(std::make_pair(
-            std::string{"three"}, std::make_shared<Verbose>("three")));
+    base.insert({"one", std::make_shared<Verbose>("one")});
+    base.insert({"two", std::make_shared<Verbose>("two")});
+    base.insert({"three", std::make_shared<Verbose>("three")});
 
     print(reference(container));
 }
 
-#if 0
-
 TEST(SharedPointerMap, shallow_copy) {
     // Place elements into container as pointers.
-    auto container = SharedPointerMap<Verbose>{};
+    auto container = SharedPointerMap<std::string, Verbose>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace("one", std::make_shared<Verbose>("one"));
+    base.emplace("two", std::make_shared<Verbose>("two"));
+    base.emplace("three", std::make_shared<Verbose>("three"));
 
     // Copying a container of pointers does not copy the referenced objects.
     auto container_copy = container;
     print(reference(container_copy));
 
-    container_copy[0].name() = "alfa";
-    container_copy[1].name() = "bravo";
-    container_copy[2].name() = "charlie";
+    container_copy["one"].name() = "alfa";
+    container_copy["two"].name() = "bravo";
+    container_copy["three"].name() = "charlie";
+
+    print(reference(container));
 
     EXPECT_EQ(container, container_copy); // shallow copy
-    EXPECT_NE("one", container[0].name());
-    EXPECT_NE("two", container[1].name());
+    EXPECT_NE("one", container["one"].name());
+    EXPECT_NE("two", container["two"].name());
 }
 
-TEST(SharedPointerMap, front_back) {
-    // Place elements into container as pointers.
-    auto container = SharedPointerMap<Verbose>{};
+TEST(SharedPointerMap, erase_if) {
+    auto container = SharedPointerMap<std::string, Verbose>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("front"));
-    base.emplace_back(std::make_shared<Verbose>("middle"));
-    base.emplace_back(std::make_shared<Verbose>("back"));
-
-    EXPECT_EQ("front", container.front().name());
-    EXPECT_EQ("back", container.back().name());
-}
-
-TEST(SharedPointerMap, erase_remove) {
-    auto container = SharedPointerMap<Verbose>{};
-    auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace("one", std::make_shared<Verbose>("one"));
+    base.emplace("two", std::make_shared<Verbose>("two"));
+    base.emplace("three", std::make_shared<Verbose>("three"));
 
     // In order to avoid copying/moving values,
     // use the base vector of pointers for erase-remove.
-    auto predicate = [](const std::shared_ptr<Verbose>& v) {
-        return v->name() == "two";
+    auto predicate = [](const auto& elem) {
+        return elem.second->name() == "two";
     };
-    base.erase(std::remove_if(base.begin(), base.end(), predicate), base.end());
+    EXPECT_EQ(1, erase_if(base, predicate));
+    EXPECT_EQ(2, container.size());
 
     print(reference(container));
 }
 
-TEST(SharedPointerMap, mask) {
-    auto container = SharedPointerMap<Verbose>{};
+TEST(UniquePointerMap, uncopyable) {
+    auto container = UniquePointerMap<std::string, Verbose>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
-
-    auto masked = mask(container, std::vector<bool>{true, false, true});
-
-    masked[1].name() = "tres";
-    EXPECT_EQ("tres", container[2].name());
-
-    EXPECT_EQ(container.size() - 1, masked.size());
-    EXPECT_EQ(container[0].name(), masked[0].name());
-    EXPECT_EQ(container[2].name(), masked[1].name());
-
-    print(reference(container));
-}
-
-TEST(UniquePointerVector, uncopyable) {
-    auto container = UniquePointerVector<Verbose>{};
-    auto& base = container.base;
-    base.emplace_back(std::make_unique<Verbose>("one"));
-    base.emplace_back(std::make_unique<Verbose>("two"));
-    base.emplace_back(std::make_unique<Verbose>("three"));
+    base.emplace("one", std::make_unique<Verbose>("one"));
+    base.emplace("two", std::make_unique<Verbose>("two"));
+    base.emplace("three", std::make_unique<Verbose>("three"));
 
     // auto container_copy = container; // compile time error
 }
-
-#endif

@@ -19,6 +19,21 @@ namespace {
             EXPECT_THAT(name, Not(HasSubstr("move")));
         }
     }
+
+#if __cplusplus >= 202002L // since C++20
+
+    using std::erase_if;
+
+#else // until C++20
+
+    // [Erase-remove idiom](https://en.wikipedia.org/wiki/Erase%E2%80%93remove_idiom)
+    template <typename V, typename Predicate>
+    typename V::iterator erase_if(V& v, Predicate p) {
+        return v.erase(std::remove_if(v.begin(), v.end(), p), v.end());
+    }
+
+#endif // C++20
+
 } // anonymous namespace
 
 TEST(SharedPointerVector, emplace_back) {
@@ -76,7 +91,7 @@ TEST(SharedPointerVector, front_back) {
     EXPECT_EQ("back", container.back().name());
 }
 
-TEST(SharedPointerVector, erase_remove) {
+TEST(SharedPointerVector, erase_if) {
     auto container = SharedPointerVector<Verbose>{};
     auto& base = container.base;
     base.emplace_back(std::make_shared<Verbose>("one"));
@@ -85,10 +100,8 @@ TEST(SharedPointerVector, erase_remove) {
 
     // In order to avoid copying/moving values,
     // use the base vector of pointers for erase-remove.
-    auto predicate = [](const std::shared_ptr<Verbose>& v) {
-        return v->name() == "two";
-    };
-    base.erase(std::remove_if(base.begin(), base.end(), predicate), base.end());
+    auto predicate = [](const auto& elem) { return elem->name() == "two"; };
+    erase_if(base, predicate);
 
     print(reference(container));
 }

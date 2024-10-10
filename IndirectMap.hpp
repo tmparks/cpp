@@ -15,9 +15,10 @@ public:
     using difference_type = typename M::difference_type;
     using key_compare = typename M::key_compare;
     using reference = value_type&;
-    using const_reference = const_value_type&;
-    using value_compare = M::value_compare;
+
+    using value_compare = typename M::value_compare;
     class value_transform;
+
     using iterator =
             boost::transform_iterator<value_transform, typename M::iterator>;
     using const_iterator =
@@ -31,11 +32,11 @@ public:
     bool operator==(const IndirectMap& other) const noexcept;
     bool operator<(const IndirectMap& other) const noexcept;
 
-    reference at(const key_type& key);
-    [[nodiscard]] const_reference at(const key_type& key) const;
+    mapped_type& at(const key_type& key);
+    [[nodiscard]] const mapped_type& at(const key_type& key) const;
 
-    reference operator[](const key_type& key);
-    reference operator[](key_type&& key);
+    mapped_type& operator[](const key_type& key);
+    mapped_type& operator[](key_type&& key);
 
     iterator begin();
     [[nodiscard]] const_iterator begin() const;
@@ -53,6 +54,10 @@ public:
     [[nodiscard]] const_reverse_iterator rend() const;
     [[nodiscard]] const_reverse_iterator crend() const noexcept;
 
+    [[nodiscard]] bool empty() const;
+    [[nodiscard]] size_type size() const;
+    void clear();
+
     [[nodiscard]] size_type count(const key_type& key) const;
     iterator find(const key_type& key);
     [[nodiscard]] bool contains(const key_type& key) const;
@@ -68,11 +73,11 @@ public:
 template <typename M>
 class IndirectMap<M>::value_transform {
 public:
-    IndirectMap<M>::value_type operator()(M::value_type& v) const {
+    IndirectMap<M>::value_type operator()(typename M::value_type& v) const {
         return {v.first, *v.second};
     }
 
-    IndirectMap<M>::const_value_type operator()(const M::value_type& v) const {
+    IndirectMap<M>::const_value_type operator()(const typename M::value_type& v) const {
         return {v.first, *v.second};
     }
 };
@@ -90,22 +95,22 @@ auto IndirectMap<M>::operator<(const IndirectMap& other) const noexcept -> bool 
 }
 
 template <typename M>
-auto IndirectMap<M>::at(const key_type& key) -> reference {
+auto IndirectMap<M>::at(const key_type& key) -> mapped_type& {
     return *base.at(key);
 }
 
 template <typename M>
-auto IndirectMap<M>::at(const key_type& key) const -> const_reference {
+auto IndirectMap<M>::at(const key_type& key) const -> const mapped_type& {
     return *base.at(key);
 }
 
 template <typename M>
-auto IndirectMap<M>::operator[](const key_type& key) -> reference {
+auto IndirectMap<M>::operator[](const key_type& key) -> mapped_type& {
     return *base[key];
 }
 
 template <typename M>
-auto IndirectMap<M>::operator[](key_type&& key) -> reference {
+auto IndirectMap<M>::operator[](key_type&& key) -> mapped_type& {
     return *base[std::move(key)];
 }
 
@@ -167,6 +172,21 @@ auto IndirectMap<M>::rend() const -> const_reverse_iterator {
 template <typename M>
 auto IndirectMap<M>::crend() const noexcept -> const_reverse_iterator {
     return {base.crend(), value_transform{}};
+}
+
+template <typename M>
+auto IndirectMap<M>::empty() const -> bool {
+    return base.empty();
+}
+
+template <typename M>
+auto IndirectMap<M>::size() const -> size_type {
+    return base.size();
+}
+
+template <typename M>
+void IndirectMap<M>::clear() {
+    base.clear();
 }
 
 template <typename M>
