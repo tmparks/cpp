@@ -13,7 +13,7 @@ public:
     Array(Array&& other) noexcept;             // move constructor
     Array& operator=(const Array& other);      // copy assignment
     Array& operator=(Array&& other) noexcept;  // move assignment
-    ~Array() noexcept = default;               // destructor
+    virtual ~Array() noexcept = default;       // destructor
     friend void swap(Array&, Array&) noexcept; // non-member swap
 
     [[nodiscard]] gsl::index size() const noexcept;

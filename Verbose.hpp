@@ -19,7 +19,7 @@ public:
     Verbose(Verbose&& other) noexcept;               // move constructor
     Verbose& operator=(const Verbose& other);        // copy assignment
     Verbose& operator=(Verbose&& other) noexcept;    // move assignment
-    virtual ~Verbose() noexcept;                     // destructor
+    ~Verbose() noexcept;                             // destructor NOLINT
     friend void swap<>(Verbose&, Verbose&) noexcept; // non-member swap
 
     std::string& name() noexcept;
