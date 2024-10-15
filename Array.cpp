@@ -2,23 +2,18 @@
 #include "compat/memory14.hpp"
 #include <iostream>
 
-// default constructor
-Array::Array() noexcept : Verbose { gsl::czstring { __func__ } } { }
-
 // constructor
 Array::Array(gsl::index size) :
-        Verbose { gsl::czstring { __func__ } },
-        size_ { size },
-        data_ { std::make_unique<double[]>(size_) } { // NOLINT(*-avoid-c-arrays)
+        size_{size},
+        data_{std::make_unique<double[]>(size_)} { // NOLINT(*-avoid-c-arrays)
 }
 
 // copy constructor (deep copy)
 // explicitly invoke Verbose copy constructor
 // instead of delegating to another constructor
 Array::Array(const Array& other) :
-        Verbose { other },
-        size_ { other.size_ },
-        data_ { std::make_unique<double[]>(size_) } { // NOLINT(*-avoid-c-arrays)}
+        size_{other.size_},
+        data_{std::make_unique<double[]>(size_)} { // NOLINT(*-avoid-c-arrays)}
     const auto* begin = other.data_.get();
     const auto* end =
             begin + other.size_; // NOLINT *-pro-bounds-pointer-arithmetic
@@ -31,7 +26,7 @@ Array::Array(const Array& other) :
 // instead of delgating to default constructor
 // see [What is the copy-and-swap idiom?]
 //     (https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
-Array::Array(Array&& other) noexcept : Verbose { std::move(other) } {
+Array::Array(Array&& other) noexcept {
     swap(*this, other); // other becomes empty
 }
 
@@ -53,7 +48,7 @@ Array& Array::operator=(Array&& other) noexcept {
 // see Item 11: [Handle assignment to self in operator=]
 //     (https://learning.oreilly.com/library/view/effective-c-third/0321334876/ch02.html#ch02lev1sec7)
 void Array::assign(Array other) noexcept { // pass by value
-    std::cout << name() << ": unified assignment" << std::endl;
+    std::cout << "Array: unified assignment" << std::endl;
     using std::swap; // enable argument dependent lookup
     swap(*this, other);
 }
@@ -61,7 +56,6 @@ void Array::assign(Array other) noexcept { // pass by value
 // non-member swap
 void swap(Array& left, Array& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
-    swap(static_cast<Verbose&>(left), static_cast<Verbose&>(right));
     swap(left.size_, right.size_);
     swap(left.data_, right.data_);
 }
@@ -101,29 +95,30 @@ void Array::reserve(gsl::index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "Verbose.hpp"
 #include <gmock/gmock.h>
 
 using namespace testing;
 using namespace testing::internal;
 
 namespace { // anonymous namespace for definitions that are local to this file
-    class TestableArray : public Array {
+    class TestableArray : public Verbose<Array> {
     public:
-        using Array::Array;
-        using Array::data_;
-        using Array::size_;
+        using Verbose<Array>::Verbose;
+        using Verbose<Array>::data_;
+        using Verbose<Array>::size_;
     };
 } // anonymous namespace
 
 TEST(Array, DefaultConstructor) {
-    auto a = TestableArray {}; // constructor
+    auto a = TestableArray{"a"}; // constructor
     EXPECT_EQ(0, a.size());
 }
 
 TEST(Array, MoveConstructor) {
-    constexpr auto size = gsl::index { 3 };
-    auto a0 = TestableArray { size }; // constructor
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    constexpr auto size = gsl::index{3};
+    auto a0 = TestableArray{"a0", size}; // constructor
+    for (auto i = gsl::index{0}; i < size; i++) {
         a0[i] = gsl::narrow_cast<double>(2 * i); // even
     }
 
@@ -131,10 +126,9 @@ TEST(Array, MoveConstructor) {
     auto a1 = std::move(a0); // move constructor
     auto actual = GetCapturedStdout();
 
-    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("move constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
-    EXPECT_THAT(actual, HasSubstr("move"));
-    EXPECT_THAT(actual, HasSubstr("swap"));
+    EXPECT_THAT(actual, Not(HasSubstr("assignment")));
     std::cout << std::endl << actual << std::endl;
 
     const auto& const0 = a0;
@@ -142,16 +136,16 @@ TEST(Array, MoveConstructor) {
     EXPECT_EQ(0, const0.size_);
     EXPECT_EQ(nullptr, const0.data_);
     EXPECT_EQ(size, const1.size());
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    for (auto i = gsl::index{0}; i < size; i++) {
         EXPECT_EQ(const1[i], 2 * i); // even
     }
 }
 
 TEST(Array, CopyAssignment) {
-    constexpr auto size = gsl::index { 3 };
-    auto a0 = TestableArray { size }; // constructor
-    auto a1 = TestableArray { size }; // constructor
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    constexpr auto size = gsl::index{3};
+    auto a0 = TestableArray{"a0", size}; // constructor
+    auto a1 = TestableArray{"a1", size}; // constructor
+    for (auto i = gsl::index{0}; i < size; i++) {
         a0[i] = gsl::narrow_cast<double>(2 * i);     // even
         a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
@@ -160,27 +154,25 @@ TEST(Array, CopyAssignment) {
     a0 = a1; // copy assignment
     auto actual = GetCapturedStdout();
 
-    EXPECT_THAT(actual, HasSubstr("constructor"));
-    EXPECT_THAT(actual, HasSubstr("copy"));
+    EXPECT_THAT(actual, HasSubstr("copy assignment"));
     EXPECT_THAT(actual, Not(HasSubstr("move")));
-    EXPECT_THAT(actual, HasSubstr("swap"));
-    EXPECT_THAT(actual, HasSubstr("destructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("constructor")));
     std::cout << std::endl << actual << std::endl;
 
     const auto& const0 = a0;
     const auto& const1 = a1;
     EXPECT_NE(const0.data_, const1.data_); // pointers should differ
     EXPECT_EQ(const0.size(), const1.size());
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    for (auto i = gsl::index{0}; i < size; i++) {
         EXPECT_EQ(const0[i], const1[i]);
     }
 }
 
 TEST(Array, MoveAssignment) {
-    constexpr auto size = gsl::index { 3 };
-    auto a0 = TestableArray { size }; // constructor
-    auto a1 = TestableArray { size }; // constructor
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    constexpr auto size = gsl::index{3};
+    auto a0 = TestableArray{"a0", size}; // constructor
+    auto a1 = TestableArray{"a1", size}; // constructor
+    for (auto i = gsl::index{0}; i < size; i++) {
         a0[i] = gsl::narrow_cast<double>(2 * i);     // even
         a1[i] = gsl::narrow_cast<double>(2 * i + 1); // odd
     }
@@ -189,16 +181,14 @@ TEST(Array, MoveAssignment) {
     a0 = std::move(a1); // move assignment
     auto actual = GetCapturedStdout();
 
-    EXPECT_THAT(actual, HasSubstr("constructor"));
+    EXPECT_THAT(actual, HasSubstr("move assignment"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
-    EXPECT_THAT(actual, HasSubstr("move"));
-    EXPECT_THAT(actual, HasSubstr("swap"));
-    EXPECT_THAT(actual, HasSubstr("destructor"));
+    EXPECT_THAT(actual, Not(HasSubstr("constructor")));
     std::cout << std::endl << actual << std::endl;
 
     const auto& const0 = a0;
     const auto& const1 = a1;
-    for (auto i = gsl::index { 0 }; i < size; i++) {
+    for (auto i = gsl::index{0}; i < size; i++) {
         EXPECT_EQ(const0[i], 2 * i + 1); // odd
     }
     EXPECT_EQ(0, const1.size_);
