@@ -2,10 +2,11 @@
 // (https://isocpp.org/wiki/faq/value-vs-ref-semantics#virt-data)
 
 #include "StretchableArray.hpp"
+#include "Verbose.hpp"
 #include "compat/gsl14.hpp"
 #include "compat/memory14.hpp"
 
-class StackPtr : private Verbose {
+class StackPtr {
 public:
     // The base class has a normal constructor that provides its own object.
     explicit StackPtr(gsl::index size = 1);
@@ -16,14 +17,14 @@ public:
 
 protected:
     // The base class has a constructor that accepts an object from a derived class.
-    StackPtr(const std::string& name, std::unique_ptr<Array> data);
+    StackPtr(std::unique_ptr<Array> data);
 
 private:
     // To simulate virtual data in C++, the base class has a pointer to the
     // member object and the base class’s destructor deletes the object.
     // Some additional memory allocation overhead is imposed.
     std::unique_ptr<Array> data_;
-    gsl::index index_ { 0 };
+    gsl::index index_{0};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,10 +40,9 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 StackPtr::StackPtr(gsl::index size) :
-        StackPtr(gsl::czstring { __func__ }, std::make_unique<Array>(size)) { }
+        StackPtr(std::make_unique<Array>(size)) { }
 
-StackPtr::StackPtr(const std::string& name, std::unique_ptr<Array> data) :
-        Verbose { name }, data_ { std::move(data) } { }
+StackPtr::StackPtr(std::unique_ptr<Array> data) : data_{std::move(data)} { }
 
 void StackPtr::Push(double x) {
     (*data_)[index_++] = x; // may throw
@@ -55,17 +55,16 @@ double StackPtr::Pop() {
 ////////////////////////////////////////////////////////////////////////////////
 
 StretchableStackPtr::StretchableStackPtr(gsl::index size) :
-        StackPtr { gsl::czstring { __func__ },
-                   std::make_unique<StretchableArray>(size) } { }
+        StackPtr{std::make_unique<StretchableArray>(size)} { }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <gtest/gtest.h>
 
 TEST(VirtualDataPtr, Stack_Push_Pop) {
-    const auto size = gsl::index { 3 };
-    auto stack = StackPtr { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    const auto size = gsl::index{3};
+    auto stack = Verbose<StackPtr>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     for (auto x = size - 1; x >= 0; x--) {
@@ -74,23 +73,23 @@ TEST(VirtualDataPtr, Stack_Push_Pop) {
 }
 
 TEST(VirtualDataPtr, Stack_Push_Full) {
-    const auto size = gsl::index { 3 };
-    auto stack = StackPtr { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    const auto size = gsl::index{3};
+    auto stack = Verbose<StackPtr>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     EXPECT_THROW(stack.Push(gsl::narrow_cast<double>(size)), std::out_of_range);
 }
 
 TEST(VirtualDataPtr, Stack_Pop_Empty) {
-    auto stack = StackPtr { 1 };
+    auto stack = Verbose<StackPtr>{"stack", 1};
     EXPECT_THROW(stack.Pop(), std::out_of_range);
 }
 
 TEST(VirtualDataPtr, Stack_Stretch) {
-    auto size = gsl::index { 3 };
-    auto stack = StretchableStackPtr { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    auto size = gsl::index{3};
+    auto stack = Verbose<StretchableStackPtr>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     EXPECT_NO_THROW(stack.Push(gsl::narrow_cast<double>(size)));
