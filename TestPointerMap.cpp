@@ -1,8 +1,6 @@
 #include "PointerMap.hpp"
-
 #include "Verbose.hpp"
 #include "compat/gsl14.hpp"
-
 #include <gmock/gmock.h>
 
 using namespace testing;
@@ -11,7 +9,7 @@ using namespace testing::internal;
 // Anonymous namespace for definitions that are local to this file.
 namespace {
     // Print the elements of a PointerMap.
-    void print([[maybe_unused]] const RawPointerMap<std::string, Verbose>& container) {
+    void print([[maybe_unused]] const RawPointerMap<std::string, Verbose<>>& container) {
         for (const auto& elem : container) {
             std::cout << gsl::czstring{__func__} << ": key=" << elem.first
                       << " value=" << elem.second << std::endl;
@@ -45,33 +43,33 @@ namespace {
 
 TEST(SharedPointerMap, emplace) {
     // Place elements into container as pointers.
-    auto container = SharedPointerMap<std::string, Verbose>{};
+    auto container = SharedPointerMap<std::string, Verbose<>>{};
     auto& base = container.base;
-    base.emplace("one", std::make_shared<Verbose>("one"));
-    base.emplace("two", std::make_shared<Verbose>("two"));
-    base.emplace("three", std::make_shared<Verbose>("three"));
+    base.emplace("one", std::make_shared<Verbose<>>("one"));
+    base.emplace("two", std::make_shared<Verbose<>>("two"));
+    base.emplace("three", std::make_shared<Verbose<>>("three"));
 
     print(reference(container));
 }
 
 TEST(SharedPointerMap, insert) {
     // Place elements into container as pointers.
-    auto container = SharedPointerMap<std::string, Verbose>{};
+    auto container = SharedPointerMap<std::string, Verbose<>>{};
     auto& base = container.base;
-    base.insert({"one", std::make_shared<Verbose>("one")});
-    base.insert({"two", std::make_shared<Verbose>("two")});
-    base.insert({"three", std::make_shared<Verbose>("three")});
+    base.insert({"one", std::make_shared<Verbose<>>("one")});
+    base.insert({"two", std::make_shared<Verbose<>>("two")});
+    base.insert({"three", std::make_shared<Verbose<>>("three")});
 
     print(reference(container));
 }
 
 TEST(SharedPointerMap, shallow_copy) {
     // Place elements into container as pointers.
-    auto container = SharedPointerMap<std::string, Verbose>{};
+    auto container = SharedPointerMap<std::string, Verbose<>>{};
     auto& base = container.base;
-    base.emplace("one", std::make_shared<Verbose>("one"));
-    base.emplace("two", std::make_shared<Verbose>("two"));
-    base.emplace("three", std::make_shared<Verbose>("three"));
+    base.emplace("one", std::make_shared<Verbose<>>("one"));
+    base.emplace("two", std::make_shared<Verbose<>>("two"));
+    base.emplace("three", std::make_shared<Verbose<>>("three"));
 
     // Copying a container of pointers does not copy the referenced objects.
     auto container_copy = container;
@@ -89,11 +87,11 @@ TEST(SharedPointerMap, shallow_copy) {
 }
 
 TEST(SharedPointerMap, erase_if) {
-    auto container = SharedPointerMap<std::string, Verbose>{};
+    auto container = SharedPointerMap<std::string, Verbose<>>{};
     auto& base = container.base;
-    base.emplace("one", std::make_shared<Verbose>("one"));
-    base.emplace("two", std::make_shared<Verbose>("two"));
-    base.emplace("three", std::make_shared<Verbose>("three"));
+    base.emplace("one", std::make_shared<Verbose<>>("one"));
+    base.emplace("two", std::make_shared<Verbose<>>("two"));
+    base.emplace("three", std::make_shared<Verbose<>>("three"));
 
     // In order to avoid copying/moving values,
     // use the base vector of pointers for erase-remove.
@@ -107,11 +105,11 @@ TEST(SharedPointerMap, erase_if) {
 }
 
 TEST(UniquePointerMap, uncopyable) {
-    auto container = UniquePointerMap<std::string, Verbose>{};
+    auto container = UniquePointerMap<std::string, Verbose<>>{};
     auto& base = container.base;
-    base.emplace("one", std::make_unique<Verbose>("one"));
-    base.emplace("two", std::make_unique<Verbose>("two"));
-    base.emplace("three", std::make_unique<Verbose>("three"));
+    base.emplace("one", std::make_unique<Verbose<>>("one"));
+    base.emplace("two", std::make_unique<Verbose<>>("two"));
+    base.emplace("three", std::make_unique<Verbose<>>("three"));
 
     // auto container_copy = container; // compile time error
 }
