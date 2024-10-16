@@ -8,10 +8,8 @@
 
 // See https://en.cppreference.com/w/cpp/named_req/BasicLockable
 template <typename T>
-class BasicLockable : protected Verbose {
+class BasicLockable {
 public:
-    BasicLockable() noexcept : Verbose { gsl::czstring { __func__ } } { }
-
     void lock() {
         lock_.lock();
 #ifndef NDEBUG
@@ -44,14 +42,14 @@ public:
 private:
 #ifndef NDEBUG
     static const std::thread::id none_; // initialized later
-    std::thread::id owner_ { none_ };   // initially unowned
-#endif                                  // NDEBUG
-    T lock_ {};                         // initially unlocked
+    std::thread::id owner_{none_};      // initially unowned
+#endif // NDEBUG
+    T lock_{};                          // initially unlocked
 };
 
 #ifndef NDEBUG
 template <typename T>
-const std::thread::id BasicLockable<T>::none_ {};
+const std::thread::id BasicLockable<T>::none_{};
 #endif // NDEBUG
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,22 +60,24 @@ const std::thread::id BasicLockable<T>::none_ {};
 using namespace testing;
 using namespace testing::internal;
 
+using VerboseMutex = Verbose<BasicLockable<std::mutex>>;
+
 TEST(BasicLockable, lock_guard) {
-    auto&& mutex = BasicLockable<std::mutex> {};                        // C++17
-    auto&& lock = std::lock_guard<BasicLockable<std::mutex>> { mutex }; // C++17
+    auto&& mutex = VerboseMutex{"mutex"};               // && until C++17
+    auto&& lock = std::lock_guard<VerboseMutex>{mutex}; // && until C++17
     mutex.assert_ownership();
 }
 
 TEST(BasicLockable, unique_lock) {
-    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
-    auto&& lock = std::unique_lock<BasicLockable<std::mutex>> { mutex }; // C++17
+    auto&& mutex = VerboseMutex{"mutex"};                // && until C++17
+    auto&& lock = std::unique_lock<VerboseMutex>{mutex}; // && until C++17
     mutex.assert_ownership();
 }
 
 // Does not fail for RELEASE build
 TEST(BasicLockable, unowned_expects) {
 #ifdef NDEBUG
-    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
+    auto&& mutex = VerboseMutex{"mutex"};  // && until C++17
     Expects(mutex.owner_is_this_thread()); // Expected to fail!
 #endif // NDEBUG
 }
@@ -85,12 +85,12 @@ TEST(BasicLockable, unowned_expects) {
 // Does not abort for RELEASE build
 TEST(BasicLockable, unowned_assert) {
 #ifdef NDEBUG
-    auto&& mutex = BasicLockable<std::mutex> {}; // C++17
-    mutex.assert_ownership(); // Expected to fail!
+    auto&& mutex = VerboseMutex{"mutex"}; // && until C++17
+    mutex.assert_ownership();             // Expected to fail!
 #endif // NDEBUG
 }
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
 TEST(BasicLockable, timing_assert) {
 #ifdef NDEBUG
@@ -98,9 +98,9 @@ TEST(BasicLockable, timing_assert) {
 #else
     const auto limit = 100'000;
 #endif // NDEBUG
-    auto mutex = BasicLockable<std::mutex> {};
+    auto mutex = VerboseMutex{"mutex"};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard { mutex };
+        auto lock = std::lock_guard{mutex};
         mutex.assert_ownership();
     }
 }
@@ -111,18 +111,18 @@ TEST(BasicLockable, timing_expects) {
 #else
     const auto limit = 100'000;
 #endif // NDEBUG
-    auto mutex = BasicLockable<std::mutex> {};
+    auto mutex = VerboseMutex{"mutex"};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard { mutex };
+        auto lock = std::lock_guard{mutex};
         Expects(mutex.owner_is_this_thread());
     }
 }
 
 TEST(BasicLockable, timing_without) {
     const auto limit = 100'000'000;
-    auto mutex = std::mutex {};
+    auto mutex = std::mutex{};
     for (auto i = 0; i < limit; i++) {
-        auto lock = std::lock_guard { mutex };
+        auto lock = std::lock_guard{mutex};
     }
 }
 
