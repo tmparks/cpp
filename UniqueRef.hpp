@@ -1,8 +1,5 @@
 #pragma once
-
-#include "Verbose.hpp"
 #include "compat/gsl14.hpp"
-#include <iostream>
 #include <memory>
 
 // Forward declarations.
@@ -39,13 +36,11 @@ private:
     UniqueRef& operator=(UniqueRef&&) noexcept = delete; // no move assignment
 
     std::unique_ptr<T> p_; // never null
-    Verbose v_ { "UniqueRef" };
 };
 
 template <typename T>
-UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_ { std::move(p) } {
+UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_{std::move(p)} {
     Expects(p_ != nullptr);
-    std::cout << v_ << ": conversion from unique_ptr" << std::endl;
 }
 
 template <typename T>
@@ -56,13 +51,11 @@ void UniqueRef<T>::reset(std::unique_ptr<T> p) noexcept {
 
 template <typename T>
 UniqueRef<T>::operator T&() {
-    std::cout << v_ << ": conversion to reference" << std::endl;
     return *p_;
 }
 
 template <typename T>
 UniqueRef<T>::operator const T&() const {
-    std::cout << v_ << ": conversion to const reference" << std::endl;
     return *p_;
 }
 
@@ -81,5 +74,4 @@ template <typename T>
 void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
-    swap(left.v_, right.v_);
 }
