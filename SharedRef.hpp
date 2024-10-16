@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Verbose.hpp"
 #include "compat/gsl14.hpp"
-#include <iostream>
 #include <memory>
 
 // Forward declarations.
@@ -42,13 +40,11 @@ private:
     SharedRef& operator=(SharedRef&&) noexcept = delete; // no move assignment
 
     std::shared_ptr<T> p_; // never null
-    Verbose v_ { "SharedRef" };
 };
 
 template <typename T>
-SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_ { std::move(p) } {
+SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_{std::move(p)} {
     Expects(p_ != nullptr);
-    std::cout << v_ << ": conversion from shared_ptr" << std::endl;
 }
 
 template <typename T>
@@ -59,13 +55,11 @@ void SharedRef<T>::reset(std::shared_ptr<T> p) noexcept {
 
 template <typename T>
 SharedRef<T>::operator T&() {
-    std::cout << v_ << ": conversion to reference" << std::endl;
     return *p_;
 }
 
 template <typename T>
 SharedRef<T>::operator const T&() const {
-    std::cout << v_ << ": conversion to const reference" << std::endl;
     return *p_;
 }
 
@@ -81,13 +75,11 @@ const T& SharedRef<T>::get() const {
 
 template <typename T>
 SharedRef<T>::operator std::shared_ptr<T>() {
-    std::cout << v_ << ": conversion to shared_ptr" << std::endl;
     return p_;
 }
 
 template <typename T>
 SharedRef<T>::operator std::shared_ptr<const T>() const {
-    std::cout << v_ << ": conversion to const shared_ptr" << std::endl;
     return p_;
 }
 
@@ -106,5 +98,4 @@ template <typename T>
 void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
-    swap(left.v_, right.v_);
 }
