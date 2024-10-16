@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <tuple>
 
 // Forward declarations
 template <typename T>
@@ -9,12 +10,8 @@ class Verbose;
 template <typename T>
 void swap(Verbose<T>&, Verbose<T>&) noexcept;
 
-namespace {
-    struct empty { };
-} // namespace
-
 // Make any class verbose
-template <typename T = empty>
+template <typename T = std::tuple<>>
 class Verbose : public T {
 public:
     template <typename... Args>
