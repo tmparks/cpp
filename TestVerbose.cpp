@@ -5,12 +5,10 @@
 using namespace testing;
 using namespace testing::internal;
 
-struct empty {};
-
 TEST(Verbose, Constructor) {
     CaptureStdout();
-    auto v1 = Verbose<empty>{"one"};
-    auto v2 = Verbose<empty>{"two"};
+    auto v1 = Verbose<>{"one"};
+    auto v2 = Verbose<>{"two"};
     auto actual = GetCapturedStdout();
     EXPECT_THAT(actual, HasSubstr("constructor"));
     EXPECT_THAT(actual, Not(HasSubstr("copy")));
@@ -19,7 +17,7 @@ TEST(Verbose, Constructor) {
 }
 
 TEST(Verbose, CopyConstructor) {
-    auto v1 = Verbose<empty> { "one" };
+    auto v1 = Verbose<>{"one"};
     CaptureStdout();
     auto v2 = v1;
     auto actual = GetCapturedStdout();
@@ -30,7 +28,7 @@ TEST(Verbose, CopyConstructor) {
 }
 
 TEST(Verbose, MoveConstructor) {
-    auto v1 = Verbose<empty> { "one" };
+    auto v1 = Verbose<>{"one"};
     CaptureStdout();
     auto v2 = std::move(v1);
     auto actual = GetCapturedStdout();
@@ -41,8 +39,8 @@ TEST(Verbose, MoveConstructor) {
 }
 
 TEST(Verbose, CopyAssignment) {
-    auto v1 = Verbose<empty> { "one" };
-    auto v2 = Verbose<empty> { "two" };
+    auto v1 = Verbose<>{"one"};
+    auto v2 = Verbose<>{"two"};
     CaptureStdout();
     v1 = v2;
     auto actual = GetCapturedStdout();
@@ -54,8 +52,8 @@ TEST(Verbose, CopyAssignment) {
 }
 
 TEST(Verbose, MoveAssignment) {
-    auto v1 = Verbose<empty> { "one" };
-    auto v2 = Verbose<empty> { "two" };
+    auto v1 = Verbose<>{"one"};
+    auto v2 = Verbose<>{"two"};
     CaptureStdout();
     v1 = std::move(v2);
     auto actual = GetCapturedStdout();
@@ -68,8 +66,8 @@ TEST(Verbose, MoveAssignment) {
 
 TEST(Verbose, Destructor) {
     {
-        auto v1 = Verbose<empty> { "one" };
-        auto v2 = Verbose<empty> { "two" };
+        auto v1 = Verbose<>{"one"};
+        auto v2 = Verbose<>{"two"};
         CaptureStdout();
     }
     auto actual = GetCapturedStdout();
@@ -78,8 +76,8 @@ TEST(Verbose, Destructor) {
 }
 
 TEST(Verbose, Swap) {
-    auto v1 = Verbose<empty> { "one" };
-    auto v2 = Verbose<empty> { "two" };
+    auto v1 = Verbose<>{"one"};
+    auto v2 = Verbose<>{"two"};
 
     CaptureStdout();
     std::swap(v1, v2);
@@ -94,10 +92,10 @@ TEST(Verbose, Swap) {
 // Move constructor (not copy constructor) should be used when a
 // vector reallocates due to growing to exceed its capacity
 TEST(Verbose, VectorMove) {
-    std::vector<Verbose<empty>> v {};
+    std::vector<Verbose<>> v{};
     v.reserve(1);
     auto limit = gsl::narrow_cast<gsl::index>(v.capacity());
-    for (auto i = gsl::index { 0 }; i < limit; i++) {
+    for (auto i = gsl::index{0}; i < limit; i++) {
         v.emplace_back(std::to_string(i));
     }
     CaptureStdout();

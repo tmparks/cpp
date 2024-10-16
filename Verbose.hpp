@@ -9,8 +9,12 @@ class Verbose;
 template <typename T>
 void swap(Verbose<T>&, Verbose<T>&) noexcept;
 
+namespace {
+    struct empty { };
+} // namespace
+
 // Make any class verbose
-template <typename T>
+template <typename T = empty>
 class Verbose : public T {
 public:
     template <typename... Args>
