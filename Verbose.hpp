@@ -8,7 +8,15 @@ template <typename T>
 class Verbose;
 
 template <typename T>
+Verbose<T> make_verbose(std::string name, T&& obj);
+
+template <typename T>
 void swap(Verbose<T>&, Verbose<T>&) noexcept;
+
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object);
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Make any class verbose
 template <typename T = std::tuple<>>
@@ -30,8 +38,26 @@ private:
     std::string name_{};
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 template <typename T>
-std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object);
+Verbose<T> make_verbose(std::string name, T&& obj) {
+    return Verbose<T>{std::move(name), std::forward<T>(obj)};
+}
+
+template <typename T>
+void swap(Verbose<T>& left, Verbose<T>& right) noexcept {
+    std::cout << left.name() << ": swap left=" << &left //
+              << " right=" << &right << std::endl;
+    using std::swap; // enable Argument Dependent Lookup
+    swap(static_cast<T&>(left), static_cast<T&>(right));
+    swap(left.name_, right.name_);
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object) {
+    return operator<<(stream, object.name());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,15 +111,6 @@ Verbose<T>::~Verbose() noexcept {
 }
 
 template <typename T>
-void swap(Verbose<T>& left, Verbose<T>& right) noexcept {
-    std::cout << left.name() << ": swap left=" << &left //
-              << " right=" << &right << std::endl;
-    using std::swap; // enable Argument Dependent Lookup
-    swap(static_cast<T&>(left), static_cast<T&>(right));
-    swap(left.name_, right.name_);
-}
-
-template <typename T>
 std::string& Verbose<T>::name() noexcept {
     return name_;
 }
@@ -101,9 +118,4 @@ std::string& Verbose<T>::name() noexcept {
 template <typename T>
 const std::string& Verbose<T>::name() const noexcept {
     return name_;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object) {
-    return operator<<(stream, object.name());
 }
