@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#if __cplusplus < 201402L
+#if __cplusplus < 201402L // until C++14
 
 #pragma message "emulating C++14 memory"
 
