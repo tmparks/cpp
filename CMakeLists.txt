@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.22) # Ubuntu 22.04
-project(cpp VERSION 2024.02)
+cmake_minimum_required(VERSION 3.28) # Ubuntu 24.04
+project(cpp VERSION 2024.10)
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED CONFIG)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -66,7 +66,7 @@ endif() # CMAKE_BUILD_TYPE
 # Default build options
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Needed by clang-tidy (see below)
 if(NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 20)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
