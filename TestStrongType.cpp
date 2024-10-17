@@ -16,12 +16,12 @@ struct Mass { double asDouble{0.0}; }; // Strong type.
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 struct Length : Inherited::StrongType<double> { };
 struct Width : Length { };
 struct Height : Length { };
 using Area = Tagged::StrongType<double, struct AreaTag>;
-#else  // C++17
+#else  // until C++17
 struct Length : Inherited::StrongType<double> { using base::base; };
 struct Width : Length { using Length::Length; };
 struct Height : Length { using Length::Length; };
@@ -50,9 +50,9 @@ typename std::enable_if<std::is_enum<E>::value, E>::type next() {
 
 // Better: Use inheritance so that code expresses intent.
 // [Express ideas directly in code](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p1-express-ideas-directly-in-code)
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 struct GreenId : Inherited::StrongIdentifier<int> { };
-#else  // C++17
+#else  // until C++17
 struct GreenId : Inherited::StrongIdentifier<int> { using base::base; };
 #endif // C++17
 
@@ -92,14 +92,14 @@ TEST(StrongIdentifier, initialization) {
 }
 
 TEST(StrongIdentifier, equal) {
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
     auto red = RedId{1};
     auto rojo = RedId{1};
     auto rouge = RedId::null;
     auto blue = BlueId{2};
     auto azul = BlueId{2};
     auto bleu = BlueId::null;
-#else  // C++17
+#else  // until C++17
     auto red = static_cast<RedId>(1);
     auto rojo = static_cast<RedId>(1);
     auto rouge = RedId::null;

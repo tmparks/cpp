@@ -9,7 +9,7 @@ template <typename T>
 struct StrongType {
     using type = T; // underlying type
     T value{};      // zero-initialized value
-#if __cplusplus < 201703L
+#if __cplusplus < 201703L // until C++17
     // Provide an explicit constructor that can be inherited because
     // [aggregate initialization](https://en.cppreference.com/w/cpp/language/aggregate_initialization)
     // cannot be used with derived types until C++17.
@@ -21,7 +21,7 @@ struct StrongType {
     StrongType& operator=(const StrongType&) = default;     // copy assignment
     StrongType& operator=(StrongType&&) noexcept = default; // move assignment
     ~StrongType() noexcept = default; // CAUTION: non-virtual destructor
-#endif // until C++17
+#endif // C++17
 };
 
 // A simple strong identifier using inheritance.
@@ -32,10 +32,10 @@ struct StrongIdentifier : StrongType<T> {
     const static StrongIdentifier null;         // initialized later
     bool operator==(StrongIdentifier other) const noexcept; // equal
     bool operator<(StrongIdentifier other) const noexcept;  // less
-#if __cplusplus < 201703L
+#if __cplusplus < 201703L // until C++17
     using base = StrongIdentifier;   // base type
     using StrongType<T>::StrongType; // inherit constructors
-#endif // until C++17
+#endif // C++17
 };
 
 template <typename T>

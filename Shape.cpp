@@ -54,7 +54,7 @@ Circle Shape::boundingCircle() const {
 }
 
 Rectangle Shape::boundingBox() const {
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
     auto [width, height] = boundingBoxImpl(scale_, rotation_);
 #else
     auto tuple = boundingBoxImpl(scale_, rotation_);

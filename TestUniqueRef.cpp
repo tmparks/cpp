@@ -15,7 +15,7 @@ namespace {
     template <typename T>
     using UniqueContainer = std::list<UniqueRef<T>>;
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
     // Create a smart reference to a newly constructed object of type T.
     // Note: copy elision is guaranteed since C++17
@@ -47,11 +47,11 @@ namespace {
 } // anonymous namespace
 
 TEST(UniqueRef, constructor) {
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
     auto a = create<Verbose<>>("one");
     auto b = create<Verbose<>>("two");
     // auto c = UniqueRef<Verbose<>> { }; // no dangling references!
-#else
+#else // until C++17
     UniqueRef<Verbose<>> a{std::make_unique<Verbose<>>("one")};
     UniqueRef<Verbose<>> b{std::make_unique<Verbose<>>("two")};
     // UniqueRef<Verbose<>> c { }; // no dangling references!
