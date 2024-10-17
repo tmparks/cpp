@@ -66,7 +66,7 @@ endif() # CMAKE_BUILD_TYPE
 # Default build options
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Needed by clang-tidy (see below)
 if(NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD 11)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -76,22 +76,25 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_executable(TestRunner
     Array.cpp
-    Constant.cpp
-    CopyElision.cpp
-    Lockable.cpp
     Shape.cpp
     StretchableArray.cpp
+    TestArray.cpp
+    TestConstant.cpp
+    TestCopyElision.cpp
+    TestLockable.cpp
     TestPointerMap.cpp
     TestPointerVector.cpp
+    TestShape.cpp
     TestSharedCloneable.cpp
     TestSharedFromThis.cpp
     TestSharedRef.cpp
+    TestStretchableArray.cpp
     TestStrongType.cpp
     TestUniqueRef.cpp
-    Verbose.cpp
-    VirtualDataPtr.cpp
-    VirtualDataRef.cpp
-    Zip.cpp
+    TestVerbose.cpp
+    TestVirtualDataPtr.cpp
+    TestVirtualDataRef.cpp
+    TestZip.cpp
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)
