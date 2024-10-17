@@ -16,7 +16,7 @@ struct StrongType {
 // A simple strong identifier using type aliases.
 // Example: using MyId = StrongIdentifier<int, struct MyIdTag>;
 template <typename T, typename UniqueTag>
-struct StrongIdentifier {
+struct StrongIdentifier : StrongType<T, UniqueTag> {
     const static StrongIdentifier null;            // initialized later
     bool operator==(StrongIdentifier other) const; // equal
     bool operator<(StrongIdentifier other) const;  // less

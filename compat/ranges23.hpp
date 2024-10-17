@@ -1,9 +1,7 @@
 #pragma once
 
-// Note: GCC does not (yet) use 202302L for C++23,
-// so check for anything strictly newer than C++20
-// See [Predefined macros](https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros)
-#if __cplusplus > 202002L
+// [Predefined macros](https://en.cppreference.com/w/cpp/preprocessor/replace#Predefined_macros)
+#if __cplusplus >= 202302L // since C++23
 
 #include <ranges>
 
@@ -23,7 +21,7 @@ std::ostream& operator<<(std::ostream& stream, std::tuple<Ts...> const& tuple) {
     return stream;
 }
 
-#else // C++23
+#else // until C++23
 
 #pragma message "emulating C++23 ranges"
 

@@ -5,16 +5,15 @@
 
 class Zip : public testing::Test {
 public:
-
     // NOLINTBEGIN(*-avoid-magic-numbers)
 
     void SetUp() override {
-        left = { 1, 2, 3, 4, 5 };
-        right = { 1.1, 2.2, 3.3, 4.4, 5.5 };
+        left = {1, 2, 3, 4, 5};
+        right = {1.1, 2.2, 3.3, 4.4, 5.5};
 
         // Carefully avoid copies and moves.
         center.reserve(5);
-        for (const auto& name : { "one", "two", "three", "four", "five" }) {
+        for (const auto& name : {"one", "two", "three", "four", "five"}) {
             center.emplace_back(name);
         }
     }
@@ -31,7 +30,7 @@ public:
     }
 
     std::vector<int> left;
-    std::vector<Verbose> center;
+    std::vector<Verbose<>> center;
     std::vector<double> right;
 };
 
@@ -43,7 +42,7 @@ TEST_F(Zip, print) {
           std::ranges::views::zip(left, center, right));
 }
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
 TEST_F(Zip, for_mutable) {
     print("before: ", std::ranges::views::zip(left, center, right));
@@ -157,7 +156,7 @@ TEST_F(Zip, for_const) {
         EXPECT_NE('!', a.name().back());
     }
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
     // To make our intentions more obvious, we can explicitly make the sequence const.
     for (const auto& a : std::as_const(center)) {
@@ -197,7 +196,7 @@ TEST_F(Zip, for_const) {
 
 #endif // C++17
 
-#if __cplusplus >= 202302L
+#if __cplusplus >= 202302L // since C++23
 
     // To make our intentions more obvious, and to guard against future changes
     // in the declarations of the sequences, we can explicitly make each
@@ -241,7 +240,7 @@ TEST_F(Zip, for_copy) {
         EXPECT_NE('!', a.name().back()); // Verify that original is not modified.
     }
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
     // Unfortunately using the same convention with a zipped sequence does not
     // have the intended effect. This is because each tuple in the zipped

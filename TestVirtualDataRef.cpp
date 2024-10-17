@@ -2,10 +2,11 @@
 // (https://isocpp.org/wiki/faq/value-vs-ref-semantics#virt-data)
 
 #include "StretchableArray.hpp"
+#include "Verbose.hpp"
 #include <functional>
 #include <iostream>
 
-class StackRef : private Verbose {
+class StackRef {
 public:
     void Push(double x);
     double Pop();
@@ -13,7 +14,7 @@ public:
 protected:
     // The base class has no public constructor and does not provide its own
     // object. Instead it accepts an object from a derived class.
-    StackRef(const std::string& name, Array& data);
+    StackRef(Array& data);
 
 private:
     // To simulate virtual data in C++, the base class has a reference to the
@@ -21,7 +22,7 @@ private:
     // No additional memory allocation overhead is imposed,
     // but copy assignment becomes impossible.
     std::reference_wrapper<Array> data_;
-    gsl::index index_ { 0 };
+    gsl::index index_{0};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,9 +55,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-StackRef::StackRef(const std::string& name, Array& data) :
-        Verbose { name }, data_ { data } {
-    std::cout << gsl::czstring { __func__ } << ": &data_=" << &data_.get()
+StackRef::StackRef(Array& data) : data_{data} {
+    std::cout << gsl::czstring{__func__} << ": &data_=" << &data_.get()
               << std::endl;
 }
 
@@ -70,18 +70,15 @@ double StackRef::Pop() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FixedStackRef::FixedStackRef(gsl::index size) :
-        StackRef { gsl::czstring { __func__ }, value_ }, value_ { size } {
-    std::cout << gsl::czstring { __func__ } << ": &value_=" << &value_
-              << std::endl;
+FixedStackRef::FixedStackRef(gsl::index size) : StackRef{value_}, value_{size} {
+    std::cout << gsl::czstring{__func__} << ": &value_=" << &value_ << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 StretchableStackRef::StretchableStackRef(gsl::index size) :
-        StackRef { gsl::czstring { __func__ }, value_ }, value_ { size } {
-    std::cout << gsl::czstring { __func__ } << ": &value_=" << &value_
-              << std::endl;
+        StackRef{value_}, value_{size} {
+    std::cout << gsl::czstring{__func__} << ": &value_=" << &value_ << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +86,9 @@ StretchableStackRef::StretchableStackRef(gsl::index size) :
 #include <gtest/gtest.h>
 
 TEST(VirtualDataRef, Stack_Push_Pop) {
-    const auto size = gsl::index { 3 };
-    auto stack = FixedStackRef { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    const auto size = gsl::index{3};
+    auto stack = Verbose<FixedStackRef>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     for (auto x = size - 1; x >= 0; x--) {
@@ -100,23 +97,23 @@ TEST(VirtualDataRef, Stack_Push_Pop) {
 }
 
 TEST(VirtualDataRef, Stack_Push_Full) {
-    auto size = gsl::index { 3 };
-    auto stack = FixedStackRef { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    auto size = gsl::index{3};
+    auto stack = Verbose<FixedStackRef>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     EXPECT_THROW(stack.Push(gsl::narrow_cast<double>(size)), std::out_of_range);
 }
 
 TEST(VirtualDataRef, Stack_Pop_Empty) {
-    auto stack = FixedStackRef { 1 };
+    auto stack = Verbose<FixedStackRef>{"stack", 1};
     EXPECT_THROW(stack.Pop(), std::out_of_range);
 }
 
 TEST(VirtualDataRef, Stack_Stretch) {
-    const auto size = gsl::index { 3 };
-    auto stack = StretchableStackRef { size };
-    for (auto x = gsl::index { 0 }; x < size; x++) {
+    const auto size = gsl::index{3};
+    auto stack = Verbose<StretchableStackRef>{"stack", size};
+    for (auto x = gsl::index{0}; x < size; x++) {
         stack.Push(gsl::narrow_cast<double>(x));
     }
     EXPECT_NO_THROW(stack.Push(gsl::narrow_cast<double>(size)));

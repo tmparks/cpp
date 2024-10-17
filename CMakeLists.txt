@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.22) # Ubuntu 22.04
-project(cpp VERSION 2024.02)
+cmake_minimum_required(VERSION 3.28) # Ubuntu 24.04
+project(cpp VERSION 2024.10)
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED CONFIG)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -76,22 +76,25 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_executable(TestRunner
     Array.cpp
-    Constant.cpp
-    CopyElision.cpp
-    Lockable.cpp
     Shape.cpp
     StretchableArray.cpp
+    TestArray.cpp
+    TestConstant.cpp
+    TestCopyElision.cpp
+    TestLockable.cpp
     TestPointerMap.cpp
     TestPointerVector.cpp
+    TestShape.cpp
     TestSharedCloneable.cpp
     TestSharedFromThis.cpp
     TestSharedRef.cpp
+    TestStretchableArray.cpp
     TestStrongType.cpp
     TestUniqueRef.cpp
-    Verbose.cpp
-    VirtualDataPtr.cpp
-    VirtualDataRef.cpp
-    Zip.cpp
+    TestVerbose.cpp
+    TestVirtualDataPtr.cpp
+    TestVirtualDataRef.cpp
+    TestZip.cpp
 )
 
 target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)

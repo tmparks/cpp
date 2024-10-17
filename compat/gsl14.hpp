@@ -1,10 +1,10 @@
 #pragma once
 
-#if __cplusplus >= 201402L
+#if __cplusplus >= 201402L // since C++14
 
 #include <gsl/gsl>
 
-#else // C++14
+#else // until C++14
 
 #pragma message "emulating C++14 gsl"
 

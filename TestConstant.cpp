@@ -38,7 +38,7 @@ public:
 const int StaticConst2::dependent_;
 const int StaticConst2::dependent2_;
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
 class ConstExpr {
 public:
@@ -73,7 +73,7 @@ TEST(Const, static_dependent) {
     EXPECT_EQ(203, StaticConst2::dependent2_);
 }
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
 TEST(Const, constexpr) { EXPECT_EQ(2, ConstExpr::initialized_); }
 

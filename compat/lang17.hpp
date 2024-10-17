@@ -4,7 +4,7 @@
 
 // NOLINTBEGIN(*-macro-usage)
 
-#if __cplusplus < 201703L
+#if __cplusplus < 201703L // until C++17
 
 #define STRUCTURED_BINDING_1(a, tuple) auto&& a = std::get<0>(tuple);
 
@@ -28,7 +28,7 @@
     auto&& f = std::get<5>(tuple); \
     STRUCTURED_BINDING_5(a, b, c, d, e, tuple);
 
-#else // C++17
+#else // since C++17
 
 #define STRUCTURED_BINDING_1(a, tuple) auto&& [a] = tuple;
 

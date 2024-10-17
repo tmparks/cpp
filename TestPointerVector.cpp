@@ -11,7 +11,7 @@ using namespace testing::internal;
 // Anonymous namespace for definitions that are local to this file.
 namespace {
     // Print the elements of a PointerVector.
-    void print(const RawPointerVector<Verbose>& container) {
+    void print(const RawPointerVector<Verbose<>>& container) {
         for (const auto& elem : container) {
             std::cout << gsl::czstring{__func__} << ": " << elem << std::endl;
             const auto& name = elem.name();
@@ -38,33 +38,33 @@ namespace {
 
 TEST(SharedPointerVector, emplace_back) {
     // Place elements into container as pointers.
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace_back(std::make_shared<Verbose<>>("one"));
+    base.emplace_back(std::make_shared<Verbose<>>("two"));
+    base.emplace_back(std::make_shared<Verbose<>>("three"));
 
     print(reference(container));
 }
 
 TEST(SharedPointerVector, push_back) {
     // Place elements into container as pointers.
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.push_back(std::make_shared<Verbose>("one"));
-    base.push_back(std::make_shared<Verbose>("two"));
-    base.push_back(std::make_shared<Verbose>("three"));
+    base.push_back(std::make_shared<Verbose<>>("one"));
+    base.push_back(std::make_shared<Verbose<>>("two"));
+    base.push_back(std::make_shared<Verbose<>>("three"));
 
     print(reference(container));
 }
 
 TEST(SharedPointerVector, shallow_copy) {
     // Place elements into container as pointers.
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace_back(std::make_shared<Verbose<>>("one"));
+    base.emplace_back(std::make_shared<Verbose<>>("two"));
+    base.emplace_back(std::make_shared<Verbose<>>("three"));
 
     // Copying a container of pointers does not copy the referenced objects.
     auto container_copy = container;
@@ -81,22 +81,22 @@ TEST(SharedPointerVector, shallow_copy) {
 
 TEST(SharedPointerVector, front_back) {
     // Place elements into container as pointers.
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("front"));
-    base.emplace_back(std::make_shared<Verbose>("middle"));
-    base.emplace_back(std::make_shared<Verbose>("back"));
+    base.emplace_back(std::make_shared<Verbose<>>("front"));
+    base.emplace_back(std::make_shared<Verbose<>>("middle"));
+    base.emplace_back(std::make_shared<Verbose<>>("back"));
 
     EXPECT_EQ("front", container.front().name());
     EXPECT_EQ("back", container.back().name());
 }
 
 TEST(SharedPointerVector, erase_if) {
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace_back(std::make_shared<Verbose<>>("one"));
+    base.emplace_back(std::make_shared<Verbose<>>("two"));
+    base.emplace_back(std::make_shared<Verbose<>>("three"));
 
     // In order to avoid copying/moving values,
     // use the base vector of pointers for erase-remove.
@@ -107,11 +107,11 @@ TEST(SharedPointerVector, erase_if) {
 }
 
 TEST(SharedPointerVector, mask) {
-    auto container = SharedPointerVector<Verbose>{};
+    auto container = SharedPointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_shared<Verbose>("one"));
-    base.emplace_back(std::make_shared<Verbose>("two"));
-    base.emplace_back(std::make_shared<Verbose>("three"));
+    base.emplace_back(std::make_shared<Verbose<>>("one"));
+    base.emplace_back(std::make_shared<Verbose<>>("two"));
+    base.emplace_back(std::make_shared<Verbose<>>("three"));
 
     auto masked = mask(container, std::vector<bool>{true, false, true});
 
@@ -126,11 +126,11 @@ TEST(SharedPointerVector, mask) {
 }
 
 TEST(UniquePointerVector, uncopyable) {
-    auto container = UniquePointerVector<Verbose>{};
+    auto container = UniquePointerVector<Verbose<>>{};
     auto& base = container.base;
-    base.emplace_back(std::make_unique<Verbose>("one"));
-    base.emplace_back(std::make_unique<Verbose>("two"));
-    base.emplace_back(std::make_unique<Verbose>("three"));
+    base.emplace_back(std::make_unique<Verbose<>>("one"));
+    base.emplace_back(std::make_unique<Verbose<>>("two"));
+    base.emplace_back(std::make_unique<Verbose<>>("three"));
 
     // auto container_copy = container; // compile time error
 }

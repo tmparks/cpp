@@ -4,25 +4,22 @@
 #include <gtest/gtest.h>
 
 // Derived publicly (but indirectly) from std::enable_shared_from_this
-class Widget : public SharedObject {
+class Widget : public Verbose<SharedObject> {
 public:
     ~Widget() noexcept override = default;
     Widget& operator=(const Widget& other) = default;
     Widget& operator=(Widget&& other) noexcept = default;
 
 public: // pseudo-protected
-    explicit Widget(Protected) noexcept : Widget {} { }
-    Widget(Protected, const Widget& other) : Widget { other } { }
-    Widget(Protected, Widget&& other) noexcept : Widget { std::move(other) } { }
-    Widget(Protected, const std::string& name) : v_ { name } { }
+    explicit Widget(Protected) noexcept : Widget{} { }
+    Widget(Protected, const Widget& other) : Widget{other} { }
+    Widget(Protected, Widget&& other) noexcept : Widget{std::move(other)} { }
+    Widget(Protected, const std::string& name) : Verbose<SharedObject>{name} { }
 
 protected:
-    Widget() noexcept : v_ { gsl::czstring { __func__ } } { }
+    Widget() noexcept : Verbose<SharedObject>{gsl::czstring{__func__}} { }
     Widget(const Widget& other) = default;
     Widget(Widget&& other) noexcept = default;
-
-private:
-    Verbose v_; // initialized later
 };
 
 // Derived publicly (but indirectly) from std::enable_shared_from_this
@@ -33,26 +30,26 @@ public:
     Gadget& operator=(Gadget&& other) noexcept = default;
 
 public: // pseudo-protected
-    explicit Gadget(Protected) noexcept : Gadget {} { }
-    Gadget(Protected, const Gadget& other) : Gadget { other } { }
-    Gadget(Protected, Gadget&& other) noexcept : Gadget { std::move(other) } { }
-    Gadget(Protected tag, const std::string& name) : Widget { tag, name } { }
+    explicit Gadget(Protected) noexcept : Gadget{} { }
+    Gadget(Protected, const Gadget& other) : Gadget{other} { }
+    Gadget(Protected, Gadget&& other) noexcept : Gadget{std::move(other)} { }
+    Gadget(Protected tag, const std::string& name) : Widget{tag, name} { }
 
 protected:
-    Gadget() noexcept : Widget { Protected {}, gsl::czstring { __func__ } } { }
+    Gadget() noexcept : Widget{Protected{}, gsl::czstring{__func__}} { }
     Gadget(const Gadget& other) = default;
     Gadget(Gadget&& other) noexcept = default;
 };
 
 void share_const(const Widget& w) {
     auto p = w.shared_from_this();
-    std::cout << gsl::czstring { __func__ } << ": use_count=" << p.use_count()
+    std::cout << gsl::czstring{__func__} << ": use_count=" << p.use_count()
               << std::endl;
 }
 
 void share(Widget& w) {
     auto p = w.shared_from_this();
-    std::cout << gsl::czstring { __func__ } << ": use_count=" << p.use_count()
+    std::cout << gsl::czstring{__func__} << ": use_count=" << p.use_count()
               << std::endl;
 }
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#if __cplusplus >= 202002L
+#if __cplusplus >= 202002L // since C++20
 
 #include <numbers>
 
-#else // C++20
+#else // until C++20
 
 #pragma message "emulating C++20 numbers"
 

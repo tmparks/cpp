@@ -13,7 +13,7 @@ namespace {
     template <typename T>
     using SharedContainer = std::vector<SharedRef<T>>;
 
-#if __cplusplus >= 201703L
+#if __cplusplus >= 201703L // since C++17
 
     // Create a smart reference to a newly constructed object of type T.
     // Note: copy elision is guaranteed since C++17
@@ -25,18 +25,17 @@ namespace {
 #endif // C++17
 
     // Test that two objects are distinct (different addresses)
-    bool distinct(const Verbose& a, const Verbose& b) { return &a != &b; }
+    bool distinct(const Verbose<>& a, const Verbose<>& b) { return &a != &b; }
 
     // Test that two objects are equal (same name)
-    bool equal(const Verbose& a, const Verbose& b) {
+    bool equal(const Verbose<>& a, const Verbose<>& b) {
         return a.name() == b.name();
     }
 
     // Print the elements of a container of smart references.
-    void print(const SharedContainer<Verbose>& container) {
+    void print(const SharedContainer<Verbose<>>& container) {
         for (const auto& elem : container) {
-            std::cout << gsl::czstring { __func__ } << ": "
-                      << elem // implicit conversion for operator<<
+            std::cout << gsl::czstring{__func__} << ": " << elem.get()
                       << std::endl;
             const auto& name = elem.get().name();
             EXPECT_THAT(name, Not(HasSubstr("copy")));
@@ -46,14 +45,14 @@ namespace {
 } // anonymous namespace
 
 TEST(SharedRef, constructor) {
-#if __cplusplus >= 201703L
-    auto a = create<Verbose>("one");
-    auto b = create<Verbose>("two");
-    // auto c = SharedRef<Verbose> { }; // no dangling references!
+#if __cplusplus >= 201703L // since C++17
+    auto a = create<Verbose<>>("one");
+    auto b = create<Verbose<>>("two");
+    // auto c = SharedRef<Verbose<>> { }; // no dangling references!
 #else
-    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
-    SharedRef<Verbose> b { std::make_shared<Verbose>("two") };
-    // SharedRef<Verbose> c { }; // no dangling references!
+    SharedRef<Verbose<>> a{std::make_shared<Verbose<>>("one")};
+    SharedRef<Verbose<>> b{std::make_shared<Verbose<>>("two")};
+    // SharedRef<Verbose<>> c { }; // no dangling references!
 #endif // C++17
 
     EXPECT_FALSE(equal(a, b));
@@ -65,16 +64,16 @@ TEST(SharedRef, copy) {
     EXPECT_TRUE(std::is_copy_constructible<SharedRef<int>>::value);
     EXPECT_TRUE(std::is_copy_assignable<SharedRef<int>>::value);
 
-#if __cplusplus >= 201703L
-    auto a = create<Verbose>("one");
-    auto b = create<Verbose>("two");
-    auto c = create<Verbose>("three");
-    auto d = SharedRef<Verbose> { a }; // copy constructor
+#if __cplusplus >= 201703L // since C++17
+    auto a = create<Verbose<>>("one");
+    auto b = create<Verbose<>>("two");
+    auto c = create<Verbose<>>("three");
+    auto d = SharedRef<Verbose<>>{a}; // copy constructor
 #else
-    SharedRef<Verbose> a { std::make_shared<Verbose>("one") };
-    SharedRef<Verbose> b { std::make_shared<Verbose>("two") };
-    SharedRef<Verbose> c { std::make_shared<Verbose>("three") };
-    SharedRef<Verbose> d { a }; // copy constructor
+    SharedRef<Verbose<>> a{std::make_shared<Verbose<>>("one")};
+    SharedRef<Verbose<>> b{std::make_shared<Verbose<>>("two")};
+    SharedRef<Verbose<>> c{std::make_shared<Verbose<>>("three")};
+    SharedRef<Verbose<>> d{a}; // copy constructor
 #endif // C++17
 
     c = b; // copy assignment
@@ -110,32 +109,34 @@ TEST(SharedRef, move) {
 }
 
 TEST(SharedRef, reset) {
-    auto&& a = SharedRef<Verbose> { std::make_shared<Verbose>("one") }; // C++17
-    a.reset(std::make_shared<Verbose>("two"));
+    auto&& a = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("one")}; // C++17
+    a.reset(std::make_shared<Verbose<>>("two"));
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(SharedRef, swap) {
-    auto&& a = SharedRef<Verbose> { std::make_shared<Verbose>("one") }; // C++17
-    auto&& b = SharedRef<Verbose> { std::make_shared<Verbose>("two") }; // C++17
+    auto&& a = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("one")}; // C++17
+    auto&& b = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("two")}; // C++17
     swap(a, b);
     EXPECT_EQ("one", b.get().name());
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(SharedRef, container) {
-    auto container = SharedContainer<Verbose> {};
-    container.emplace_back(std::make_shared<Verbose>("one"));
-    container.emplace_back(std::make_shared<Verbose>("two"));
-    container.emplace_back(std::make_shared<Verbose>("three"));
+    auto container = SharedContainer<Verbose<>>{};
+    container.emplace_back(std::make_shared<Verbose<>>("one"));
+    container.emplace_back(std::make_shared<Verbose<>>("two"));
+    container.emplace_back(std::make_shared<Verbose<>>("three"));
 
     print(container);
 
     for (const auto& elem : container) {
-        std::cout << elem.get().name() << std::endl; // explicitly get reference
+        // explicitly get reference
+        std::cout << elem.get().name() << std::endl;
     }
 
-    for (const Verbose& elem : container) { // implicit conversion (cannot use auto)
+    // implicit conversion (cannot use auto)
+    for (const Verbose<>& elem : container) {
         std::cout << elem.name() << std::endl;
     }
 
