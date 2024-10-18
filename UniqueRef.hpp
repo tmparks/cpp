@@ -9,7 +9,11 @@ class UniqueRef;
 template <typename T>
 void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept;
 
-// Inspired by std::reference_wrapper, but holds a unique_ptr instead of a raw pointer.
+template <typename T, typename... Args>
+UniqueRef<T> makeUniqueRef(Args&&... args);
+
+// Inspired by std::reference_wrapper, but holds a unique_ptr
+// instead of a raw pointer.
 // Cannot be copied because unique_ptr cannot be copied.
 // A moved-from object is empty, but can be deleted or assigned to.
 // See: [A move operation should move and leave its source in a valid state](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-move-semantic)
@@ -75,4 +79,9 @@ template <typename T>
 void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
+}
+
+template <typename T, typename... Args>
+UniqueRef<T> makeUniqueRef(Args&&... args) {
+    return std::make_unique<T>(std::forward<Args>(args)...);
 }

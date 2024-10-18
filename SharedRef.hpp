@@ -10,7 +10,11 @@ class SharedRef;
 template <typename T>
 void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept;
 
-// Inspired by std::reference_wrapper, but holds a shared_ptr instead of a raw pointer.
+template <typename T, typename... Args>
+SharedRef<T> makeSharedRef(Args&&... args);
+
+// Inspired by std::reference_wrapper, but holds a shared_ptr
+// instead of a raw pointer.
 // A moved-from object is empty, but can be deleted or assigned to.
 // See: [A move operation should move and leave its source in a valid state](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-move-semantic)
 template <typename T>
@@ -99,4 +103,9 @@ template <typename T>
 void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
+}
+
+template <typename T, typename... Args>
+SharedRef<T> makeSharedRef(Args&&... args) {
+    return std::make_shared<T>(std::forward<Args>(args)...);
 }
