@@ -3,28 +3,15 @@
 #include "compat/gsl14.hpp"
 
 #include <gmock/gmock.h>
-#include <list>
+#include <vector>
 
 using namespace testing;
 using namespace testing::internal;
 
 // Anonymous namespace for definitions that are local to this file.
 namespace {
-    // UniqueRef is neither copyable nor movable, so we use std::list instead
-    // of std::vector, which sometimes needs to reallocate its storage.
     template <typename T>
-    using UniqueContainer = std::list<UniqueRef<T>>;
-
-#if __cplusplus >= 201703L // since C++17
-
-    // Create a smart reference to a newly constructed object of type T.
-    // Note: copy elision is guaranteed since C++17
-    template <typename T, typename... Args>
-    UniqueRef<T> create(Args&&... args) {
-        return std::make_unique<T>(std::forward<Args>(args)...);
-    }
-
-#endif // C++17
+    using UniqueContainer = std::vector<UniqueRef<T>>;
 
     // Test that two objects are distinct (different addresses)
     bool distinct(const Verbose<>& a, const Verbose<>& b) { return &a != &b; }
@@ -36,10 +23,9 @@ namespace {
 
     // Print the elements of a container of smart references.
     void print(const UniqueContainer<Verbose<>>& container) {
-        for (const auto& elem : container) {
-            std::cout << gsl::czstring{__func__} << ": " << elem.get()
-                      << std::endl;
-            const auto& name = elem.get().name();
+        for (const Verbose<>& elem : container) {
+            std::cout << gsl::czstring{__func__} << ": " << elem << std::endl;
+            const auto& name = elem.name();
             EXPECT_THAT(name, Not(HasSubstr("copy")));
             EXPECT_THAT(name, Not(HasSubstr("move")));
         }
@@ -47,15 +33,9 @@ namespace {
 } // anonymous namespace
 
 TEST(UniqueRef, constructor) {
-#if __cplusplus >= 201703L // since C++17
-    auto a = create<Verbose<>>("one");
-    auto b = create<Verbose<>>("two");
+    auto a = makeUniqueRef<Verbose<>>("one");
+    auto b = makeUniqueRef<Verbose<>>("two");
     // auto c = UniqueRef<Verbose<>> { }; // no dangling references!
-#else // until C++17
-    UniqueRef<Verbose<>> a{std::make_unique<Verbose<>>("one")};
-    UniqueRef<Verbose<>> b{std::make_unique<Verbose<>>("two")};
-    // UniqueRef<Verbose<>> c { }; // no dangling references!
-#endif // C++17
 
     EXPECT_FALSE(equal(a, b));
     EXPECT_TRUE(distinct(a, b));
@@ -68,20 +48,44 @@ TEST(UniqueRef, copy) {
 }
 
 TEST(UniqueRef, move) {
-    // UniqueRef is not moveable because the moved-from unique_ptr would be null.
-    EXPECT_FALSE(std::is_move_constructible<UniqueRef<int>>::value);
-    EXPECT_FALSE(std::is_move_assignable<UniqueRef<int>>::value);
+    // UniqueRef is moveable because unique_ptr is moveable.
+    EXPECT_TRUE(std::is_move_constructible<UniqueRef<int>>::value);
+    EXPECT_TRUE(std::is_move_assignable<UniqueRef<int>>::value);
+
+    auto a = makeUniqueRef<Verbose<>>("one");
+    auto b = makeUniqueRef<Verbose<>>("two");
+    auto c = makeUniqueRef<Verbose<>>("three");
+    auto d = UniqueRef<Verbose<>>{std::move(a)}; // move constructor
+
+    c = std::move(b); // move assignment
+
+    // Moving modifies the reference, not the referenced object.
+
+    const auto& cName = c.get().name();
+    EXPECT_THAT(cName, EndsWith("two"));
+    EXPECT_THAT(cName, Not(HasSubstr("three")));
+    EXPECT_THAT(cName, Not(HasSubstr("copy")));
+    EXPECT_THAT(cName, Not(HasSubstr("move")));
+    EXPECT_THAT(cName, Not(HasSubstr("construct")));
+    EXPECT_THAT(cName, Not(HasSubstr("assign")));
+
+    const auto& dName = d.get().name();
+    EXPECT_THAT(dName, EndsWith("one"));
+    EXPECT_THAT(dName, Not(HasSubstr("copy")));
+    EXPECT_THAT(dName, Not(HasSubstr("move")));
+    EXPECT_THAT(dName, Not(HasSubstr("construct")));
+    EXPECT_THAT(dName, Not(HasSubstr("assign")));
 }
 
 TEST(UniqueRef, reset) {
-    UniqueRef<Verbose<>> a{std::make_unique<Verbose<>>("one")};
+    auto a = makeUniqueRef<Verbose<>>("one");
     a.reset(std::make_unique<Verbose<>>("two"));
     EXPECT_EQ("two", a.get().name());
 }
 
 TEST(UniqueRef, swap) {
-    UniqueRef<Verbose<>> a{std::make_unique<Verbose<>>("one")};
-    UniqueRef<Verbose<>> b{std::make_unique<Verbose<>>("two")};
+    auto a = makeUniqueRef<Verbose<>>("one");
+    auto b = makeUniqueRef<Verbose<>>("two");
     swap(a, b);
     EXPECT_EQ("one", b.get().name());
     EXPECT_EQ("two", a.get().name());
@@ -100,8 +104,13 @@ TEST(UniqueRef, container) {
         std::cout << elem.get().name() << std::endl;
     }
 
-    // implicit conversion (cannot use auto)
+    // implicit conversion
     for (const Verbose<>& elem : container) {
         std::cout << elem.name() << std::endl;
     }
+
+    // Moving a container of unique references
+    // does not move the references objects.
+    auto container_move = std::move(container);
+    print(container_move);
 }
