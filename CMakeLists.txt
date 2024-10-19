@@ -79,11 +79,13 @@ add_executable(TestRunner
     Shape.cpp
     StretchableArray.cpp
     TestArray.cpp
+    TestConstPointer.cpp
     TestConstant.cpp
     TestCopyElision.cpp
     TestLockable.cpp
     TestPointerMap.cpp
     TestPointerVector.cpp
+    TestRawRef.cpp
     TestShape.cpp
     TestSharedCloneable.cpp
     TestSharedFromThis.cpp
