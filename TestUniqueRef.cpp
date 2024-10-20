@@ -39,6 +39,8 @@ namespace {
     }
 } // anonymous namespace
 
+// NOLINTBEGIN(*-avoid-magic-numbers)
+
 TEST(UniqueRef, constructor) {
     auto a = makeUniqueRef<Verbose<Circle>>("one", 1.0);
     auto b = makeUniqueRef<Verbose<Circle>>("two", 2.0);
@@ -117,3 +119,5 @@ TEST(UniqueRef, container) {
     auto container_move = std::move(container);
     print(container_move, "move: ");
 }
+
+// NOLINTEND(*-avoid-magic-numbers)

@@ -44,6 +44,8 @@ namespace {
     }
 } // anonymous namespace
 
+// NOLINTBEGIN(*-avoid-magic-numbers)
+
 TEST(SharedRef, constructor) {
     auto a = makeSharedRef<Verbose<Circle>>("one", 1.0);
     auto b = makeSharedRef<Verbose<Circle>>("two", 2.0);
@@ -169,3 +171,5 @@ TEST(SharedRef, container) {
     auto container_move = std::move(container);
     print(container_move, "move: ");
 }
+
+// NOLINTEND(*-avoid-magic-numbers)
