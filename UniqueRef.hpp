@@ -7,10 +7,10 @@ template <typename T>
 class UniqueRef;
 
 template <typename T>
-void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept;
+void swap(UniqueRef<T>&, UniqueRef<T>&) noexcept;
 
 template <typename T, typename... Args>
-UniqueRef<T> makeUniqueRef(Args&&... args);
+UniqueRef<T> makeUniqueRef(Args&&...);
 
 // Inspired by std::reference_wrapper, but holds a unique_ptr
 // instead of a raw pointer.
@@ -20,16 +20,16 @@ UniqueRef<T> makeUniqueRef(Args&&... args);
 template <typename T>
 class UniqueRef {
 public:
-    using Type = T;
-    virtual ~UniqueRef() noexcept = default; // destructor
-    UniqueRef(std::unique_ptr<T> p) noexcept;
-    void reset(std::unique_ptr<T> p) noexcept;
+    using type = T;
+    UniqueRef(T*) noexcept;
+    UniqueRef(std::unique_ptr<T>) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
     [[nodiscard]] const T& get() const;
     UniqueRef(UniqueRef&&) noexcept = default;            // move constructor
     UniqueRef& operator=(UniqueRef&&) noexcept = default; // move assignment
+    virtual ~UniqueRef() noexcept = default;              // destructor
     friend void swap<>(UniqueRef&, UniqueRef&) noexcept;  // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
@@ -44,14 +44,13 @@ private:
 };
 
 template <typename T>
-UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_{std::move(p)} {
-    Expects(p_ != nullptr);
+UniqueRef<T>::UniqueRef(T* p) noexcept : p_{p} {
+    Expects(p != nullptr);
 }
 
 template <typename T>
-void UniqueRef<T>::reset(std::unique_ptr<T> p) noexcept {
-    Expects(p != nullptr);
-    p_ = std::move(p);
+UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_{std::move(p)} {
+    Expects(p_ != nullptr);
 }
 
 template <typename T>

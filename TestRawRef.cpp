@@ -1,3 +1,4 @@
+#include "Shape.hpp"
 #include "Verbose.hpp"
 #include "compat/gsl14.hpp"
 #include <functional>
@@ -16,15 +17,17 @@ namespace {
         return left.name() < right.name();
     }
 
+    const std::string& name(const Verbose<>& v) { return v.name(); }
+
     // Print the elements of a container of smart references.
+    template <typename T>
     void print(
-            const RefContainer<Verbose<>>& container,
-            std::string prefix = "print: ") {
-        for (const Verbose<>& elem : container) {
-            std::cout << prefix << elem << std::endl;
-            const auto& name = elem.name();
-            EXPECT_THAT(name, Not(HasSubstr("copy")));
-            EXPECT_THAT(name, Not(HasSubstr("move")));
+            const RefContainer<Verbose<T>>& container,
+            const std::string& prefix = "print: ") {
+        for (const auto& elem : container) {
+            std::cout << prefix << name(elem) << std::endl;
+            EXPECT_THAT(name(elem), Not(HasSubstr("copy")));
+            EXPECT_THAT(name(elem), Not(HasSubstr("move")));
         }
     }
 } // anonymous namespace
@@ -40,18 +43,14 @@ TEST(RawRef, container) {
             RefContainer<Verbose<>>(container.begin(), container.end());
 
     print(refContainer, "ref: ");
-    EXPECT_EQ("two", refContainer[1].get().name()) << "get";
-    EXPECT_EQ("two", static_cast<Verbose<>&>(refContainer[1]).name())
-            << "explicit";
-    const Verbose<>& two = refContainer[1];
-    EXPECT_EQ("two", two.name()) << "implicit";
+    EXPECT_EQ("two", name(refContainer[1]));
 
-    // Copying a container of shared references
+    // Copying a container of references
     // does not copy or move the referenced objects.
     auto container_copy = refContainer;
     print(container_copy, "copy: ");
 
-    // Sorting a container of shared references
+    // Sorting a container of references
     // does not affect the original container.
 #if __cplusplus >= 202002L // since C++20
     std::ranges::sort(refContainer, less);
@@ -60,8 +59,5 @@ TEST(RawRef, container) {
 #endif // C++20
 
     print(refContainer, "sorted: ");
-    for (const auto& elem : container) {
-        std::cout << "original: " << elem << std::endl;
-    }
-    EXPECT_EQ(container[2].name(), refContainer[1].get().name());
+    EXPECT_EQ(name(container[2]), name(refContainer[1]));
 }

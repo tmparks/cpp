@@ -1,5 +1,4 @@
 #pragma once
-
 #include "compat/gsl14.hpp"
 #include <memory>
 
@@ -8,10 +7,10 @@ template <typename T>
 class SharedRef;
 
 template <typename T>
-void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept;
+void swap(SharedRef<T>&, SharedRef<T>&) noexcept;
 
 template <typename T, typename... Args>
-SharedRef<T> makeSharedRef(Args&&... args);
+SharedRef<T> makeSharedRef(Args&&...);
 
 // Inspired by std::reference_wrapper, but holds a shared_ptr
 // instead of a raw pointer.
@@ -20,10 +19,9 @@ SharedRef<T> makeSharedRef(Args&&... args);
 template <typename T>
 class SharedRef {
 public:
-    using Type = T;
-    virtual ~SharedRef() noexcept = default; // destructor
-    SharedRef(std::shared_ptr<T> p) noexcept;
-    void reset(std::shared_ptr<T> p) noexcept;
+    using type = T;
+    SharedRef(T*) noexcept;
+    SharedRef(std::shared_ptr<T>) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
@@ -36,6 +34,7 @@ public:
     SharedRef(SharedRef&&) noexcept = default;            // move constructor
     SharedRef& operator=(const SharedRef&) = default;     // copy assignment
     SharedRef& operator=(SharedRef&&) noexcept = default; // move assignment
+    virtual ~SharedRef() noexcept = default;              // destructor
     friend void swap<>(SharedRef&, SharedRef&) noexcept;  // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
@@ -48,14 +47,13 @@ private:
 };
 
 template <typename T>
-SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_{std::move(p)} {
-    Expects(p_ != nullptr);
+SharedRef<T>::SharedRef(T* p) noexcept : p_{p} {
+    Expects(p != nullptr);
 }
 
 template <typename T>
-void SharedRef<T>::reset(std::shared_ptr<T> p) noexcept {
-    Expects(p != nullptr);
-    p_ = std::move(p);
+SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_{std::move(p)} {
+    Expects(p_ != nullptr);
 }
 
 template <typename T>

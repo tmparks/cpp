@@ -1,3 +1,4 @@
+#include "Shape.hpp"
 #include "UniqueRef.hpp"
 #include "Verbose.hpp"
 #include "compat/gsl14.hpp"
@@ -13,32 +14,39 @@ namespace {
     template <typename T>
     using UniqueContainer = std::vector<UniqueRef<T>>;
 
-    // Test that two objects are distinct (different addresses)
-    bool distinct(const Verbose<>& a, const Verbose<>& b) { return &a != &b; }
-
-    // Test that two objects are equal (same name)
-    bool equal(const Verbose<>& a, const Verbose<>& b) {
-        return a.name() == b.name();
+    // Both refer to the same object (same addresses)
+    template <typename T>
+    bool same(const UniqueRef<T>& a, const UniqueRef<T>& b) {
+        return &a.get() == &b.get();
     }
 
+    const std::string& name(const Verbose<Circle>& v) { return v.name(); }
+
+    const std::string& name(const Verbose<>& v) { return v.name(); }
+
+    double area(const Shape& a) { return a.area(); }
+
     // Print the elements of a container of smart references.
-    void print(const UniqueContainer<Verbose<>>& container) {
-        for (const Verbose<>& elem : container) {
-            std::cout << gsl::czstring{__func__} << ": " << elem << std::endl;
-            const auto& name = elem.name();
-            EXPECT_THAT(name, Not(HasSubstr("copy")));
-            EXPECT_THAT(name, Not(HasSubstr("move")));
+    template <typename T>
+    void print(
+            const UniqueContainer<Verbose<T>>& container,
+            const std::string& prefix = "print: ") {
+        for (const auto& elem : container) {
+            std::cout << prefix << name(elem) << std::endl;
+            EXPECT_THAT(name(elem), Not(HasSubstr("copy")));
+            EXPECT_THAT(name(elem), Not(HasSubstr("move")));
         }
     }
 } // anonymous namespace
 
 TEST(UniqueRef, constructor) {
-    auto a = makeUniqueRef<Verbose<>>("one");
-    auto b = makeUniqueRef<Verbose<>>("two");
-    // auto c = UniqueRef<Verbose<>> { }; // no dangling references!
+    auto a = makeUniqueRef<Verbose<Circle>>("one", 1.0);
+    auto b = makeUniqueRef<Verbose<Circle>>("two", 2.0);
+    // auto c = UniqueRef<Verbose<Circle>> { }; // no dangling references!
 
-    EXPECT_FALSE(equal(a, b));
-    EXPECT_TRUE(distinct(a, b));
+    EXPECT_FALSE(same(a, b));
+    EXPECT_NE(name(a), name(b));
+    EXPECT_NE(area(a), area(b));
 }
 
 TEST(UniqueRef, copy) {
@@ -52,65 +60,60 @@ TEST(UniqueRef, move) {
     EXPECT_TRUE(std::is_move_constructible<UniqueRef<int>>::value);
     EXPECT_TRUE(std::is_move_assignable<UniqueRef<int>>::value);
 
-    auto a = makeUniqueRef<Verbose<>>("one");
-    auto b = makeUniqueRef<Verbose<>>("two");
-    auto c = makeUniqueRef<Verbose<>>("three");
-    auto d = UniqueRef<Verbose<>>{std::move(a)}; // move constructor
+    auto a = makeUniqueRef<Verbose<Circle>>("one", 1.0);
+    auto b = makeUniqueRef<Verbose<Circle>>("two", 2.0);
+    auto c = makeUniqueRef<Verbose<Circle>>("three", 3.0);
+    auto d = UniqueRef<Verbose<Circle>>{std::move(a)}; // move constructor
 
     c = std::move(b); // move assignment
 
-    // Moving modifies the reference, not the referenced object.
+    // Moving modifies the reference, not the object.
 
-    const auto& cName = c.get().name();
-    EXPECT_THAT(cName, EndsWith("two"));
-    EXPECT_THAT(cName, Not(HasSubstr("three")));
-    EXPECT_THAT(cName, Not(HasSubstr("copy")));
-    EXPECT_THAT(cName, Not(HasSubstr("move")));
-    EXPECT_THAT(cName, Not(HasSubstr("construct")));
-    EXPECT_THAT(cName, Not(HasSubstr("assign")));
+    EXPECT_THAT(name(c), EndsWith("two"));
+    EXPECT_THAT(name(c), Not(HasSubstr("three")));
+    EXPECT_THAT(name(c), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(c), Not(HasSubstr("move")));
+    EXPECT_THAT(name(c), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(c), Not(HasSubstr("assign")));
 
-    const auto& dName = d.get().name();
-    EXPECT_THAT(dName, EndsWith("one"));
-    EXPECT_THAT(dName, Not(HasSubstr("copy")));
-    EXPECT_THAT(dName, Not(HasSubstr("move")));
-    EXPECT_THAT(dName, Not(HasSubstr("construct")));
-    EXPECT_THAT(dName, Not(HasSubstr("assign")));
+    EXPECT_THAT(name(d), EndsWith("one"));
+    EXPECT_THAT(name(d), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(d), Not(HasSubstr("move")));
+    EXPECT_THAT(name(d), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(d), Not(HasSubstr("assign")));
 }
 
-TEST(UniqueRef, reset) {
-    auto a = makeUniqueRef<Verbose<>>("one");
-    a.reset(std::make_unique<Verbose<>>("two"));
-    EXPECT_EQ("two", a.get().name());
+TEST(UniqueRef, rebind) {
+    CaptureStdout();
+    auto a = UniqueRef<Shape>(new Verbose<Square>{"square", 3.0});
+    auto b = std::move(a); // move reference, not object
+    b = UniqueRef<Shape>{new Verbose<Circle>{"circle", 3.0}};
+    auto actual = GetCapturedStdout();
+    EXPECT_NE(9.0, area(b));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(UniqueRef, swap) {
     auto a = makeUniqueRef<Verbose<>>("one");
     auto b = makeUniqueRef<Verbose<>>("two");
     swap(a, b);
-    EXPECT_EQ("one", b.get().name());
-    EXPECT_EQ("two", a.get().name());
+    EXPECT_EQ("one", name(b));
+    EXPECT_EQ("two", name(a));
 }
 
 TEST(UniqueRef, container) {
-    UniqueContainer<Verbose<>> container;
+    auto container = UniqueContainer<Verbose<>>{};
     container.emplace_back(std::make_unique<Verbose<>>("one"));
     container.emplace_back(std::make_unique<Verbose<>>("two"));
     container.emplace_back(std::make_unique<Verbose<>>("three"));
 
-    print(container);
+    print(container, "original: ");
+    EXPECT_EQ("two", name(container[1]));
 
-    for (const auto& elem : container) {
-        // explicitly get reference
-        std::cout << elem.get().name() << std::endl;
-    }
-
-    // implicit conversion
-    for (const Verbose<>& elem : container) {
-        std::cout << elem.name() << std::endl;
-    }
-
-    // Moving a container of unique references
-    // does not move the references objects.
+    // Moving a container of references
+    // does not move the objects.
     auto container_move = std::move(container);
-    print(container_move);
+    print(container_move, "move: ");
 }
