@@ -12,52 +12,70 @@ template <typename T>
 using SharedPtr = CoQual<std::shared_ptr<T>>;
 
 template <typename T>
+using SharedVector = std::vector<SharedPtr<T>>;
+
+template <typename T>
 using UniquePtr = CoQual<std::unique_ptr<T>>;
 
-void check(Verbose<>& v) {
-    std::cout << __func__ << ": " << v.name() << " is mutable" << std::endl;
-}
+template <typename T>
+using UniqueVector = std::vector<UniquePtr<T>>;
 
-void check(const Verbose<>& v) {
-    std::cout << __func__ << ": " << v.name() << " is const" << std::endl;
-}
+bool isConst(Verbose<>&) { return false; }
+
+bool isConst(const Verbose<>&) { return true; }
 
 TEST(Qual, unqual_shared_ptr) {
+    // const pointer to mutable object
     const auto p = std::make_shared<Verbose<>>("unqual");
-    CaptureStdout();
-    check(*p);
-    auto actual = GetCapturedStdout();
-    EXPECT_THAT(actual, HasSubstr("mutable"));
-    EXPECT_THAT(actual, Not(HasSubstr("const")));
-    std::cout << std::endl << actual << std::endl;
+    EXPECT_FALSE(isConst(*p));
 }
 
 TEST(Qual, qual_shared_ptr) {
-    const auto p = SharedPtr<Verbose<>>{std::make_shared<Verbose<>>("unqual")};
-    CaptureStdout();
-    check(*p);
-    auto actual = GetCapturedStdout();
-    EXPECT_THAT(actual, HasSubstr("const"));
-    EXPECT_THAT(actual, Not(HasSubstr("mutable")));
-    std::cout << std::endl << actual << std::endl;
+    // const pointer to const object
+    const auto p = SharedPtr<Verbose<>>{std::make_shared<Verbose<>>("qual")};
+    EXPECT_TRUE(isConst(*p));
+}
+
+TEST(Qual, qual_shared_vector) {
+    // const pointers to const objects
+    auto v = SharedVector<Verbose<>>{};
+    v.emplace_back(std::make_shared<Verbose<>>("one"));
+    v.emplace_back(std::make_shared<Verbose<>>("two"));
+    v.emplace_back(std::make_shared<Verbose<>>("three"));
+
+    for (auto& p : v) {
+        EXPECT_FALSE(isConst(*p));
+    }
+
+    for (const auto& p : v) {
+        EXPECT_TRUE(isConst(*p));
+    }
 }
 
 TEST(Qual, unqual_unique_ptr) {
+    // const pointer to mutable object
     const auto p = std::make_unique<Verbose<>>("unqual");
-    CaptureStdout();
-    check(*p);
-    auto actual = GetCapturedStdout();
-    EXPECT_THAT(actual, HasSubstr("mutable"));
-    EXPECT_THAT(actual, Not(HasSubstr("const")));
-    std::cout << std::endl << actual << std::endl;
+    EXPECT_FALSE(isConst(*p));
 }
 
 TEST(Qual, qual_unique_ptr) {
-    const auto p = UniquePtr<Verbose<>>(std::make_unique<Verbose<>>("unqual"));
-    CaptureStdout();
-    check(*p);
-    auto actual = GetCapturedStdout();
-    EXPECT_THAT(actual, HasSubstr("const"));
-    EXPECT_THAT(actual, Not(HasSubstr("mutable")));
-    std::cout << std::endl << actual << std::endl;
+    // const pointer to const object
+    const auto p = UniquePtr<Verbose<>>(std::make_unique<Verbose<>>("qual"));
+    EXPECT_TRUE(isConst(*p));
+}
+
+TEST(Qual, qual_unique_vector) {
+    // const pointers to const objects
+    auto v = UniqueVector<Verbose<>>{};
+    v.emplace_back(std::make_unique<Verbose<>>("one"));
+    v.emplace_back(std::make_unique<Verbose<>>("two"));
+    v.emplace_back(std::make_unique<Verbose<>>("three"));
+
+    for (auto& p : v) {
+        EXPECT_FALSE(isConst(*p));
+    }
+
+    for (const auto& p : v) {
+        EXPECT_TRUE(isConst(*p));
+    }
 }
