@@ -7,23 +7,30 @@ template <typename T>
 class UniqueRef;
 
 template <typename T>
-void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept;
+void swap(UniqueRef<T>&, UniqueRef<T>&) noexcept;
 
-// Inspired by std::reference_wrapper, but holds a unique_ptr instead of a raw pointer.
+template <typename T, typename... Args>
+UniqueRef<T> makeUniqueRef(Args&&...);
+
+// Inspired by std::reference_wrapper, but holds a unique_ptr
+// instead of a raw pointer.
 // Cannot be copied because unique_ptr cannot be copied.
-// Cannot be moved because the held unique_ptr must never be null.
+// A moved-from object is empty, but can be deleted or assigned to.
+// See: [A move operation should move and leave its source in a valid state](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-move-semantic)
 template <typename T>
 class UniqueRef {
 public:
-    using Type = T;
-    virtual ~UniqueRef() noexcept = default; // destructor
-    UniqueRef(std::unique_ptr<T> p) noexcept;
-    void reset(std::unique_ptr<T> p) noexcept;
+    using type = T;
+    UniqueRef(T*) noexcept;
+    UniqueRef(std::unique_ptr<T>) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
     [[nodiscard]] const T& get() const;
-    friend void swap<>(UniqueRef&, UniqueRef&) noexcept; // non-member swap
+    UniqueRef(UniqueRef&&) noexcept = default;            // move constructor
+    UniqueRef& operator=(UniqueRef&&) noexcept = default; // move assignment
+    virtual ~UniqueRef() noexcept = default;              // destructor
+    friend void swap<>(UniqueRef&, UniqueRef&) noexcept;  // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
@@ -31,22 +38,19 @@ public:
 private:
     UniqueRef() noexcept = delete;                   // no default constructor
     UniqueRef(const UniqueRef&) = delete;            // no copy constructor
-    UniqueRef(UniqueRef&&) noexcept = delete;        // no move constructor
     UniqueRef& operator=(const UniqueRef&) = delete; // no copy assignment
-    UniqueRef& operator=(UniqueRef&&) noexcept = delete; // no move assignment
 
-    std::unique_ptr<T> p_; // never null
+    std::unique_ptr<T> p_; // never null (unless moved from)
 };
+
+template <typename T>
+UniqueRef<T>::UniqueRef(T* p) noexcept : p_{p} {
+    Expects(p != nullptr);
+}
 
 template <typename T>
 UniqueRef<T>::UniqueRef(std::unique_ptr<T> p) noexcept : p_{std::move(p)} {
     Expects(p_ != nullptr);
-}
-
-template <typename T>
-void UniqueRef<T>::reset(std::unique_ptr<T> p) noexcept {
-    Expects(p != nullptr);
-    p_ = std::move(p);
 }
 
 template <typename T>
@@ -74,4 +78,9 @@ template <typename T>
 void swap(UniqueRef<T>& left, UniqueRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
+}
+
+template <typename T, typename... Args>
+UniqueRef<T> makeUniqueRef(Args&&... args) {
+    return std::make_unique<T>(std::forward<Args>(args)...);
 }

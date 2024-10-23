@@ -14,7 +14,7 @@ template <typename T>
 void swap(Verbose<T>&, Verbose<T>&) noexcept;
 
 template <typename T>
-std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object);
+std::ostream& operator<<(std::ostream&, const Verbose<T>&);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,8 +55,8 @@ void swap(Verbose<T>& left, Verbose<T>& right) noexcept {
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& stream, const Verbose<T>& object) {
-    return operator<<(stream, object.name());
+std::ostream& operator<<(std::ostream& s, const Verbose<T>& v) {
+    return operator<<(s, v.name());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

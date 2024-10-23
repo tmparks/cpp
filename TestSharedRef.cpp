@@ -1,4 +1,6 @@
 #include "SharedRef.hpp"
+
+#include "Shape.hpp"
 #include "Verbose.hpp"
 #include "compat/gsl14.hpp"
 
@@ -13,113 +15,131 @@ namespace {
     template <typename T>
     using SharedContainer = std::vector<SharedRef<T>>;
 
-#if __cplusplus >= 201703L // since C++17
-
-    // Create a smart reference to a newly constructed object of type T.
-    // Note: copy elision is guaranteed since C++17
-    template <typename T, typename... Args>
-    SharedRef<T> create(Args&&... args) {
-        return std::make_shared<T>(std::forward<Args>(args)...);
+    // Both refer to the same object (same address)
+    template <typename T>
+    bool same(const SharedRef<T>& a, const SharedRef<T>& b) {
+        return &a.get() == &b.get();
     }
 
-#endif // C++17
-
-    // Test that two objects are distinct (different addresses)
-    bool distinct(const Verbose<>& a, const Verbose<>& b) { return &a != &b; }
-
-    // Test that two objects are equal (same name)
-    bool equal(const Verbose<>& a, const Verbose<>& b) {
-        return a.name() == b.name();
+    bool less(const Verbose<>& left, const Verbose<>& right) {
+        return left.name() < right.name();
     }
+
+    const std::string& name(const Verbose<Circle>& v) { return v.name(); }
+
+    const std::string& name(const Verbose<>& v) { return v.name(); }
+
+    double area(const Shape& a) { return a.area(); }
 
     // Print the elements of a container of smart references.
-    void print(const SharedContainer<Verbose<>>& container) {
+    template <typename T>
+    void print(
+            const SharedContainer<Verbose<T>>& container,
+            const std::string& prefix = "print: ") {
         for (const auto& elem : container) {
-            std::cout << gsl::czstring{__func__} << ": " << elem.get()
-                      << std::endl;
-            const auto& name = elem.get().name();
-            EXPECT_THAT(name, Not(HasSubstr("copy")));
-            EXPECT_THAT(name, Not(HasSubstr("move")));
+            std::cout << prefix << name(elem) << std::endl;
+            EXPECT_THAT(name(elem), Not(HasSubstr("copy")));
+            EXPECT_THAT(name(elem), Not(HasSubstr("move")));
         }
     }
 } // anonymous namespace
 
-TEST(SharedRef, constructor) {
-#if __cplusplus >= 201703L // since C++17
-    auto a = create<Verbose<>>("one");
-    auto b = create<Verbose<>>("two");
-    // auto c = SharedRef<Verbose<>> { }; // no dangling references!
-#else
-    SharedRef<Verbose<>> a{std::make_shared<Verbose<>>("one")};
-    SharedRef<Verbose<>> b{std::make_shared<Verbose<>>("two")};
-    // SharedRef<Verbose<>> c { }; // no dangling references!
-#endif // C++17
+// NOLINTBEGIN(*-avoid-magic-numbers)
 
-    EXPECT_FALSE(equal(a, b));
-    EXPECT_TRUE(distinct(a, b));
+TEST(SharedRef, constructor) {
+    auto a = makeSharedRef<Verbose<Circle>>("one", 1.0);
+    auto b = makeSharedRef<Verbose<Circle>>("two", 2.0);
+    // auto c = SharedRef<Verbose<Circle>> { }; // no dangling references!
+
+    EXPECT_FALSE(same(a, b));
+    EXPECT_NE(name(a), name(b));
+    EXPECT_NE(area(a), area(b));
 }
 
 TEST(SharedRef, copy) {
     // SharedRef is copyable because shared_ptr is copyable.
-    EXPECT_TRUE(std::is_copy_constructible<SharedRef<int>>::value);
-    EXPECT_TRUE(std::is_copy_assignable<SharedRef<int>>::value);
+    EXPECT_TRUE(std::is_copy_constructible<SharedRef<Shape>>::value);
+    EXPECT_TRUE(std::is_copy_assignable<SharedRef<Shape>>::value);
 
-#if __cplusplus >= 201703L // since C++17
-    auto a = create<Verbose<>>("one");
-    auto b = create<Verbose<>>("two");
-    auto c = create<Verbose<>>("three");
-    auto d = SharedRef<Verbose<>>{a}; // copy constructor
-#else
-    SharedRef<Verbose<>> a{std::make_shared<Verbose<>>("one")};
-    SharedRef<Verbose<>> b{std::make_shared<Verbose<>>("two")};
-    SharedRef<Verbose<>> c{std::make_shared<Verbose<>>("three")};
-    SharedRef<Verbose<>> d{a}; // copy constructor
-#endif // C++17
+    auto a = makeSharedRef<Verbose<Circle>>("one", 1.0);
+    auto b = makeSharedRef<Verbose<Circle>>("two", 2.0);
+    auto c = makeSharedRef<Verbose<Circle>>("three", 3.0);
+    auto d = SharedRef<Verbose<Circle>>{a}; // copy constructor
 
     c = b; // copy assignment
 
-    // Copying modifies the reference, not the referenced object.
+    // Copying modifies the reference, not the object.
 
-    EXPECT_TRUE(equal(a, d));
-    EXPECT_FALSE(distinct(a, d)); // both refer to same object
+    EXPECT_TRUE(same(a, d)); // both refer to same object
+    EXPECT_EQ(name(a), name(d));
+    EXPECT_EQ(area(a), area(d));
 
-    EXPECT_TRUE(equal(b, c));
-    EXPECT_FALSE(distinct(b, c)); // both refer to same object
+    EXPECT_TRUE(same(b, c)); // both refer to same object
+    EXPECT_EQ(name(b), name(c));
+    EXPECT_EQ(area(b), area(c));
 
-    const auto& cName = c.get().name();
-    EXPECT_THAT(cName, EndsWith("two"));
-    EXPECT_THAT(cName, Not(HasSubstr("three")));
-    EXPECT_THAT(cName, Not(HasSubstr("copy")));
-    EXPECT_THAT(cName, Not(HasSubstr("move")));
-    EXPECT_THAT(cName, Not(HasSubstr("construct")));
-    EXPECT_THAT(cName, Not(HasSubstr("assign")));
+    EXPECT_THAT(name(c), EndsWith("two"));
+    EXPECT_THAT(name(c), Not(HasSubstr("three")));
+    EXPECT_THAT(name(c), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(c), Not(HasSubstr("move")));
+    EXPECT_THAT(name(c), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(c), Not(HasSubstr("assign")));
 
-    const auto& dName = d.get().name();
-    EXPECT_THAT(dName, EndsWith("one"));
-    EXPECT_THAT(dName, Not(HasSubstr("copy")));
-    EXPECT_THAT(dName, Not(HasSubstr("move")));
-    EXPECT_THAT(dName, Not(HasSubstr("construct")));
-    EXPECT_THAT(dName, Not(HasSubstr("assign")));
+    EXPECT_THAT(name(d), EndsWith("one"));
+    EXPECT_THAT(name(d), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(d), Not(HasSubstr("move")));
+    EXPECT_THAT(name(d), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(d), Not(HasSubstr("assign")));
 }
 
 TEST(SharedRef, move) {
-    // SharedRef is not moveable because the moved-from shared_ptr would be null.
-    EXPECT_FALSE(std::is_move_constructible<SharedRef<int>>::value);
-    EXPECT_FALSE(std::is_move_assignable<SharedRef<int>>::value);
+    // SharedRef is moveable because shared_ptr is moveable.
+    EXPECT_TRUE(std::is_move_constructible<SharedRef<Shape>>::value);
+    EXPECT_TRUE(std::is_move_assignable<SharedRef<Shape>>::value);
+
+    auto a = makeSharedRef<Verbose<Circle>>("one", 1.0);
+    auto b = makeSharedRef<Verbose<Circle>>("two", 2.0);
+    auto c = makeSharedRef<Verbose<Circle>>("three", 3.0);
+    auto d = SharedRef<Verbose<Circle>>{std::move(a)}; // move constructor
+
+    c = std::move(b); // move assignment
+
+    // Moving modifies the reference, not the object.
+
+    EXPECT_THAT(name(c), EndsWith("two"));
+    EXPECT_THAT(name(c), Not(HasSubstr("three")));
+    EXPECT_THAT(name(c), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(c), Not(HasSubstr("move")));
+    EXPECT_THAT(name(c), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(c), Not(HasSubstr("assign")));
+
+    EXPECT_THAT(name(d), EndsWith("one"));
+    EXPECT_THAT(name(d), Not(HasSubstr("copy")));
+    EXPECT_THAT(name(d), Not(HasSubstr("move")));
+    EXPECT_THAT(name(d), Not(HasSubstr("construct")));
+    EXPECT_THAT(name(d), Not(HasSubstr("assign")));
 }
 
-TEST(SharedRef, reset) {
-    auto&& a = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("one")}; // C++17
-    a.reset(std::make_shared<Verbose<>>("two"));
-    EXPECT_EQ("two", a.get().name());
+TEST(SharedRef, rebind) {
+    CaptureStdout();
+    auto a = SharedRef<Shape>{new Verbose<Square>{"square", 3.0}};
+    auto b = a; // copy reference, not object
+    b = SharedRef<Shape>{new Verbose<Circle>{"circle", 3.0}};
+    auto actual = GetCapturedStdout();
+    EXPECT_NE(area(a), area(b));
+    EXPECT_THAT(actual, Not(HasSubstr("copy")));
+    EXPECT_THAT(actual, Not(HasSubstr("move")));
+    std::cout << std::endl << actual << std::endl;
 }
 
 TEST(SharedRef, swap) {
-    auto&& a = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("one")}; // C++17
-    auto&& b = SharedRef<Verbose<>>{std::make_shared<Verbose<>>("two")}; // C++17
-    swap(a, b);
-    EXPECT_EQ("one", b.get().name());
-    EXPECT_EQ("two", a.get().name());
+    auto a = SharedRef<Shape>{new Verbose<Square>{"square", 1.0}};
+    auto b = SharedRef<Shape>{new Verbose<Circle>{"circle", 2.0}};
+    CaptureStdout();
+    swap(a, b); // swap references, not objects
+    auto actual = GetCapturedStdout();
+    EXPECT_EQ(1.0, area(b));
+    EXPECT_TRUE(actual.empty()) << actual;
 }
 
 TEST(SharedRef, container) {
@@ -128,19 +148,28 @@ TEST(SharedRef, container) {
     container.emplace_back(std::make_shared<Verbose<>>("two"));
     container.emplace_back(std::make_shared<Verbose<>>("three"));
 
-    print(container);
+    print(container, "original :");
+    EXPECT_EQ("two", name(container[1]));
 
-    for (const auto& elem : container) {
-        // explicitly get reference
-        std::cout << elem.get().name() << std::endl;
-    }
-
-    // implicit conversion (cannot use auto)
-    for (const Verbose<>& elem : container) {
-        std::cout << elem.name() << std::endl;
-    }
-
-    // Copying a container of shared references does not copy the referenced objects.
+    // Copying a container of references
+    // does not copy the referenced objects.
     auto container_copy = container;
-    print(container_copy);
+    print(container_copy, "copy: ");
+
+    // Sorting a container of references
+    // does not affect the original container.
+#if __cplusplus >= 202002L // since C++20
+    std::ranges::sort(container_copy, less);
+#else  // until C++20
+    std::sort(container_copy.begin(), container_copy.end(), less);
+#endif // C++20
+    print(container_copy, "sorted: ");
+    EXPECT_EQ(name(container[2]), name(container_copy[1]));
+
+    // Moving a container of references
+    // does not move the objects.
+    auto container_move = std::move(container);
+    print(container_move, "move: ");
 }
+
+// NOLINTEND(*-avoid-magic-numbers)

@@ -18,7 +18,6 @@ Checks:
   - -modernize-use-constraints # since C++20
 
 CheckOptions:
-  cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true
   modernize-use-auto.MinTypeNameLength: 0
 
 ...

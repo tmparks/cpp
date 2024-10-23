@@ -1,5 +1,4 @@
 #pragma once
-
 #include "compat/gsl14.hpp"
 #include <memory>
 
@@ -8,17 +7,21 @@ template <typename T>
 class SharedRef;
 
 template <typename T>
-void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept;
+void swap(SharedRef<T>&, SharedRef<T>&) noexcept;
 
-// Inspired by std::reference_wrapper, but holds a shared_ptr instead of a raw pointer.
-// Cannot be moved because the held shared_ptr must never be null.
+template <typename T, typename... Args>
+SharedRef<T> makeSharedRef(Args&&...);
+
+// Inspired by std::reference_wrapper, but holds a shared_ptr
+// instead of a raw pointer.
+// A moved-from object is empty, but can be deleted or assigned to.
+// See: [A move operation should move and leave its source in a valid state](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-move-semantic)
 template <typename T>
 class SharedRef {
 public:
-    using Type = T;
-    virtual ~SharedRef() noexcept = default; // destructor
-    SharedRef(std::shared_ptr<T> p) noexcept;
-    void reset(std::shared_ptr<T> p) noexcept;
+    using type = T;
+    SharedRef(T*) noexcept;
+    SharedRef(std::shared_ptr<T>) noexcept;
     operator T&();
     operator const T&() const;
     T& get();
@@ -27,30 +30,30 @@ public:
     operator std::shared_ptr<const T>() const;
     std::shared_ptr<T> share();
     [[nodiscard]] std::shared_ptr<const T> share() const;
-    SharedRef(const SharedRef&) = default;               // copy constructor
-    SharedRef& operator=(const SharedRef&) = default;    // copy assignment
-    friend void swap<>(SharedRef&, SharedRef&) noexcept; // non-member swap
+    SharedRef(const SharedRef&) = default;                // copy constructor
+    SharedRef(SharedRef&&) noexcept = default;            // move constructor
+    SharedRef& operator=(const SharedRef&) = default;     // copy assignment
+    SharedRef& operator=(SharedRef&&) noexcept = default; // move assignment
+    virtual ~SharedRef() noexcept = default;              // destructor
+    friend void swap<>(SharedRef&, SharedRef&) noexcept;  // non-member swap
 
     // Unfortunately, we cannot overload operator . (dot)
     // See [Operator Dot](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4477.pdf)
     // T& operator.();
 private:
-    SharedRef() noexcept = delete;            // no default constructor
-    SharedRef(SharedRef&&) noexcept = delete; // no move constructor
-    SharedRef& operator=(SharedRef&&) noexcept = delete; // no move assignment
+    SharedRef() noexcept = delete; // no default constructor
 
-    std::shared_ptr<T> p_; // never null
+    std::shared_ptr<T> p_; // never null (unless moved from)
 };
+
+template <typename T>
+SharedRef<T>::SharedRef(T* p) noexcept : p_{p} {
+    Expects(p != nullptr);
+}
 
 template <typename T>
 SharedRef<T>::SharedRef(std::shared_ptr<T> p) noexcept : p_{std::move(p)} {
     Expects(p_ != nullptr);
-}
-
-template <typename T>
-void SharedRef<T>::reset(std::shared_ptr<T> p) noexcept {
-    Expects(p != nullptr);
-    p_ = std::move(p);
 }
 
 template <typename T>
@@ -98,4 +101,9 @@ template <typename T>
 void swap(SharedRef<T>& left, SharedRef<T>& right) noexcept {
     using std::swap; // enable Argument Dependent Lookup
     swap(left.p_, right.p_);
+}
+
+template <typename T, typename... Args>
+SharedRef<T> makeSharedRef(Args&&... args) {
+    return std::make_shared<T>(std::forward<Args>(args)...);
 }
