@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.28) # Ubuntu 24.04
-project(cpp VERSION 2024.10)
+project(cpp VERSION 2024.11)
 
 find_package(Boost REQUIRED CONFIG)
+find_package(Eigen3 REQUIRED CONFIG)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -82,6 +83,7 @@ add_executable(TestRunner
     TestConstPointer.cpp
     TestConstant.cpp
     TestCopyElision.cpp
+    TestEigen.cpp
     TestLockable.cpp
     TestPointerMap.cpp
     TestPointerVector.cpp
@@ -99,7 +101,7 @@ add_executable(TestRunner
     TestZip.cpp
 )
 
-target_link_libraries(TestRunner GTest::gtest GTest::gtest_main)
+target_link_libraries(TestRunner Eigen3::Eigen GTest::gtest GTest::gtest_main)
 gtest_discover_tests(TestRunner
     PROPERTIES ENVIRONMENT LLVM_PROFILE_FILE=llvm-%p.profraw
 )

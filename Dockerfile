@@ -14,6 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         git  \
         googletest \
         libboost-dev \
+        libeigen3-dev \
         llvm \
         nano \
     && rm --recursive --force /var/lib/apt/lists/*
