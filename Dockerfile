@@ -14,6 +14,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         git  \
         googletest \
         libboost-dev \
+        libboost-timer-dev \
         libeigen3-dev \
         llvm \
         nano \

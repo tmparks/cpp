@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.28) # Ubuntu 24.04
+cmake_minimum_required(VERSION 3.30) # Ubuntu 24.10
 project(cpp VERSION 2024.11)
 
-find_package(Boost REQUIRED CONFIG)
-find_package(Eigen3 REQUIRED CONFIG)
+find_package(Boost CONFIG REQUIRED COMPONENTS timer)
+find_package(Eigen3 CONFIG REQUIRED)
 
 # Default test options
 list(APPEND CMAKE_CTEST_ARGUMENTS
@@ -71,7 +71,15 @@ if(NOT DEFINED CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-add_compile_options(-Wall -Wextra -Wpedantic)
+add_compile_options(
+    -Wall
+    -Wextra
+    -Wpedantic
+    -fopenmp
+    -march=native
+    -mcpu=native
+    -mtune=native
+)
 
 ################################################################################
 
@@ -101,7 +109,11 @@ add_executable(TestRunner
     TestZip.cpp
 )
 
-target_link_libraries(TestRunner Eigen3::Eigen GTest::gtest GTest::gtest_main)
+target_link_libraries(TestRunner PRIVATE
+    Boost::timer
+    Eigen3::Eigen
+    GTest::gtest
+    GTest::gtest_main)
 gtest_discover_tests(TestRunner
     PROPERTIES ENVIRONMENT LLVM_PROFILE_FILE=llvm-%p.profraw
 )

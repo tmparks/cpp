@@ -1,4 +1,5 @@
 #include <Eigen/Eigen>
+#include <boost/timer/timer.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -106,12 +107,13 @@ public:
                         (aDynamic.col(row) - bDynamic.col(col)).squaredNorm();
             }
         }
-        // start timer
+        timer.start();
     }
 
     void TearDown() override {
-        // stop timer
+        timer.stop();
         expectEq(actual, expected);
+        std::cout << timer.format(3) << std::endl;
     }
 
     // Accept arguments by non-const lvalue reference
@@ -158,7 +160,7 @@ public:
             }
         }
     }
-    
+
     double squaredNormRef(VectorConstRef a, VectorConstRef b) {
         return (a - b).squaredNorm();
     }
@@ -207,6 +209,8 @@ public:
 
     Matrix actual;
     Matrix expected;
+
+    boost::timer::cpu_timer timer;
 };
 
 TEST_F(TestEigen, sizeof) {
