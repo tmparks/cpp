@@ -1,3 +1,5 @@
+#define EIGEN_RUNTIME_NO_MALLOC 1
+
 #include <Eigen/Eigen>
 #include <boost/timer/timer.hpp>
 #include <gtest/gtest.h>
@@ -32,7 +34,6 @@ public:
     using FixedVector = Eigen::Vector3d;
 
     // Fixed-capacity, dynamically sized column vector.
-    // Capacity is 4 to achieve 16-byte alignment.
     using CappedVector = Eigen::Matrix<double, Eigen::Dynamic, 1, Default, 4, 1>;
 
     // Dynamically sized column vector.
@@ -46,7 +47,6 @@ public:
     using MultiFixedVector = Eigen::Matrix<double, 3, Eigen::Dynamic>;
 
     // Fixed-capacity column vectors packed into a dynamically-sized matrix.
-    // Capacity is 4 to achieve 16-byte alignment.
     using MultiCappedVector =
             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Default, 4, Eigen::Dynamic>;
 
@@ -107,11 +107,13 @@ public:
                         (aDynamic.col(row) - bDynamic.col(col)).squaredNorm();
             }
         }
+        Eigen::internal::set_is_malloc_allowed(false);
         timer.start();
     }
 
     void TearDown() override {
         timer.stop();
+        Eigen::internal::set_is_malloc_allowed(true);
         expectEq(actual, expected);
         std::cout << timer.format(3);
     }
@@ -127,7 +129,7 @@ public:
 
     // Benchmark for collection of vectors.
     template <typename T>
-    void squaredNorm(const std::vector<T>& a, const std::vector<T>& b) {
+    void squaredDistance(const std::vector<T>& a, const std::vector<T>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -139,7 +141,8 @@ public:
 
     // Benchmark for matrix types.
     template <typename T>
-    void squaredNorm(const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+    void squaredDistance(
+            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -151,7 +154,7 @@ public:
 
     // Column-wise benchmark.
     template <typename T>
-    void squaredNormColwise(
+    void squaredDistanceColwise(
             const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
@@ -163,7 +166,7 @@ public:
 
     // Replicate benchmark.
     template <typename T>
-    void squaredNormReplicate(
+    void squaredDistanceReplicate(
             const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
@@ -176,7 +179,7 @@ public:
 
     // Parallel benchmark.
     template <typename T>
-    void squaredNormParallel(
+    void squaredDistanceParallel(
             const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
         for (auto i = 0; i < repeat; i++) {
 #pragma omp parallel for num_threads(2)
@@ -187,11 +190,16 @@ public:
         }
     }
 
-    double squaredNormRef(VectorConstRef a, VectorConstRef b) {
+    template <typename A, typename B, typename C>
+    C squaredDistanceTemplate(const A& a, const B& b) {
+        reuturn(a - b).squaredNorm();
+    }
+
+    auto squaredDistanceAuto(const auto& a, const auto& b) {
         return (a - b).squaredNorm();
     }
 
-    auto squaredNormAuto(const auto& a, const auto& b) {
+    double squaredDistanceRef(VectorConstRef a, VectorConstRef b) {
         return (a - b).squaredNorm();
     }
 
@@ -268,19 +276,19 @@ TEST_F(TestEigen, sizeof) {
     EXPECT_LT(sizeof(aDynamic), matrixDataSize);
 }
 
-TEST_F(TestEigen, collection_fixed) {
-    squaredNorm(aFixedCollection, bFixedCollection);
+TEST_F(TestEigen, collectionFixed) {
+    squaredDistance(aFixedCollection, bFixedCollection);
 }
 
-TEST_F(TestEigen, collection_capped) {
-    squaredNorm(aCappedCollection, bCappedCollection);
+TEST_F(TestEigen, collectionCapped) {
+    squaredDistance(aCappedCollection, bCappedCollection);
 }
 
-TEST_F(TestEigen, collection_dynamic) {
-    squaredNorm(aDynamicCollection, bDynamicCollection);
+TEST_F(TestEigen, collectionDynamic) {
+    squaredDistance(aDynamicCollection, bDynamicCollection);
 }
 
-TEST_F(TestEigen, collection_pointer) {
+TEST_F(TestEigen, collectionPointer) {
     auto& a = aPointerCollection;
     auto& b = bPointerCollection;
     for (int i = 0; i < repeat; i++) {
@@ -292,33 +300,39 @@ TEST_F(TestEigen, collection_pointer) {
     }
 }
 
-TEST_F(TestEigen, packed_fixed) { squaredNorm(aFixed, bFixed); }
+TEST_F(TestEigen, packedFixed) { squaredDistance(aFixed, bFixed); }
 
-TEST_F(TestEigen, packed_capped) { squaredNorm(aCapped, bCapped); }
+TEST_F(TestEigen, packedCapped) { squaredDistance(aCapped, bCapped); }
 
-TEST_F(TestEigen, packed_dynamic) { squaredNorm(aDynamic, bDynamic); }
+TEST_F(TestEigen, packedDynamic) { squaredDistance(aDynamic, bDynamic); }
 
-TEST_F(TestEigen, colwise_fixed) { squaredNormColwise(aFixed, bFixed); }
+TEST_F(TestEigen, colwiseFixed) { squaredDistanceColwise(aFixed, bFixed); }
 
-TEST_F(TestEigen, colwise_capped) { squaredNormColwise(aCapped, bCapped); }
+TEST_F(TestEigen, colwiseCapped) { squaredDistanceColwise(aCapped, bCapped); }
 
-TEST_F(TestEigen, colwise_dynamic) { squaredNormColwise(aDynamic, bDynamic); }
-
-TEST_F(TestEigen, replicate_fixed) { squaredNormReplicate(aFixed, bFixed); }
-
-TEST_F(TestEigen, replicate_capped) { squaredNormReplicate(aCapped, bCapped); }
-
-TEST_F(TestEigen, replicate_dynamic) {
-    squaredNormReplicate(aDynamic, bDynamic);
+TEST_F(TestEigen, colwiseDynamic) {
+    squaredDistanceColwise(aDynamic, bDynamic);
 }
 
-TEST_F(TestEigen, parallel_fixed) { squaredNormParallel(aFixed, bFixed); }
+TEST_F(TestEigen, replicateFixed) { squaredDistanceReplicate(aFixed, bFixed); }
 
-TEST_F(TestEigen, parallel_capped) { squaredNormParallel(aCapped, bCapped); }
+TEST_F(TestEigen, replicateCapped) {
+    squaredDistanceReplicate(aCapped, bCapped);
+}
 
-TEST_F(TestEigen, parallel_dynamic) { squaredNormParallel(aDynamic, bDynamic); }
+TEST_F(TestEigen, replicateDynamic) {
+    squaredDistanceReplicate(aDynamic, bDynamic);
+}
 
-TEST_F(TestEigen, abs_norm_packed_dynamic) {
+TEST_F(TestEigen, parallelFixed) { squaredDistanceParallel(aFixed, bFixed); }
+
+TEST_F(TestEigen, parallelCapped) { squaredDistanceParallel(aCapped, bCapped); }
+
+TEST_F(TestEigen, parallelDynamic) {
+    squaredDistanceParallel(aDynamic, bDynamic);
+}
+
+TEST_F(TestEigen, absDynamic) {
     auto& a = aDynamic;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
@@ -328,10 +342,11 @@ TEST_F(TestEigen, abs_norm_packed_dynamic) {
             }
         }
     }
+    timer.stop();
     actual.setZero(); // do not check results
 }
 
-TEST_F(TestEigen, 1_norm_packed_dynamic) {
+TEST_F(TestEigen, 1Dynamic) {
     auto& a = aDynamic;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
@@ -341,10 +356,11 @@ TEST_F(TestEigen, 1_norm_packed_dynamic) {
             }
         }
     }
+    timer.stop();
     actual.setZero(); // do not check results
 }
 
-TEST_F(TestEigen, 2_norm_packed_dynamic) {
+TEST_F(TestEigen, 2Dynamic) {
     auto& a = aDynamic;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
@@ -354,5 +370,6 @@ TEST_F(TestEigen, 2_norm_packed_dynamic) {
             }
         }
     }
-    actual.setZero(); // do not check results
+    timer.stop();
+    actual = actual.array().square(); // adjust result
 }
