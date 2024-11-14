@@ -113,7 +113,7 @@ public:
     void TearDown() override {
         timer.stop();
         expectEq(actual, expected);
-        std::cout << timer.format(3) << std::endl;
+        std::cout << timer.format(3);
     }
 
     // Accept arguments by non-const lvalue reference
@@ -128,7 +128,7 @@ public:
     // Benchmark for collection of vectors.
     template <typename T>
     void squaredNorm(const std::vector<T>& a, const std::vector<T>& b) {
-        for (int i = 0; i < repeat; i++) {
+        for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
                     actual(row, col) = (a[row] - b[col]).squaredNorm();
@@ -140,7 +140,7 @@ public:
     // Benchmark for matrix types.
     template <typename T>
     void squaredNorm(const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
-        for (int i = 0; i < repeat; i++) {
+        for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
                     actual(row, col) = (a.col(row) - b.col(col)).squaredNorm();
@@ -153,7 +153,33 @@ public:
     template <typename T>
     void squaredNormColwise(
             const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
-        for (int i = 0; i < repeat; i++) {
+        for (auto i = 0; i < repeat; i++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual.col(col) =
+                        (a.colwise() - b.col(col)).colwise().squaredNorm();
+            }
+        }
+    }
+
+    // Replicate benchmark.
+    template <typename T>
+    void squaredNormReplicate(
+            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+        for (auto i = 0; i < repeat; i++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual.col(col) = (a - b.col(col).rowwise().replicate(a.cols()))
+                                          .colwise()
+                                          .squaredNorm();
+            }
+        }
+    }
+
+    // Parallel benchmark.
+    template <typename T>
+    void squaredNormParallel(
+            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+        for (auto i = 0; i < repeat; i++) {
+#pragma omp parallel for num_threads(2)
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) =
                         (a.colwise() - b.col(col)).colwise().squaredNorm();
@@ -277,6 +303,20 @@ TEST_F(TestEigen, colwise_fixed) { squaredNormColwise(aFixed, bFixed); }
 TEST_F(TestEigen, colwise_capped) { squaredNormColwise(aCapped, bCapped); }
 
 TEST_F(TestEigen, colwise_dynamic) { squaredNormColwise(aDynamic, bDynamic); }
+
+TEST_F(TestEigen, replicate_fixed) { squaredNormReplicate(aFixed, bFixed); }
+
+TEST_F(TestEigen, replicate_capped) { squaredNormReplicate(aCapped, bCapped); }
+
+TEST_F(TestEigen, replicate_dynamic) {
+    squaredNormReplicate(aDynamic, bDynamic);
+}
+
+TEST_F(TestEigen, parallel_fixed) { squaredNormParallel(aFixed, bFixed); }
+
+TEST_F(TestEigen, parallel_capped) { squaredNormParallel(aCapped, bCapped); }
+
+TEST_F(TestEigen, parallel_dynamic) { squaredNormParallel(aDynamic, bDynamic); }
 
 TEST_F(TestEigen, abs_norm_packed_dynamic) {
     auto& a = aDynamic;
