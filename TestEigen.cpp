@@ -128,8 +128,8 @@ public:
     }
 
     // Benchmark for collection of vectors.
-    template <typename T>
-    void squaredDistance(const std::vector<T>& a, const std::vector<T>& b) {
+    template <typename A, typename B>
+    void squaredDistance(const std::vector<A>& a, const std::vector<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -286,6 +286,10 @@ TEST_F(TestEigen, collectionCapped) {
 
 TEST_F(TestEigen, collectionDynamic) {
     squaredDistance(aDynamicCollection, bDynamicCollection);
+}
+
+TEST_F(TestEigen, collectionMixed) {
+    squaredDistance(aFixedCollection, bDynamicCollection);
 }
 
 TEST_F(TestEigen, collectionPointer) {
