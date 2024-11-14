@@ -140,9 +140,9 @@ public:
     }
 
     // Benchmark for matrix types.
-    template <typename T>
+    template <typename A, typename B>
     void squaredDistance(
-            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -153,9 +153,9 @@ public:
     }
 
     // Column-wise benchmark.
-    template <typename T>
+    template <typename A, typename B>
     void squaredDistanceColwise(
-            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) =
@@ -165,9 +165,9 @@ public:
     }
 
     // Replicate benchmark.
-    template <typename T>
+    template <typename A, typename B>
     void squaredDistanceReplicate(
-            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) = (a - b.col(col).rowwise().replicate(a.cols()))
@@ -178,9 +178,9 @@ public:
     }
 
     // Parallel benchmark.
-    template <typename T>
+    template <typename A, typename B>
     void squaredDistanceParallel(
-            const Eigen::MatrixBase<T>& a, const Eigen::MatrixBase<T>& b) {
+            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
 #pragma omp parallel for num_threads(2)
             for (auto col = 0; col < actual.cols(); col++) {
@@ -306,6 +306,8 @@ TEST_F(TestEigen, packedCapped) { squaredDistance(aCapped, bCapped); }
 
 TEST_F(TestEigen, packedDynamic) { squaredDistance(aDynamic, bDynamic); }
 
+TEST_F(TestEigen, packedMixed) { squaredDistance(aFixed, bDynamic); }
+
 TEST_F(TestEigen, colwiseFixed) { squaredDistanceColwise(aFixed, bFixed); }
 
 TEST_F(TestEigen, colwiseCapped) { squaredDistanceColwise(aCapped, bCapped); }
@@ -313,6 +315,8 @@ TEST_F(TestEigen, colwiseCapped) { squaredDistanceColwise(aCapped, bCapped); }
 TEST_F(TestEigen, colwiseDynamic) {
     squaredDistanceColwise(aDynamic, bDynamic);
 }
+
+TEST_F(TestEigen, colwiseMixed) { squaredDistanceColwise(aFixed, bDynamic); }
 
 TEST_F(TestEigen, replicateFixed) { squaredDistanceReplicate(aFixed, bFixed); }
 
@@ -324,6 +328,10 @@ TEST_F(TestEigen, replicateDynamic) {
     squaredDistanceReplicate(aDynamic, bDynamic);
 }
 
+TEST_F(TestEigen, replicateMixed) {
+    squaredDistanceReplicate(aFixed, bDynamic);
+}
+
 TEST_F(TestEigen, parallelFixed) { squaredDistanceParallel(aFixed, bFixed); }
 
 TEST_F(TestEigen, parallelCapped) { squaredDistanceParallel(aCapped, bCapped); }
@@ -331,6 +339,8 @@ TEST_F(TestEigen, parallelCapped) { squaredDistanceParallel(aCapped, bCapped); }
 TEST_F(TestEigen, parallelDynamic) {
     squaredDistanceParallel(aDynamic, bDynamic);
 }
+
+TEST_F(TestEigen, parallelMixed) { squaredDistanceParallel(aFixed, bDynamic); }
 
 TEST_F(TestEigen, absDynamic) {
     auto& a = aDynamic;
