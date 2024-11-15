@@ -190,9 +190,10 @@ public:
         }
     }
 
-    template <typename A, typename B, typename C>
-    C squaredDistanceTemplate(const A& a, const B& b) {
-        reuturn(a - b).squaredNorm();
+    template <typename A, typename B>
+    double squaredDistanceTemplate(
+            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+        return (a - b).squaredNorm();
     }
 
     auto squaredDistanceAuto(const auto& a, const auto& b) {
@@ -200,6 +201,18 @@ public:
     }
 
     double squaredDistanceRef(VectorConstRef a, VectorConstRef b) {
+        return (a - b).squaredNorm();
+    }
+
+    double squaredDistanceFixed(const FixedVector& a, const FixedVector& b) {
+        return (a - b).squaredNorm();
+    }
+
+    double squaredDistanceCapped(const CappedVector& a, const CappedVector& b) {
+        return (a - b).squaredNorm();
+    }
+
+    double squaredDistanceDynamic(const Vector& a, const Vector& b) {
         return (a - b).squaredNorm();
     }
 
@@ -263,11 +276,14 @@ TEST_F(TestEigen, sizeof) {
             << "expect no row count";
     EXPECT_EQ(sizeof(Matrix), dynamicMatrixSize);
 
-    EXPECT_GE(sizeof(VectorRef), dynamicVectorSize);
-    // EXPECT_EQ(sizeof(VectorConstRef), sizeof(VectorRef));
+    EXPECT_EQ(sizeof(VectorRef), dynamicVectorSize + sizeof(size_t))
+            << "expect added stride";
+    EXPECT_EQ(sizeof(VectorConstRef), sizeof(VectorRef) + dynamicVectorSize)
+            << "expect added object";
 
     EXPECT_GE(sizeof(MatrixRef), dynamicMatrixSize);
-    // EXPECT_EQ(sizeof(MatrixConstRef), sizeof(MatrixRef));
+    EXPECT_EQ(sizeof(MatrixConstRef), sizeof(MatrixRef) + dynamicMatrixSize)
+            << "expect added object";
 
     EXPECT_LT(sizeof(aFixedCollection), matrixDataSize);
     EXPECT_LT(sizeof(aDynamicCollection), matrixDataSize);
@@ -345,6 +361,83 @@ TEST_F(TestEigen, parallelDynamic) {
 }
 
 TEST_F(TestEigen, parallelMixed) { squaredDistanceParallel(aFixed, bDynamic); }
+
+TEST_F(TestEigen, templateMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) =
+                        squaredDistanceTemplate(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, autoMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceAuto(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, refMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceRef(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, fixedMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceFixed(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, cappedMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceCapped(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, dynamicMixed) {
+    // Arguments to squaredDistanceDynamic() will be converted to
+    // temporary dynamic-capacity vectors, causing memory allocation
+    Eigen::internal::set_is_malloc_allowed(true);
+
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceDynamic(a.col(row), b.col(col));
+            }
+        }
+    }
+}
 
 TEST_F(TestEigen, absDynamic) {
     auto& a = aDynamic;
