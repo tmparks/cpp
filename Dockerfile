@@ -20,6 +20,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         libomp-dev \
         llvm \
         nano \
+        time \
+        valgrind \
     && rm --recursive --force /var/lib/apt/lists/*
 
 # Install gmock and gtest

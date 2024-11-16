@@ -326,6 +326,36 @@ TEST_F(TestEigen, sizeof) {
     EXPECT_LT(sizeof(aDynamic), matrixDataSize);
 }
 
+// [Structures Having Eigen Members](https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html)
+TEST_F(TestEigen, alignment) {
+    Eigen::internal::set_is_malloc_allowed(true);
+    auto desiredAlignment = 2 * sizeof(double);
+
+    struct aligned {
+        double d1;
+        Eigen::Matrix4d m;
+        double d2;
+    } a;
+    auto pa = std::make_unique<aligned>();
+    auto pam = reinterpret_cast<std::ptrdiff_t>(std::addressof(pa->m));
+
+    EXPECT_GT(sizeof(a), 18 * sizeof(double)) << "expect gaps";
+    EXPECT_EQ(offsetof(aligned, m) % desiredAlignment, 0);
+    EXPECT_EQ(pam % desiredAlignment, 0);
+
+    struct misaligned {
+        double d1;
+        Eigen::Matrix<double, 4, 4, Eigen::DontAlign> m;
+        double d2;
+    } b;
+    auto pb = std::make_unique<misaligned>();
+    auto pbm = reinterpret_cast<std::ptrdiff_t>(std::addressof(pb->m));
+
+    EXPECT_EQ(sizeof(b), 18 * sizeof(double)) << "expect no gaps";
+    EXPECT_NE(offsetof(misaligned, m) % desiredAlignment, 0);
+    EXPECT_NE(pbm % desiredAlignment, 0);
+}
+
 TEST_F(TestEigen, collectionFixed) {
     squaredDistance(aFixedCollection, bFixedCollection);
 }

@@ -77,7 +77,6 @@ add_compile_options(
     -Wall
     -Wextra
     -Wpedantic
-    -fopenmp
     -march=native
     -mtune=native
 )
