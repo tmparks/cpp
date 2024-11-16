@@ -332,11 +332,12 @@ TEST_F(TestEigen, alignment) {
     auto desiredAlignment = 2 * sizeof(double);
 
     struct aligned {
-        double d1;
-        Eigen::Matrix4d m;
-        double d2;
+        double d1{};
+        Eigen::Matrix4d m{};
+        double d2{};
     } a;
     auto pa = std::make_unique<aligned>();
+    // NOLINTNEXTLINE(*-reinterpret-cast)
     auto pam = reinterpret_cast<std::ptrdiff_t>(std::addressof(pa->m));
 
     EXPECT_GT(sizeof(a), 18 * sizeof(double)) << "expect gaps";
@@ -344,11 +345,12 @@ TEST_F(TestEigen, alignment) {
     EXPECT_EQ(pam % desiredAlignment, 0);
 
     struct misaligned {
-        double d1;
-        Eigen::Matrix<double, 4, 4, Eigen::DontAlign> m;
-        double d2;
+        double d1{};
+        Eigen::Matrix<double, 4, 4, Eigen::DontAlign> m{};
+        double d2{};
     } b;
     auto pb = std::make_unique<misaligned>();
+    // NOLINTNEXTLINE(*-reinterpret-cast)
     auto pbm = reinterpret_cast<std::ptrdiff_t>(std::addressof(pb->m));
 
     EXPECT_EQ(sizeof(b), 18 * sizeof(double)) << "expect no gaps";
