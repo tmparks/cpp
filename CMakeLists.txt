@@ -78,7 +78,6 @@ add_compile_options(
     -Wpedantic
     -fopenmp
     -march=native
-    -mcpu=native
     -mtune=native
 )
 
