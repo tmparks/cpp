@@ -3,6 +3,7 @@ project(cpp VERSION 2024.11)
 
 find_package(Boost CONFIG REQUIRED COMPONENTS timer)
 find_package(Eigen3 CONFIG REQUIRED)
+find_package(Microsoft.GSL CONFIG REQUIRED)
 find_package(OpenMP REQUIRED)
 
 # Default test options
@@ -112,6 +113,7 @@ add_executable(TestRunner
 target_link_libraries(TestRunner PRIVATE
     Boost::timer
     Eigen3::Eigen
+    Microsoft.GSL::GSL
     OpenMP::OpenMP_CXX
     GTest::gtest
     GTest::gtest_main)
