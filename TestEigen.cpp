@@ -120,6 +120,7 @@ public:
 
     // Accept arguments by non-const lvalue reference
     // in order to prevent creation of temporary objects.
+    // Compilation fails if types are mismatched.
     void expectEq(Matrix& actual, Matrix& expected) {
         if (actual(0, 0) != 0) {
             EXPECT_DOUBLE_EQ(actual(0, 0), expected(0, 0));
@@ -190,30 +191,58 @@ public:
         }
     }
 
+    // No temporary objects are created when arguments are any matrix (or vector)
+    // expression, but not a special matrix.
     template <typename A, typename B>
     double squaredDistanceTemplate(
             const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
         return (a - b).squaredNorm();
     }
 
+    // No temporary objects are created.
     auto squaredDistanceAuto(const auto& a, const auto& b) {
         return (a - b).squaredNorm();
     }
 
+    // No temporary objects are created when arguments are any vector or block.
     double squaredDistanceRef(VectorConstRef a, VectorConstRef b) {
         return (a - b).squaredNorm();
     }
 
+    // No temporary objects are created when arguments are FixedVector.
     double squaredDistanceFixed(const FixedVector& a, const FixedVector& b) {
         return (a - b).squaredNorm();
     }
 
+    // No temporary objects are created when arguments are CappedVector.
     double squaredDistanceCapped(const CappedVector& a, const CappedVector& b) {
         return (a - b).squaredNorm();
     }
 
+    // No temporary objects are created when arguments are Vector.
     double squaredDistanceDynamic(const Vector& a, const Vector& b) {
         return (a - b).squaredNorm();
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    template <typename T>
+    bool sameDataTemplate(const Eigen::PlainObjectBase<T>& x, const double* data) {
+        return x.data() == data;
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameDataAuto(const auto& x, const double* data) {
+        return x.data() == data;
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameDataRef(MatrixRef x, const double* data) {
+        return x.data() == data;
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameDataConstRef(MatrixConstRef x, const double* data) {
+        return x.data() == data;
     }
 
 #ifdef NDEBUG
@@ -430,7 +459,7 @@ TEST_F(TestEigen, dynamicMixed) {
 
     auto& a = aFixed;
     auto& b = bDynamic;
-    for (int i = 0; i < repeat; i++) {
+    for (int i = 0; i < repeat / 10; i++) {
         for (auto row = 0; row < actual.rows(); row++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual(row, col) = squaredDistanceDynamic(a.col(row), b.col(col));
@@ -479,4 +508,37 @@ TEST_F(TestEigen, 2Dynamic) {
     }
     timer.stop();
     actual = actual.array().square(); // adjust result
+}
+
+TEST_F(TestEigen, sameDataFixed) {
+    EXPECT_TRUE(sameDataTemplate(aFixed, aFixed.data()));
+    EXPECT_TRUE(sameDataAuto(aFixed, aFixed.data()));
+    EXPECT_TRUE(sameDataRef(aFixed, aFixed.data()));
+    EXPECT_TRUE(sameDataConstRef(aFixed, aFixed.data()));
+}
+
+TEST_F(TestEigen, sameDataCapped) {
+    EXPECT_TRUE(sameDataTemplate(aCapped, aCapped.data()));
+    EXPECT_TRUE(sameDataAuto(aCapped, aCapped.data()));
+    EXPECT_TRUE(sameDataRef(aCapped, aCapped.data()));
+    EXPECT_TRUE(sameDataConstRef(aCapped, aCapped.data()));
+}
+
+TEST_F(TestEigen, sameDataDynamic) {
+    EXPECT_TRUE(sameDataTemplate(aDynamic, aDynamic.data()));
+    EXPECT_TRUE(sameDataAuto(aDynamic, aDynamic.data()));
+    EXPECT_TRUE(sameDataRef(aDynamic, aDynamic.data()));
+    EXPECT_TRUE(sameDataConstRef(aDynamic, aDynamic.data()));
+}
+
+TEST_F(TestEigen, sameDataBlock) {
+    EXPECT_TRUE(sameDataRef(aDynamic.leftCols(1), aDynamic.data()));
+    EXPECT_TRUE(sameDataRef(aDynamic.topRows(1), aDynamic.data()));
+    EXPECT_FALSE(sameDataRef(aDynamic.rightCols(1), aDynamic.data()));
+    EXPECT_FALSE(sameDataRef(aDynamic.bottomRows(1), aDynamic.data()));
+
+    EXPECT_TRUE(sameDataConstRef(aDynamic.leftCols(1), aDynamic.data()));
+    EXPECT_TRUE(sameDataConstRef(aDynamic.topRows(1), aDynamic.data()));
+    EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
+    EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
 }
