@@ -1,3 +1,4 @@
+// NOLINTNEXTLINE(*-macro-usage)
 #define EIGEN_RUNTIME_NO_MALLOC 1
 
 #include <Eigen/Eigen>
@@ -451,7 +452,7 @@ TEST_F(TestEigen, dynamicMixed) {
 
     auto& a = aFixed;
     auto& b = bDynamic;
-    for (int i = 0; i < repeat / 10; i++) {
+    for (int i = 0; i < repeat / 10; i++) { // NOLINT(*-avoid-magic-numbers)
         for (auto row = 0; row < actual.rows(); row++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual(row, col) = squaredDistanceDynamic(a.col(row), b.col(col));

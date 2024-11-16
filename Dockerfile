@@ -16,6 +16,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
         libboost-dev \
         libboost-timer-dev \
         libeigen3-dev \
+        libgomp1 \
+        libomp-dev \
         llvm \
         nano \
     && rm --recursive --force /var/lib/apt/lists/*
