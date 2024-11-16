@@ -199,11 +199,6 @@ public:
         return (a - b).squaredNorm();
     }
 
-    // No temporary objects are created.
-    auto squaredDistanceAuto(const auto& a, const auto& b) {
-        return (a - b).squaredNorm();
-    }
-
     // No temporary objects are created when arguments are any vector or block.
     double squaredDistanceRef(VectorConstRef a, VectorConstRef b) {
         return (a - b).squaredNorm();
@@ -231,11 +226,6 @@ public:
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataAuto(const auto& x, const double* data) {
-        return x.data() == data;
-    }
-
-    // Verify that temporary objects are not created by comparing data pointers.
     bool sameDataRef(MatrixRef x, const double* data) {
         return x.data() == data;
     }
@@ -244,6 +234,20 @@ public:
     bool sameDataConstRef(MatrixConstRef x, const double* data) {
         return x.data() == data;
     }
+
+#if __cplusplus >= 202002L // since C++20
+
+    // No temporary objects are created.
+    auto squaredDistanceAuto(const auto& a, const auto& b) {
+        return (a - b).squaredNorm();
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameDataAuto(const auto& x, const double* data) {
+        return x.data() == data;
+    }
+
+#endif // C++20
 
 #ifdef NDEBUG
     static constexpr int aSize{40};
@@ -404,18 +408,6 @@ TEST_F(TestEigen, templateMixed) {
     }
 }
 
-TEST_F(TestEigen, autoMixed) {
-    auto& a = aFixed;
-    auto& b = bDynamic;
-    for (int i = 0; i < repeat; i++) {
-        for (auto row = 0; row < actual.rows(); row++) {
-            for (auto col = 0; col < actual.cols(); col++) {
-                actual(row, col) = squaredDistanceAuto(a.col(row), b.col(col));
-            }
-        }
-    }
-}
-
 TEST_F(TestEigen, refMixed) {
     auto& a = aFixed;
     auto& b = bDynamic;
@@ -512,21 +504,18 @@ TEST_F(TestEigen, 2Dynamic) {
 
 TEST_F(TestEigen, sameDataFixed) {
     EXPECT_TRUE(sameDataTemplate(aFixed, aFixed.data()));
-    EXPECT_TRUE(sameDataAuto(aFixed, aFixed.data()));
     EXPECT_TRUE(sameDataRef(aFixed, aFixed.data()));
     EXPECT_TRUE(sameDataConstRef(aFixed, aFixed.data()));
 }
 
 TEST_F(TestEigen, sameDataCapped) {
     EXPECT_TRUE(sameDataTemplate(aCapped, aCapped.data()));
-    EXPECT_TRUE(sameDataAuto(aCapped, aCapped.data()));
     EXPECT_TRUE(sameDataRef(aCapped, aCapped.data()));
     EXPECT_TRUE(sameDataConstRef(aCapped, aCapped.data()));
 }
 
 TEST_F(TestEigen, sameDataDynamic) {
     EXPECT_TRUE(sameDataTemplate(aDynamic, aDynamic.data()));
-    EXPECT_TRUE(sameDataAuto(aDynamic, aDynamic.data()));
     EXPECT_TRUE(sameDataRef(aDynamic, aDynamic.data()));
     EXPECT_TRUE(sameDataConstRef(aDynamic, aDynamic.data()));
 }
@@ -542,3 +531,25 @@ TEST_F(TestEigen, sameDataBlock) {
     EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
 }
+
+#if __cplusplus >= 202002L // since C++20
+
+TEST_F(TestEigen, sameDataAuto) {
+    EXPECT_TRUE(sameDataAuto(aFixed, aFixed.data()));
+    EXPECT_TRUE(sameDataAuto(aCapped, aCapped.data()));
+    EXPECT_TRUE(sameDataAuto(aDynamic, aDynamic.data()));
+}
+
+TEST_F(TestEigen, autoMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceAuto(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+#endif // C++20
