@@ -8,23 +8,11 @@
 
 // [Writing Functions Taking Eigen Types as Parameters](https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html)
 
-// Resize a dynamic matrix.
-// Resize a fixed matrix beyond its capacity?
-
 // Templated function with in/out expression parameters.
-// Templated function with in expression parameters that returns a scalar.
 // Templated function with in expression parameters that returns a matrix.
 // Temmplated function with in expression parameters that returns an expression.
 
-// Non-templated function with in and in/out parameters. (No copies)
-// Non-templated function with in and in/out block parameters. (No copies)
-
 // Intermediate variable without evaluation? Use auto&& ?
-
-// Logical indexing
-
-// Data structure containing an Eigen fixed-capacity vector/matrix.
-// Look for alignment issues.
 
 class TestEigen : public testing::Test {
 public:
@@ -42,7 +30,11 @@ public:
 
     // Reference to any column vector or block.
     using VectorRef = Eigen::Ref<Vector>;
-    using VectorConstRef = const Eigen::Ref<const Vector>;
+    using ConstVectorRef = const Eigen::Ref<const Vector>;
+
+    // Segment of any column vector.
+    using VectorSegment = Eigen::Block<VectorRef>;
+    using ConstVectorSegment = const Eigen::Block<ConstVectorRef>;
 
     // Fixed-size column vectors packed into a dynamically-sized matrix.
     using MultiFixedVector = Eigen::Matrix<double, 3, Eigen::Dynamic>;
@@ -56,11 +48,19 @@ public:
 
     // Reference to any matrix or block.
     using MatrixRef = Eigen::Ref<Matrix>;
-    using MatrixConstRef = const Eigen::Ref<const Matrix>;
+    using ConstMatrixRef = const Eigen::Ref<const Matrix>;
+
+    // Block of any matrix.
+    using MatrixBlock = Eigen::Block<MatrixRef>;
+    using ConstMatrixBlock = const Eigen::Block<ConstMatrixRef>;
 
     // A matrix (or vector) expression.
     template <typename Derived>
     using MatrixExp = Eigen::MatrixBase<Derived>;
+
+    // A block of a matrix (or vector) expression.
+    template <typename Derived>
+    using BlockExp = Eigen::Block<Derived>;
 
     static void SetUpTestCase() {
         std::cout << "size of a + b + n = "
@@ -201,7 +201,7 @@ public:
     }
 
     // No temporary objects are created when arguments are any vector or block.
-    double squaredDistanceRef(VectorConstRef a, VectorConstRef b) {
+    double squaredDistanceRef(ConstVectorRef a, ConstVectorRef b) {
         return (a - b).squaredNorm();
     }
 
@@ -232,8 +232,21 @@ public:
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataConstRef(MatrixConstRef x, const double* data) {
+    bool sameDataConstRef(ConstMatrixRef x, const double* data) {
         return x.data() == data;
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameData(const Matrix& x, const double* data) {
+        return x.data() == data;
+    }
+
+    MatrixBlock column(MatrixRef x, Eigen::Index col) {
+        return x.block(0, col, x.rows(), 1);
+    }
+
+    ConstMatrixBlock column(ConstMatrixRef x, Eigen::Index col) {
+        return x.block(0, col, x.rows(), 1);
     }
 
 #if __cplusplus >= 202002L // since C++20
@@ -312,12 +325,16 @@ TEST_F(TestEigen, sizeof) {
 
     EXPECT_EQ(sizeof(VectorRef), dynamicVectorSize + sizeof(size_t))
             << "expect added stride";
-    EXPECT_EQ(sizeof(VectorConstRef), sizeof(VectorRef) + dynamicVectorSize)
+    EXPECT_EQ(sizeof(ConstVectorRef), sizeof(VectorRef) + dynamicVectorSize)
             << "expect added object";
+    EXPECT_EQ(sizeof(VectorSegment), sizeof(VectorRef) + 4 * sizeof(size_t));
+    EXPECT_EQ(sizeof(ConstVectorSegment), sizeof(VectorSegment));
 
     EXPECT_GE(sizeof(MatrixRef), dynamicMatrixSize);
-    EXPECT_EQ(sizeof(MatrixConstRef), sizeof(MatrixRef) + dynamicMatrixSize)
+    EXPECT_EQ(sizeof(ConstMatrixRef), sizeof(MatrixRef) + dynamicMatrixSize)
             << "expect added object";
+    EXPECT_EQ(sizeof(MatrixBlock), sizeof(MatrixRef) + 2 * sizeof(size_t));
+    EXPECT_EQ(sizeof(ConstMatrixBlock), sizeof(MatrixBlock));
 
     EXPECT_LT(sizeof(aFixedCollection), matrixDataSize);
     EXPECT_LT(sizeof(aDynamicCollection), matrixDataSize);
@@ -493,6 +510,20 @@ TEST_F(TestEigen, dynamicMixed) {
     }
 }
 
+TEST_F(TestEigen, blockMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceRef(
+                        column(ConstMatrixRef{a}, row),
+                        column(MatrixRef{b}, col));
+            }
+        }
+    }
+}
+
 TEST_F(TestEigen, absDynamic) {
     auto& a = aDynamic;
     auto& b = bDynamic;
@@ -563,6 +594,9 @@ TEST_F(TestEigen, sameDataBlock) {
     EXPECT_TRUE(sameDataConstRef(aDynamic.topRows(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
+
+    EXPECT_FALSE(sameData(aDynamic.leftCols(1), aDynamic.data()));
+    EXPECT_FALSE(sameData(aDynamic.topRows(1), aDynamic.data()));
 }
 
 #if __cplusplus >= 202002L // since C++20
