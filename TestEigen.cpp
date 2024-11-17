@@ -36,6 +36,14 @@ public:
     using VectorSegment = Eigen::Block<VectorRef>;
     using ConstVectorSegment = const Eigen::Block<ConstVectorRef>;
 
+    // A vector expression. (equivalent to MatrixExp)
+    template <typename Derived>
+    using VectorExp = Eigen::MatrixBase<Derived>;
+
+    // A segment of a vector expression. (equivalent to BlockExp)
+    template <typename Derived>
+    using SegmentExp = Eigen::Block<Derived>;
+
     // Fixed-size column vectors packed into a dynamically-sized matrix.
     using MultiFixedVector = Eigen::Matrix<double, 3, Eigen::Dynamic>;
 
@@ -54,11 +62,11 @@ public:
     using MatrixBlock = Eigen::Block<MatrixRef>;
     using ConstMatrixBlock = const Eigen::Block<ConstMatrixRef>;
 
-    // A matrix (or vector) expression.
+    // A matrix expression.
     template <typename Derived>
     using MatrixExp = Eigen::MatrixBase<Derived>;
 
-    // A block of a matrix (or vector) expression.
+    // A block of a matrix expression.
     template <typename Derived>
     using BlockExp = Eigen::Block<Derived>;
 
@@ -143,8 +151,7 @@ public:
 
     // Benchmark for matrix types.
     template <typename A, typename B>
-    void squaredDistance(
-            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+    void squaredDistance(const MatrixExp<A>& a, const MatrixExp<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -156,8 +163,7 @@ public:
 
     // Column-wise benchmark.
     template <typename A, typename B>
-    void squaredDistanceColwise(
-            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+    void squaredDistanceColwise(const MatrixExp<A>& a, const MatrixExp<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) =
@@ -168,8 +174,7 @@ public:
 
     // Replicate benchmark.
     template <typename A, typename B>
-    void squaredDistanceReplicate(
-            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+    void squaredDistanceReplicate(const MatrixExp<A>& a, const MatrixExp<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) = (a - b.col(col).rowwise().replicate(a.cols()))
@@ -181,8 +186,7 @@ public:
 
     // Parallel benchmark.
     template <typename A, typename B>
-    void squaredDistanceParallel(
-            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+    void squaredDistanceParallel(const MatrixExp<A>& a, const MatrixExp<B>& b) {
         for (auto i = 0; i < repeat; i++) {
 #pragma omp parallel for num_threads(2)
             for (auto col = 0; col < actual.cols(); col++) {
@@ -193,10 +197,9 @@ public:
     }
 
     // No temporary objects are created when arguments are any matrix (or vector)
-    // expression, but not a special matrix.
+    // expression (but not a special matrix such as Eigen::DiagonalMatrix)
     template <typename A, typename B>
-    double squaredDistanceTemplate(
-            const Eigen::MatrixBase<A>& a, const Eigen::MatrixBase<B>& b) {
+    double squaredDistanceTemplate(const MatrixExp<A>& a, const MatrixExp<B>& b) {
         return (a - b).squaredNorm();
     }
 
@@ -241,13 +244,26 @@ public:
         return x.data() == data;
     }
 
+    // Extract a read-write block from any matrix type without creating temporary objects.
     MatrixBlock column(MatrixRef x, Eigen::Index col) {
         return x.block(0, col, x.rows(), 1);
     }
 
+    // Extract a read-only block from any matrix type without creating temporary objects.
     ConstMatrixBlock column(ConstMatrixRef x, Eigen::Index col) {
         return x.block(0, col, x.rows(), 1);
     }
+
+    // Generic output parameters have no restrictions
+    // and can be mixed with reference parameters.
+    template <typename T>
+    void assignTemplate(MatrixExp<T>& self, ConstMatrixRef other) {
+        self = other;
+    }
+
+    // Reference output parameters have some limitations
+    // * cannot be resized (DEBUG compiler error)
+    void assignRef(MatrixRef self, ConstMatrixRef other) { self = other; }
 
 #if __cplusplus >= 202002L // since C++20
 
@@ -373,6 +389,25 @@ TEST_F(TestEigen, alignment) {
     EXPECT_EQ(sizeof(b), 18 * sizeof(double)) << "expect no gaps";
     EXPECT_NE(offsetof(misaligned, m) % desiredAlignment, 0);
     EXPECT_NE(pbm % desiredAlignment, 0);
+}
+
+TEST_F(TestEigen, outputParameters) {
+    CappedVector v1;
+    FixedVector v2;
+    v2.setRandom();
+
+    EXPECT_EQ(v1.size(), 0);
+    EXPECT_EQ(v2.size(), 3);
+    assignTemplate(v1, v2);
+    EXPECT_EQ(v1.size(), v2.size()); // template parameters can be resized
+    EXPECT_EQ(v1, v2);
+
+    CappedVector v3;
+    v3.resizeLike(v2);
+    v3.setZero();
+    EXPECT_NE(v3, v2);
+    assignRef(v3, v2); // reference parameters cannot be resized
+    EXPECT_EQ(v3, v2); // but their values can be modified
 }
 
 TEST_F(TestEigen, collectionFixed) {
@@ -595,6 +630,8 @@ TEST_F(TestEigen, sameDataBlock) {
     EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
 
+    // The next tests cause dynamic allocation for temporary objects.
+    Eigen::internal::set_is_malloc_allowed(true);
     EXPECT_FALSE(sameData(aDynamic.leftCols(1), aDynamic.data()));
     EXPECT_FALSE(sameData(aDynamic.topRows(1), aDynamic.data()));
 }
