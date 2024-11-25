@@ -6,69 +6,23 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+using namespace Eigen;
+
 // [Writing Functions Taking Eigen Types as Parameters](https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html)
 
-// Templated function with in/out expression parameters.
 // Templated function with in expression parameters that returns a matrix.
-// Temmplated function with in expression parameters that returns an expression.
+// Templated function with in expression parameters that returns an expression.
 
 // Intermediate variable without evaluation? Use auto&& ?
 
 class TestEigen : public testing::Test {
 public:
-    // Default storage options.
-    static constexpr auto Default = Eigen::StorageOptions{};
-
-    // Fixed-size column vector.
-    using FixedVector = Eigen::Vector3d;
-
     // Fixed-capacity, dynamically sized column vector.
-    using CappedVector = Eigen::Matrix<double, Eigen::Dynamic, 1, Default, 4, 1>;
-
-    // Dynamically sized column vector.
-    using Vector = Eigen::VectorXd;
-
-    // Reference to any column vector or block.
-    using VectorRef = Eigen::Ref<Vector>;
-    using ConstVectorRef = const Eigen::Ref<const Vector>;
-
-    // Segment of any column vector.
-    using VectorSegment = Eigen::Block<VectorRef>;
-    using ConstVectorSegment = const Eigen::Block<ConstVectorRef>;
-
-    // A vector expression. (equivalent to MatrixExp)
-    template <typename Derived>
-    using VectorExp = Eigen::MatrixBase<Derived>;
-
-    // A segment of a vector expression. (equivalent to BlockExp)
-    template <typename Derived>
-    using SegmentExp = Eigen::Block<Derived>;
-
-    // Fixed-size column vectors packed into a dynamically-sized matrix.
-    using MultiFixedVector = Eigen::Matrix<double, 3, Eigen::Dynamic>;
+    using VectorX4d = Matrix<double, Dynamic, 1, StorageOptions{}, 4, 1>;
 
     // Fixed-capacity column vectors packed into a dynamically-sized matrix.
-    using MultiCappedVector =
-            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Default, 4, Eigen::Dynamic>;
-
-    // Dynamically sized matrix.
-    using Matrix = Eigen::MatrixXd;
-
-    // Reference to any matrix or block.
-    using MatrixRef = Eigen::Ref<Matrix>;
-    using ConstMatrixRef = const Eigen::Ref<const Matrix>;
-
-    // Block of any matrix.
-    using MatrixBlock = Eigen::Block<MatrixRef>;
-    using ConstMatrixBlock = const Eigen::Block<ConstMatrixRef>;
-
-    // A matrix expression.
-    template <typename Derived>
-    using MatrixExp = Eigen::MatrixBase<Derived>;
-
-    // A block of a matrix expression.
-    template <typename Derived>
-    using BlockExp = Eigen::Block<Derived>;
+    using MatrixXX4Xd =
+            Matrix<double, Dynamic, Dynamic, StorageOptions{}, 4, Dynamic>;
 
     static void SetUpTestCase() {
         std::cout << "size of a + b + n = "
@@ -91,7 +45,7 @@ public:
         aCappedCollection.resize(aSize);
         aFixedCollection.resize(aSize);
         for (auto i = 0; i < aSize; i++) {
-            aPointerCollection[i] = std::make_unique<Vector>(aDynamic.col(i));
+            aPointerCollection[i] = std::make_unique<VectorXd>(aDynamic.col(i));
             aDynamicCollection[i] = aDynamic.col(i);
             aCappedCollection[i] = aDynamic.col(i);
             aFixedCollection[i] = aDynamic.col(i);
@@ -102,7 +56,7 @@ public:
         bCappedCollection.resize(bSize);
         bFixedCollection.resize(bSize);
         for (auto i = 0; i < bSize; i++) {
-            bPointerCollection[i] = std::make_unique<Vector>(bDynamic.col(i));
+            bPointerCollection[i] = std::make_unique<VectorXd>(bDynamic.col(i));
             bDynamicCollection[i] = bDynamic.col(i);
             bCappedCollection[i] = bDynamic.col(i);
             bFixedCollection[i] = bDynamic.col(i);
@@ -130,7 +84,7 @@ public:
     // Accept arguments by non-const lvalue reference
     // in order to prevent creation of temporary objects.
     // Compilation fails if types are mismatched.
-    void expectEq(Matrix& actual, Matrix& expected) {
+    void expectEq(MatrixXd& actual, MatrixXd& expected) {
         if (actual(0, 0) != 0) {
             EXPECT_DOUBLE_EQ(actual(0, 0), expected(0, 0));
         }
@@ -151,7 +105,7 @@ public:
 
     // Benchmark for matrix types.
     template <typename A, typename B>
-    void squaredDistance(const MatrixExp<A>& a, const MatrixExp<B>& b) {
+    void squaredDistance(const MatrixBase<A>& a, const MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto row = 0; row < actual.rows(); row++) {
                 for (auto col = 0; col < actual.cols(); col++) {
@@ -163,7 +117,7 @@ public:
 
     // Column-wise benchmark.
     template <typename A, typename B>
-    void squaredDistanceColwise(const MatrixExp<A>& a, const MatrixExp<B>& b) {
+    void squaredDistanceColwise(const MatrixBase<A>& a, const MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) =
@@ -174,7 +128,7 @@ public:
 
     // Replicate benchmark.
     template <typename A, typename B>
-    void squaredDistanceReplicate(const MatrixExp<A>& a, const MatrixExp<B>& b) {
+    void squaredDistanceReplicate(const MatrixBase<A>& a, const MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual.col(col) = (a - b.col(col).rowwise().replicate(a.cols()))
@@ -186,7 +140,7 @@ public:
 
     // Parallel benchmark.
     template <typename A, typename B>
-    void squaredDistanceParallel(const MatrixExp<A>& a, const MatrixExp<B>& b) {
+    void squaredDistanceParallel(const MatrixBase<A>& a, const MatrixBase<B>& b) {
         for (auto i = 0; i < repeat; i++) {
 #pragma omp parallel for num_threads(2)
             for (auto col = 0; col < actual.cols(); col++) {
@@ -199,71 +153,107 @@ public:
     // No temporary objects are created when arguments are any matrix (or vector)
     // expression (but not a special matrix such as Eigen::DiagonalMatrix)
     template <typename A, typename B>
-    double squaredDistanceTemplate(const MatrixExp<A>& a, const MatrixExp<B>& b) {
+    double squaredDistanceTemplate(const MatrixBase<A>& a, const MatrixBase<B>& b) {
         return (a - b).squaredNorm();
     }
 
-    // No temporary objects are created when arguments are any vector or block.
-    double squaredDistanceRef(ConstVectorRef a, ConstVectorRef b) {
+    // No temporary objects are created when arguments are any vector or subvector.
+    double squaredDistanceRef(Ref<VectorXd> a, Ref<VectorXd> b) {
         return (a - b).squaredNorm();
     }
 
-    // No temporary objects are created when arguments are FixedVector.
-    double squaredDistanceFixed(const FixedVector& a, const FixedVector& b) {
+    // No temporary objects are created when arguments are any vector or subvector.
+    double squaredDistanceConstRef(
+            const Ref<const VectorXd>& a, const Ref<const VectorXd>& b) {
         return (a - b).squaredNorm();
     }
 
-    // No temporary objects are created when arguments are CappedVector.
-    double squaredDistanceCapped(const CappedVector& a, const CappedVector& b) {
+    // No temporary objects are created when arguments are any vector or subvector.
+    double squaredDistanceFixedRef(Ref<Vector3d> a, Ref<Vector3d> b) {
         return (a - b).squaredNorm();
     }
 
-    // No temporary objects are created when arguments are Vector.
-    double squaredDistanceDynamic(const Vector& a, const Vector& b) {
+    // No temporary objects are created when arguments are any vector or subvector.
+    double squaredDistanceFixedConstRef(
+            const Ref<const Vector3d>& a, const Ref<const Vector3d>& b) {
+        return (a - b).squaredNorm();
+    }
+
+    // No temporary objects are created when arguments are Vector3d.
+    double squaredDistanceFixed(const Vector3d& a, const Vector3d& b) {
+        return (a - b).squaredNorm();
+    }
+
+    // No temporary objects are created when arguments are VectorX4d.
+    double squaredDistanceCapped(const VectorX4d& a, const VectorX4d& b) {
+        return (a - b).squaredNorm();
+    }
+
+    // No temporary objects are created when arguments are VectorXd.
+    double squaredDistanceDynamic(const VectorXd& a, const VectorXd& b) {
         return (a - b).squaredNorm();
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
     template <typename T>
-    bool sameDataTemplate(const Eigen::PlainObjectBase<T>& x, const double* data) {
+    bool sameDataTemplate(const MatrixBase<T>& x, const double* data) {
+        return x.derived().data() == data;
+    }
+
+    // Verify that temporary objects are not created by comparing data pointers.
+    bool sameDataRef(Ref<MatrixXd> x, const double* data) {
         return x.data() == data;
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataRef(MatrixRef x, const double* data) {
+    bool sameDataConstRef(const Ref<const MatrixXd>& x, const double* data) {
         return x.data() == data;
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataConstRef(ConstMatrixRef x, const double* data) {
+    bool sameData(const MatrixXd& x, const double* data) {
         return x.data() == data;
     }
 
-    // Verify that temporary objects are not created by comparing data pointers.
-    bool sameData(const Matrix& x, const double* data) {
-        return x.data() == data;
-    }
-
-    // Extract a read-write block from any matrix type without creating temporary objects.
-    MatrixBlock column(MatrixRef x, Eigen::Index col) {
+    // Extract a read-write block from any matrix expression
+    // without creating temporary objects.
+    template <typename Derived>
+    Block<Derived> columnTemplate(MatrixBase<Derived>& x, int col) {
         return x.block(0, col, x.rows(), 1);
     }
 
-    // Extract a read-only block from any matrix type without creating temporary objects.
-    ConstMatrixBlock column(ConstMatrixRef x, Eigen::Index col) {
+    // Extract a read-only block from any matrix expression
+    // without creating temporary objects.
+    template <typename Derived>
+    const Block<const Derived> columnTemplate(const MatrixBase<Derived>& x, int col) {
+        return x.block(0, col, x.rows(), 1);
+    }
+
+    // Extract a read-write block from any matrix type
+    // without creating temporary objects.
+    Block<Ref<MatrixXd>> columnRef(Ref<MatrixXd> x, int col) {
+        return x.block(0, col, x.rows(), 1);
+    }
+
+    // Extract a read-only block from any matrix type
+    // without creating temporary objects.
+    const Block<const Ref<const MatrixXd>> columnConstRef(
+            const Ref<const MatrixXd>& x, int col) {
         return x.block(0, col, x.rows(), 1);
     }
 
     // Generic output parameters have no restrictions
     // and can be mixed with reference parameters.
     template <typename T>
-    void assignTemplate(MatrixExp<T>& self, ConstMatrixRef other) {
+    void assignTemplate(MatrixBase<T>& self, const Ref<const MatrixXd>& other) {
         self = other;
     }
 
     // Reference output parameters have some limitations
     // * cannot be resized (DEBUG compiler error)
-    void assignRef(MatrixRef self, ConstMatrixRef other) { self = other; }
+    void assignRef(Ref<MatrixXd> self, const Ref<const MatrixXd>& other) {
+        self = other;
+    }
 
 #if __cplusplus >= 202002L // since C++20
 
@@ -290,35 +280,35 @@ public:
 #endif
 
     // Collection of fixed-size vectors.
-    std::vector<FixedVector> aFixedCollection;
-    std::vector<FixedVector> bFixedCollection;
+    std::vector<Vector3d> aFixedCollection;
+    std::vector<Vector3d> bFixedCollection;
 
     // Collection of fixed-capacity vectors.
-    std::vector<CappedVector> aCappedCollection;
-    std::vector<CappedVector> bCappedCollection;
+    std::vector<VectorX4d> aCappedCollection;
+    std::vector<VectorX4d> bCappedCollection;
 
     // Collection of dynamic-capacity vectors.
-    std::vector<Vector> aDynamicCollection;
-    std::vector<Vector> bDynamicCollection;
+    std::vector<VectorXd> aDynamicCollection;
+    std::vector<VectorXd> bDynamicCollection;
 
     // Collection of pointers to dynamic-capacity vectors.
-    std::vector<std::unique_ptr<Vector>> aPointerCollection;
-    std::vector<std::unique_ptr<Vector>> bPointerCollection;
+    std::vector<std::unique_ptr<VectorXd>> aPointerCollection;
+    std::vector<std::unique_ptr<VectorXd>> bPointerCollection;
 
     // Matrix packed with fixed-size vectors.
-    MultiFixedVector aFixed;
-    MultiFixedVector bFixed;
+    Matrix3Xd aFixed;
+    Matrix3Xd bFixed;
 
     // Matrix packed with fixed-capacity vectors.
-    MultiCappedVector aCapped;
-    MultiCappedVector bCapped;
+    MatrixXX4Xd aCapped;
+    MatrixXX4Xd bCapped;
 
     // Matrix packed with dynamic-capacity vectors.
-    Matrix aDynamic;
-    Matrix bDynamic;
+    MatrixXd aDynamic;
+    MatrixXd bDynamic;
 
-    Matrix actual;
-    Matrix expected;
+    MatrixXd actual;
+    MatrixXd expected;
 
     boost::timer::cpu_timer timer;
 };
@@ -333,24 +323,24 @@ TEST_F(TestEigen, sizeof) {
     // Pointer, rows, columns.
     auto dynamicMatrixSize = sizeof(double*) + 2 * sizeof(size_t);
 
-    EXPECT_EQ(sizeof(FixedVector), vectorDataSize) << "expect no overhead";
-    EXPECT_EQ(sizeof(Vector), dynamicVectorSize);
-    EXPECT_EQ(sizeof(MultiFixedVector), dynamicMatrixSize - sizeof(size_t))
+    EXPECT_EQ(sizeof(Vector3d), vectorDataSize) << "expect no overhead";
+    EXPECT_EQ(sizeof(VectorXd), dynamicVectorSize);
+    EXPECT_EQ(sizeof(Matrix3Xd), dynamicMatrixSize - sizeof(size_t))
             << "expect no row count";
-    EXPECT_EQ(sizeof(Matrix), dynamicMatrixSize);
+    EXPECT_EQ(sizeof(MatrixXd), dynamicMatrixSize);
 
-    EXPECT_EQ(sizeof(VectorRef), dynamicVectorSize + sizeof(size_t))
+    EXPECT_EQ(sizeof(Ref<VectorXd>), dynamicVectorSize + sizeof(size_t))
             << "expect added stride";
-    EXPECT_EQ(sizeof(ConstVectorRef), sizeof(VectorRef) + dynamicVectorSize)
+    EXPECT_EQ(sizeof(const Ref<const VectorXd>), sizeof(Ref<VectorXd>) + dynamicVectorSize)
             << "expect added object";
-    EXPECT_EQ(sizeof(VectorSegment), sizeof(VectorRef) + 4 * sizeof(size_t));
-    EXPECT_EQ(sizeof(ConstVectorSegment), sizeof(VectorSegment));
+    EXPECT_EQ(sizeof(Block<VectorXd>), sizeof(Ref<VectorXd>) + 4 * sizeof(size_t));
+    EXPECT_EQ(sizeof(const Block<const VectorXd>), sizeof(Block<VectorXd>));
 
-    EXPECT_GE(sizeof(MatrixRef), dynamicMatrixSize);
-    EXPECT_EQ(sizeof(ConstMatrixRef), sizeof(MatrixRef) + dynamicMatrixSize)
+    EXPECT_GE(sizeof(Ref<MatrixXd>), dynamicMatrixSize);
+    EXPECT_EQ(sizeof(const Ref<const MatrixXd>), sizeof(Ref<MatrixXd>) + dynamicMatrixSize)
             << "expect added object";
-    EXPECT_EQ(sizeof(MatrixBlock), sizeof(MatrixRef) + 2 * sizeof(size_t));
-    EXPECT_EQ(sizeof(ConstMatrixBlock), sizeof(MatrixBlock));
+    EXPECT_EQ(sizeof(Block<MatrixXd>), sizeof(Ref<MatrixXd>) + 2 * sizeof(size_t));
+    EXPECT_EQ(sizeof(const Block<const MatrixXd>), sizeof(Block<MatrixXd>));
 
     EXPECT_LT(sizeof(aFixedCollection), matrixDataSize);
     EXPECT_LT(sizeof(aDynamicCollection), matrixDataSize);
@@ -364,36 +354,44 @@ TEST_F(TestEigen, alignment) {
     Eigen::internal::set_is_malloc_allowed(true);
     auto desiredAlignment = 2 * sizeof(double);
 
-    struct aligned {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+
+    struct aligned_padded {
         double d1{};
-        Eigen::Matrix4d m{};
+        Matrix4d m{};
         double d2{};
     } a;
-    auto pa = std::make_unique<aligned>();
+
+#pragma GCC diagnostic pop
+
+    auto pa = std::make_unique<aligned_padded>();
     // NOLINTNEXTLINE(*-reinterpret-cast)
     auto pam = reinterpret_cast<std::ptrdiff_t>(std::addressof(pa->m));
 
-    EXPECT_GT(sizeof(a), 18 * sizeof(double)) << "expect gaps";
-    EXPECT_EQ(offsetof(aligned, m) % desiredAlignment, 0);
+    EXPECT_GT(sizeof(a), 18 * sizeof(double)) << "expect padding";
+    EXPECT_EQ(alignof(decltype(a.m)), desiredAlignment);
+    EXPECT_EQ(offsetof(aligned_padded, m) % desiredAlignment, 0);
     EXPECT_EQ(pam % desiredAlignment, 0);
 
-    struct misaligned {
+    struct misaligned_unpadded {
         double d1{};
-        Eigen::Matrix<double, 4, 4, Eigen::DontAlign> m{};
+        Matrix<double, 4, 4, DontAlign> m{};
         double d2{};
     } b;
-    auto pb = std::make_unique<misaligned>();
+
+    auto pb = std::make_unique<misaligned_unpadded>();
     // NOLINTNEXTLINE(*-reinterpret-cast)
     auto pbm = reinterpret_cast<std::ptrdiff_t>(std::addressof(pb->m));
 
-    EXPECT_EQ(sizeof(b), 18 * sizeof(double)) << "expect no gaps";
-    EXPECT_NE(offsetof(misaligned, m) % desiredAlignment, 0);
+    EXPECT_EQ(sizeof(b), 18 * sizeof(double)) << "expect no padding";
+    EXPECT_NE(offsetof(misaligned_unpadded, m) % desiredAlignment, 0);
     EXPECT_NE(pbm % desiredAlignment, 0);
 }
 
 TEST_F(TestEigen, outputParameters) {
-    CappedVector v1;
-    FixedVector v2;
+    VectorX4d v1;
+    Vector3d v2;
     v2.setRandom();
 
     EXPECT_EQ(v1.size(), 0);
@@ -402,7 +400,7 @@ TEST_F(TestEigen, outputParameters) {
     EXPECT_EQ(v1.size(), v2.size()); // template parameters can be resized
     EXPECT_EQ(v1, v2);
 
-    CappedVector v3;
+    VectorX4d v3;
     v3.resizeLike(v2);
     v3.setZero();
     EXPECT_NE(v3, v2);
@@ -505,7 +503,50 @@ TEST_F(TestEigen, refMixed) {
     }
 }
 
-TEST_F(TestEigen, fixedMixed) {
+TEST_F(TestEigen, constRefMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) =
+                        squaredDistanceConstRef(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, fixedRefMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) =
+                        squaredDistanceFixedRef(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, fixedConstRefMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) =
+                        squaredDistanceFixedConstRef(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, fixedMixedSlow) {
+    // This test is expected to be slower because
+    // arguments to squaredDistanceFixed() will be
+    // converted to temporary fixed-size vectors
+
     auto& a = aFixed;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
@@ -517,7 +558,11 @@ TEST_F(TestEigen, fixedMixed) {
     }
 }
 
-TEST_F(TestEigen, cappedMixed) {
+TEST_F(TestEigen, cappedMixedSlow) {
+    // This test is expected to be slower because
+    // arguments to squaredDistanceCapped() will be
+    // converted to temporary fixed-capacity vectors
+
     auto& a = aFixed;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
@@ -529,9 +574,11 @@ TEST_F(TestEigen, cappedMixed) {
     }
 }
 
-TEST_F(TestEigen, dynamicMixed) {
-    // Arguments to squaredDistanceDynamic() will be converted to
-    // temporary dynamic-capacity vectors, causing memory allocation
+TEST_F(TestEigen, dynamicMixedSlow) {
+    // This test is expected to take longer because
+    // arguments to squaredDistanceDynamic() will be
+    // converted to temporary dynamic-capacity vectors.
+    // This will also cause dynamic memory allocation.
     Eigen::internal::set_is_malloc_allowed(true);
 
     auto& a = aFixed;
@@ -545,15 +592,43 @@ TEST_F(TestEigen, dynamicMixed) {
     }
 }
 
-TEST_F(TestEigen, blockMixed) {
+TEST_F(TestEigen, dynamicAsFixedSlow) {
+    // This test is expected to take longer because
+    // arguments to squaredDistanceFixed() will be
+    // converted to temporary fixed-capacity vectors.
+
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) { // NOLINT(*-avoid-magic-numbers)
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceFixed(a.col(row), b.col(col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, blockTemplateMixed) {
     auto& a = aFixed;
     auto& b = bDynamic;
     for (int i = 0; i < repeat; i++) {
         for (auto row = 0; row < actual.rows(); row++) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual(row, col) = squaredDistanceRef(
-                        column(ConstMatrixRef{a}, row),
-                        column(MatrixRef{b}, col));
+                        columnTemplate(a, row), columnTemplate(b, col));
+            }
+        }
+    }
+}
+
+TEST_F(TestEigen, blockRefMixed) {
+    auto& a = aFixed;
+    auto& b = bDynamic;
+    for (int i = 0; i < repeat; i++) {
+        for (auto row = 0; row < actual.rows(); row++) {
+            for (auto col = 0; col < actual.cols(); col++) {
+                actual(row, col) = squaredDistanceConstRef(
+                        columnConstRef(a, row), columnConstRef(b, col));
             }
         }
     }
@@ -629,6 +704,9 @@ TEST_F(TestEigen, sameDataBlock) {
     EXPECT_TRUE(sameDataConstRef(aDynamic.topRows(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
     EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
+
+    EXPECT_TRUE(sameDataRef(columnRef(aDynamic, 0), aDynamic.data()));
+    EXPECT_TRUE(sameDataConstRef(columnConstRef(aDynamic, 0), aDynamic.data()));
 
     // The next tests cause dynamic allocation for temporary objects.
     Eigen::internal::set_is_malloc_allowed(true);
