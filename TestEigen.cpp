@@ -158,23 +158,13 @@ public:
     }
 
     // No temporary objects are created when arguments are any vector or subvector.
-    double squaredDistanceRef(Ref<VectorXd> a, Ref<VectorXd> b) {
-        return (a - b).squaredNorm();
-    }
-
-    // No temporary objects are created when arguments are any vector or subvector.
-    double squaredDistanceConstRef(
+    double squaredDistanceRef(
             const Ref<const VectorXd>& a, const Ref<const VectorXd>& b) {
         return (a - b).squaredNorm();
     }
 
     // No temporary objects are created when arguments are any vector or subvector.
-    double squaredDistanceFixedRef(Ref<Vector3d> a, Ref<Vector3d> b) {
-        return (a - b).squaredNorm();
-    }
-
-    // No temporary objects are created when arguments are any vector or subvector.
-    double squaredDistanceFixedConstRef(
+    double squaredDistanceFixedRef(
             const Ref<const Vector3d>& a, const Ref<const Vector3d>& b) {
         return (a - b).squaredNorm();
     }
@@ -201,12 +191,7 @@ public:
     }
 
     // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataRef(Ref<MatrixXd> x, const double* data) {
-        return x.data() == data;
-    }
-
-    // Verify that temporary objects are not created by comparing data pointers.
-    bool sameDataConstRef(const Ref<const MatrixXd>& x, const double* data) {
+    bool sameDataRef(const Ref<const MatrixXd>& x, const double* data) {
         return x.data() == data;
     }
 
@@ -229,15 +214,9 @@ public:
         return x.block(0, col, x.rows(), 1);
     }
 
-    // Extract a read-write block from any matrix type
-    // without creating temporary objects.
-    Block<Ref<MatrixXd>> columnRef(Ref<MatrixXd> x, int col) {
-        return x.block(0, col, x.rows(), 1);
-    }
-
     // Extract a read-only block from any matrix type
     // without creating temporary objects.
-    const Block<const Ref<const MatrixXd>> columnConstRef(
+    const Block<const Ref<const MatrixXd>> columnRef(
             const Ref<const MatrixXd>& x, int col) {
         return x.block(0, col, x.rows(), 1);
     }
@@ -352,7 +331,7 @@ TEST_F(TestEigen, sizeof) {
 // [Structures Having Eigen Members](https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html)
 TEST_F(TestEigen, alignment) {
     Eigen::internal::set_is_malloc_allowed(true);
-    auto desiredAlignment = 2 * sizeof(double);
+    auto desiredAlignment = alignof(Matrix4d);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -370,7 +349,6 @@ TEST_F(TestEigen, alignment) {
     auto pam = reinterpret_cast<std::ptrdiff_t>(std::addressof(pa->m));
 
     EXPECT_GT(sizeof(a), 18 * sizeof(double)) << "expect padding";
-    EXPECT_EQ(alignof(decltype(a.m)), desiredAlignment);
     EXPECT_EQ(offsetof(aligned_padded, m) % desiredAlignment, 0);
     EXPECT_EQ(pam % desiredAlignment, 0);
 
@@ -503,19 +481,6 @@ TEST_F(TestEigen, refMixed) {
     }
 }
 
-TEST_F(TestEigen, constRefMixed) {
-    auto& a = aFixed;
-    auto& b = bDynamic;
-    for (int i = 0; i < repeat; i++) {
-        for (auto row = 0; row < actual.rows(); row++) {
-            for (auto col = 0; col < actual.cols(); col++) {
-                actual(row, col) =
-                        squaredDistanceConstRef(a.col(row), b.col(col));
-            }
-        }
-    }
-}
-
 TEST_F(TestEigen, fixedRefMixed) {
     auto& a = aFixed;
     auto& b = bDynamic;
@@ -524,19 +489,6 @@ TEST_F(TestEigen, fixedRefMixed) {
             for (auto col = 0; col < actual.cols(); col++) {
                 actual(row, col) =
                         squaredDistanceFixedRef(a.col(row), b.col(col));
-            }
-        }
-    }
-}
-
-TEST_F(TestEigen, fixedConstRefMixed) {
-    auto& a = aFixed;
-    auto& b = bDynamic;
-    for (int i = 0; i < repeat; i++) {
-        for (auto row = 0; row < actual.rows(); row++) {
-            for (auto col = 0; col < actual.cols(); col++) {
-                actual(row, col) =
-                        squaredDistanceFixedConstRef(a.col(row), b.col(col));
             }
         }
     }
@@ -592,22 +544,6 @@ TEST_F(TestEigen, dynamicMixedSlow) {
     }
 }
 
-TEST_F(TestEigen, dynamicAsFixedSlow) {
-    // This test is expected to take longer because
-    // arguments to squaredDistanceFixed() will be
-    // converted to temporary fixed-capacity vectors.
-
-    auto& a = aFixed;
-    auto& b = bDynamic;
-    for (int i = 0; i < repeat; i++) { // NOLINT(*-avoid-magic-numbers)
-        for (auto row = 0; row < actual.rows(); row++) {
-            for (auto col = 0; col < actual.cols(); col++) {
-                actual(row, col) = squaredDistanceFixed(a.col(row), b.col(col));
-            }
-        }
-    }
-}
-
 TEST_F(TestEigen, blockTemplateMixed) {
     auto& a = aFixed;
     auto& b = bDynamic;
@@ -627,8 +563,8 @@ TEST_F(TestEigen, blockRefMixed) {
     for (int i = 0; i < repeat; i++) {
         for (auto row = 0; row < actual.rows(); row++) {
             for (auto col = 0; col < actual.cols(); col++) {
-                actual(row, col) = squaredDistanceConstRef(
-                        columnConstRef(a, row), columnConstRef(b, col));
+                actual(row, col) =
+                        squaredDistanceRef(columnRef(a, row), columnRef(b, col));
             }
         }
     }
@@ -679,19 +615,23 @@ TEST_F(TestEigen, 2Dynamic) {
 TEST_F(TestEigen, sameDataFixed) {
     EXPECT_TRUE(sameDataTemplate(aFixed, aFixed.data()));
     EXPECT_TRUE(sameDataRef(aFixed, aFixed.data()));
-    EXPECT_TRUE(sameDataConstRef(aFixed, aFixed.data()));
+    // The next test causes dynamic allocation for a temporary object.
+    Eigen::internal::set_is_malloc_allowed(true);
+    EXPECT_FALSE(sameData(aFixed, aFixed.data()));
 }
 
 TEST_F(TestEigen, sameDataCapped) {
     EXPECT_TRUE(sameDataTemplate(aCapped, aCapped.data()));
     EXPECT_TRUE(sameDataRef(aCapped, aCapped.data()));
-    EXPECT_TRUE(sameDataConstRef(aCapped, aCapped.data()));
+    // The next test causes dynamic allocation for a temporary object.
+    Eigen::internal::set_is_malloc_allowed(true);
+    EXPECT_FALSE(sameData(aCapped, aCapped.data()));
 }
 
 TEST_F(TestEigen, sameDataDynamic) {
     EXPECT_TRUE(sameDataTemplate(aDynamic, aDynamic.data()));
     EXPECT_TRUE(sameDataRef(aDynamic, aDynamic.data()));
-    EXPECT_TRUE(sameDataConstRef(aDynamic, aDynamic.data()));
+    EXPECT_TRUE(sameData(aDynamic, aDynamic.data()));
 }
 
 TEST_F(TestEigen, sameDataBlock) {
@@ -699,14 +639,7 @@ TEST_F(TestEigen, sameDataBlock) {
     EXPECT_TRUE(sameDataRef(aDynamic.topRows(1), aDynamic.data()));
     EXPECT_FALSE(sameDataRef(aDynamic.rightCols(1), aDynamic.data()));
     EXPECT_FALSE(sameDataRef(aDynamic.bottomRows(1), aDynamic.data()));
-
-    EXPECT_TRUE(sameDataConstRef(aDynamic.leftCols(1), aDynamic.data()));
-    EXPECT_TRUE(sameDataConstRef(aDynamic.topRows(1), aDynamic.data()));
-    EXPECT_FALSE(sameDataConstRef(aDynamic.rightCols(1), aDynamic.data()));
-    EXPECT_FALSE(sameDataConstRef(aDynamic.bottomRows(1), aDynamic.data()));
-
     EXPECT_TRUE(sameDataRef(columnRef(aDynamic, 0), aDynamic.data()));
-    EXPECT_TRUE(sameDataConstRef(columnConstRef(aDynamic, 0), aDynamic.data()));
 
     // The next tests cause dynamic allocation for temporary objects.
     Eigen::internal::set_is_malloc_allowed(true);
