@@ -9,11 +9,7 @@
 using namespace Eigen;
 
 // [Writing Functions Taking Eigen Types as Parameters](https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html)
-
-// Templated function with in expression parameters that returns a matrix.
-// Templated function with in expression parameters that returns an expression.
-
-// Intermediate variable without evaluation? Use auto&& ?
+// [Block Operations](https://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html)
 
 class TestEigen : public testing::Test {
 public:
