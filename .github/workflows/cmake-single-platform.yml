@@ -17,10 +17,11 @@ jobs:
 
     - name: Configure
       env:
-        CMAKE_BUILD_TYPE: ${{matrix.build}}
-        CMAKE_CXX_STANDARD: ${{matrix.std}}
-        CXXFLAGS: -Werror
-      run: cmake -S . -B build
+        CMAKE_OPTIONS: >-
+          -DCMAKE_BUILD_TYPE=${{matrix.build}}
+          -DCMAKE_CXX_STANDARD=${{matrix.std}}
+          -DCMAKE_COMPILE_WARNING_AS_ERROR=YES
+      run: cmake $CMAKE_OPTIONS -S . -B build
 
     - name: Build
       run: make --directory=build all
@@ -34,4 +35,6 @@ jobs:
 
     - name: Check
       if: ${{matrix.build == 'Debug'}}
-      run: make --directory=build check
+      run: |
+        cmake -DCMAKE_COMPILE_WARNING_AS_ERROR=NO build
+        make --directory=build check
