@@ -365,7 +365,15 @@ TEST_F(TestEigen, alignment) {
 
 TEST_F(TestEigen, outputParameters) {
     VectorX4d v1;
-    Vector3d v2 = Vector3d::Random();
+
+    // See https://gitlab.com/libeigen/eigen/-/issues/2506
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
+    Vector3d v2;
+    v2.setRandom();
+
+#pragma GCC diagnostic pop
 
     EXPECT_EQ(v1.size(), 0);
     EXPECT_EQ(v2.size(), 3);
