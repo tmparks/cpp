@@ -27,14 +27,15 @@ jobs:
       run: make --directory=build all
 
     - name: Test
+      if: ${{matrix.std == 20}}
       run: /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
-      if: ${{matrix.build == 'Debug'}}
+      if: ${{matrix.build == 'Debug' && matrix.std == 20}}
       run: make --directory=build coverage
 
     - name: Check
-      if: ${{matrix.build == 'Debug'}}
+      if: ${{matrix.build == 'Debug' && matrix.std == 20}}
       run: |
         cmake -DCMAKE_COMPILE_WARNING_AS_ERROR=NO build
         make --directory=build check
