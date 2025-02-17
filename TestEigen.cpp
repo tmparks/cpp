@@ -365,8 +365,7 @@ TEST_F(TestEigen, alignment) {
 
 TEST_F(TestEigen, outputParameters) {
     VectorX4d v1;
-    Vector3d v2;
-    v2.setRandom();
+    Vector3d v2 = Vector3d::Random();
 
     EXPECT_EQ(v1.size(), 0);
     EXPECT_EQ(v2.size(), 3);
