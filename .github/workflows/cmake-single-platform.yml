@@ -27,7 +27,7 @@ jobs:
       run: make --directory=build all
 
     - name: Test
-      if: ${{matrix.std == 20}}
+      if: ${{matrix.build == 'Release' || matrix.std > 11}}
       run: /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
