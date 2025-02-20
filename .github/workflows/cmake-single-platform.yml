@@ -30,6 +30,7 @@ jobs:
       run: /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
+      if: ${{matrix.build == 'Debug'}}
       run: make --directory=build coverage
 
     - name: Check
