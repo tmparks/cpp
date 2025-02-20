@@ -34,9 +34,10 @@ jobs:
       run: make --directory=build coverage
 
     - name: Upload Artifacts
+      if: ${{matrix.build == 'Debug'}}
       uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: coverage-${{matrix.std}}
         path: build/results/
 
     - name: Check
