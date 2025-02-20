@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30) # Ubuntu 24.10
-project(cpp VERSION 2024.11)
+project(cpp VERSION 2025.02)
 
 find_package(Boost CONFIG REQUIRED COMPONENTS timer)
 find_package(Eigen3 CONFIG REQUIRED)

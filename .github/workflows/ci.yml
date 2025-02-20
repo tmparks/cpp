@@ -1,4 +1,5 @@
-name: CMake on a single platform
+---
+name: Continuous Integration
 
 on: [push]
 
@@ -44,3 +45,5 @@ jobs:
       run: |
         cmake -DCMAKE_COMPILE_WARNING_AS_ERROR=NO build
         make --directory=build check
+
+...
