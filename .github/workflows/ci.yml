@@ -28,7 +28,9 @@ jobs:
       run: make --directory=build all
 
     - name: Test
-      run: /usr/bin/time --verbose build/TestRunner
+      run: |
+        lscpu
+        /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
       if: ${{matrix.build == 'Debug'}}
