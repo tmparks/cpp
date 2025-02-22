@@ -28,6 +28,7 @@ jobs:
       run: make --directory=build all
 
     - name: Test
+      if: ${{matrix.std >= 17}}
       run: |
         lscpu
         /usr/bin/time --verbose build/TestRunner

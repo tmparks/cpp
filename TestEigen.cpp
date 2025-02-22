@@ -331,7 +331,7 @@ TEST_F(TestEigen, sizeof) {
     EXPECT_LT(sizeof(aDynamic), matrixDataSize);
 }
 
-#ifndef __x86_64__
+// #ifndef __x86_64__
 // The alignment test sometimes fails on Intel processors.
 
 // [Structures Having Eigen Members](https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html)
@@ -373,7 +373,7 @@ TEST_F(TestEigen, alignment) {
     EXPECT_NE(pbm % desiredAlignment, 0);
 }
 
-#endif // __x86_64__
+// #endif // __x86_64__
 
 TEST_F(TestEigen, outputParameters) {
     VectorX4d v1;
