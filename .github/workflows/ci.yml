@@ -38,7 +38,7 @@ jobs:
       run: make --directory=build coverage
 
     - name: Upload Artifacts
-      if: ${{matrix.build == 'Debug'}}
+      if: ${{matrix.build == 'Debug' && matrix.std >= 17}}
       uses: actions/upload-artifact@v4
       with:
         name: coverage-${{matrix.std}}
