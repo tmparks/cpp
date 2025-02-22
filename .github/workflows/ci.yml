@@ -4,9 +4,9 @@ name: Continuous Integration
 on: [push]
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: 'ghcr.io'
   IMAGE: ${{github.repository}}
-  TAG: latest
+  TAG: 'latest'
 
 jobs:
 
