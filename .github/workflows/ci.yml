@@ -16,29 +16,24 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Configure
+    - name: Build and Test
       env:
         CMAKE_OPTIONS: >-
           -DCMAKE_BUILD_TYPE=${{matrix.build}}
           -DCMAKE_CXX_STANDARD=${{matrix.std}}
           -DCMAKE_COMPILE_WARNING_AS_ERROR=YES
-      run: cmake $CMAKE_OPTIONS -S . -B build
-
-    - name: Build
-      run: make --directory=build all
-
-    - name: Test
-      if: ${{matrix.std >= 17}}
       run: |
         lscpu
+        cmake $CMAKE_OPTIONS -S . -B build
+        make --directory=build all
         /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
-      if: ${{matrix.build == 'Debug' && matrix.std >= 17}}
+      if: ${{matrix.build == 'Debug'}}
       run: make --directory=build coverage
 
     - name: Upload Artifacts
-      if: ${{matrix.build == 'Debug' && matrix.std >= 17}}
+      if: ${{matrix.build == 'Debug'}}
       uses: actions/upload-artifact@v4
       with:
         name: coverage-${{matrix.std}}

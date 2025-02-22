@@ -60,7 +60,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -fsanitize=leak
             -fsanitize=undefined
         )
-        add_compile_definitions(_GLIBCXX_DEBUG)
+        add_compile_definitions(_GLIBCXX_DEBUG _GLIBCXX_DEBUG_BACKTRACE)
+        link_libraries(stdc++exp)
     endif() # CMAKE_CXX_COMPILER_ID
     add_compile_options(${INSTRUMENTATION_OPTIONS})
     add_link_options(${INSTRUMENTATION_OPTIONS})
