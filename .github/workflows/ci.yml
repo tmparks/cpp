@@ -34,7 +34,7 @@ jobs:
         /usr/bin/time --verbose build/TestRunner
 
     - name: Coverage
-      if: ${{matrix.build == 'Debug'}}
+      if: ${{matrix.build == 'Debug' && matrix.std >= 17}}
       run: make --directory=build coverage
 
     - name: Upload Artifacts
