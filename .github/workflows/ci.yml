@@ -14,7 +14,8 @@ jobs:
         std: [11, 14, 17, 20, 23] # C++ standard
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
     - name: Build and Test
       env:
