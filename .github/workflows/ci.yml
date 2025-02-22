@@ -3,18 +3,17 @@ name: Continuous Integration
 
 on: [push]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{github.repository}}
+  TAG: latest
+
 jobs:
 
   docker:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       packages: write
-      attestations: write
-      id-token: write
-    env:
-      REGISTRY: ghcr.io
-      IMAGE: ${{github.repository}}
 
     steps:
 
@@ -30,12 +29,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{env.REGISTRY}}/${{env.IMAGE}}:latest
+          tags: ${{env.REGISTRY}}/${{env.IMAGE}}:${{env.TAG}}
 
   build:
+    needs: docker
     runs-on: ubuntu-latest
     container:
-      image: registry.gitlab.com/tmparks/cpp
+      image: ${{env.REGISTRY}}/${{env.IMAGE}}:${{env.TAG}}
     strategy:
       matrix:
         build: [Release, Debug]   # Build type
