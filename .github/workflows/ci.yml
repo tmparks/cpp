@@ -4,13 +4,9 @@ name: Continuous Integration
 
 on: [push]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE: ${{github.repository}}
-  TAG: latest
-
 jobs:
 
+  # [Manage tags and labels with GitHub Actions](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
   docker:
     runs-on: ubuntu-latest
     permissions:
@@ -19,25 +15,31 @@ jobs:
 
     steps:
 
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{github.repository}}
+
       - name: Login
         uses: docker/login-action@v3
         with:
-          registry: ${{env.REGISTRY}}
+          registry: ghcr.io
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
 
       - name: Build and Push
-        id: push
         uses: docker/build-push-action@v6
         with:
           push: true
-          tags: ${{env.REGISTRY}}/${{env.IMAGE}}:${{env.TAG}}
+          tags: ${{steps.meta.outputs.tags}}
+          labels: ${{steps.meta.outputs.labels}}
 
   build:
     needs: docker
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/tmparks/cpp:latest
+      image: ghcr.io/${{github.repository}}:${{github.ref_name}}
     strategy:
       matrix:
         build: [Release, Debug]   # Build type
