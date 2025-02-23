@@ -41,5 +41,5 @@ RUN export CMAKE_BUILD_TYPE=Release \
     && rm --recursive --force $SOURCE $BUILD
 
 # Become unprivileged user
-USER ubuntu
-WORKDIR /home/ubuntu
+# USER ubuntu
+# WORKDIR /home/ubuntu
