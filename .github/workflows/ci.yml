@@ -81,7 +81,7 @@ jobs:
 
     - name: Upload Artifacts
       if: ${{matrix.build == 'Debug'}}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-pages-artifact@v3
       with:
         name: coverage-${{matrix.std}}
         path: build/results/
@@ -90,5 +90,18 @@ jobs:
       run: |
         cmake -DCMAKE_COMPILE_WARNING_AS_ERROR=NO build
         make --directory=build check
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    steps:
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+          with:
+            artifact-name: coverage-20
 
 ...
