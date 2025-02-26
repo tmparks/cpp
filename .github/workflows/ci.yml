@@ -6,12 +6,15 @@ on: [push]
 
 jobs:
 
+  # [Publishing images to GitHub Packages](https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images#publishing-images-to-github-packages)
   # [Manage tags and labels with GitHub Actions](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
   docker:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+      attestations: write
+      id-token: write
 
     steps:
 
@@ -29,6 +32,7 @@ jobs:
           password: ${{secrets.GITHUB_TOKEN}}
 
       - name: Build and Push
+        id: push
         uses: docker/build-push-action@v6
         with:
           push: true
@@ -36,6 +40,13 @@ jobs:
           labels: ${{steps.meta.outputs.labels}}
           cache-from: type=registry,ref=ghcr.io/${{github.repository}}:${{github.ref_name}}
           cache-to: type=inline
+
+      - name: Attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{github.repository}}
+          subject-digest: ${{steps.push.outputs.digest}}
+          push-to-registry: true
 
   build:
     needs: docker
