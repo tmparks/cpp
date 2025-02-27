@@ -1,0 +1,120 @@
+# [GitHub Actions documentation](https://docs.github.com/en/actions)
+---
+name: Continuous Integration
+
+on: [push]
+
+jobs:
+
+  # [Publishing images to GitHub Packages](https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images#publishing-images-to-github-packages)
+  # [Manage tags and labels with GitHub Actions](https://docs.docker.com/build/ci/github-actions/manage-tags-labels/)
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{github.repository}}
+
+      - name: Login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build and Push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{steps.meta.outputs.tags}}
+          labels: ${{steps.meta.outputs.labels}}
+          cache-from: type=registry,ref=ghcr.io/${{github.repository}}:${{github.ref_name}}
+          cache-to: type=inline
+
+      - name: Attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{github.repository}}
+          subject-digest: ${{steps.push.outputs.digest}}
+          push-to-registry: true
+
+  build:
+    needs: docker
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{github.repository}}:${{github.ref_name}}
+    strategy:
+      matrix:
+        build: [Release, Debug]   # Build type
+        std: [11, 14, 17, 20, 23] # C++ standard
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Build and Test
+      env:
+        CMAKE_OPTIONS: >-
+          -DCMAKE_BUILD_TYPE=${{matrix.build}}
+          -DCMAKE_CXX_STANDARD=${{matrix.std}}
+          -DCMAKE_COMPILE_WARNING_AS_ERROR=YES
+      run: |
+        lscpu
+        cmake $CMAKE_OPTIONS -S . -B build
+        make --directory=build all
+        /usr/bin/time --verbose build/TestRunner
+
+    - name: Coverage
+      if: ${{matrix.build == 'Debug'}}
+      run: make --directory=build coverage
+
+    - name: Upload Artifacts
+      if: ${{matrix.build == 'Debug'}}
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{matrix.std}}
+        path: build/results/
+
+    - name: Upload Pages
+      if: ${{matrix.build == 'Debug' && matrix.std == 20 && github.ref_name == 'main'}}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: pages-coverage-${{matrix.std}}
+        path: build/results/
+
+    - name: Check
+      run: |
+        cmake -DCMAKE_COMPILE_WARNING_AS_ERROR=NO build
+        make --directory=build check
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+
+    steps:
+
+      - name: Deploy Pages
+        id: deployment
+        if: ${{github.ref_name == 'main'}}
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-coverage-20
+
+...

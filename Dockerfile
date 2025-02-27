@@ -39,3 +39,7 @@ RUN export CMAKE_BUILD_TYPE=Release \
     && cmake -S $SOURCE -B $BUILD \
     && make --directory=$BUILD install \
     && rm --recursive --force $SOURCE $BUILD
+
+# Become unprivileged user
+# USER ubuntu
+# WORKDIR /home/ubuntu

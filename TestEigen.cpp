@@ -1,7 +1,14 @@
 // NOLINTNEXTLINE(*-macro-usage)
 #define EIGEN_RUNTIME_NO_MALLOC 1
 
+// See https://gitlab.com/libeigen/eigen/-/issues/2506
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
 #include <Eigen/Eigen>
+
+#pragma GCC diagnostic pop
+
 #include <boost/timer/timer.hpp>
 #include <gtest/gtest.h>
 #include <vector>
@@ -324,6 +331,9 @@ TEST_F(TestEigen, sizeof) {
     EXPECT_LT(sizeof(aDynamic), matrixDataSize);
 }
 
+// This test fails until C++17 on some x86 processors.
+#if __cplusplus >= 201703L || not defined __x86_64__
+
 // [Structures Having Eigen Members](https://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html)
 TEST_F(TestEigen, alignment) {
     Eigen::internal::set_is_malloc_allowed(true);
@@ -362,6 +372,8 @@ TEST_F(TestEigen, alignment) {
     EXPECT_NE(offsetof(misaligned_unpadded, m) % desiredAlignment, 0);
     EXPECT_NE(pbm % desiredAlignment, 0);
 }
+
+#endif // C++17 or not x86
 
 TEST_F(TestEigen, outputParameters) {
     VectorX4d v1;
