@@ -81,9 +81,16 @@ jobs:
 
     - name: Upload Artifacts
       if: ${{matrix.build == 'Debug'}}
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-${{matrix.std}}
+        path: build/results/
+
+    - name: Upload Pages
+      if: ${{matrix.build == 'Debug' && matrix.std == 20 && github.ref_name == 'main'}}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: pages-coverage-${{matrix.std}}
         path: build/results/
 
     - name: Check
@@ -105,8 +112,9 @@ jobs:
 
       - name: Deploy Pages
         id: deployment
+        if: ${{github.ref_name == 'main'}}
         uses: actions/deploy-pages@v4
         with:
-          artifact_name: coverage-20
+          artifact_name: pages-coverage-20
 
 ...
